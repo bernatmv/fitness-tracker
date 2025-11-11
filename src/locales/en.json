@@ -1,0 +1,101 @@
+{
+  "common": {
+    "app_name": "Fitness Tracker",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done",
+    "error": "Error",
+    "success": "Success",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "close": "Close",
+    "continue": "Continue",
+    "skip": "Skip",
+    "next": "Next",
+    "back": "Back"
+  },
+  "metrics": {
+    "calories_burned": "Calories Burned",
+    "exercise_time": "Exercise Time",
+    "standing_time": "Standing Time",
+    "steps": "Steps",
+    "floors_climbed": "Floors Climbed",
+    "sleep_hours": "Hours of Sleep"
+  },
+  "units": {
+    "calories": "cal",
+    "minutes": "min",
+    "hours": "hrs",
+    "steps": "steps",
+    "floors": "floors"
+  },
+  "onboarding": {
+    "welcome_title": "Welcome to Fitness Tracker",
+    "welcome_description": "Track your fitness journey with beautiful activity visualizations",
+    "permissions_title": "Health Data Access",
+    "permissions_description": "We need access to your health data to display your activity. Your data stays on your device.",
+    "permissions_button": "Grant Access",
+    "setup_complete": "You're all set!",
+    "setup_complete_description": "Start tracking your fitness journey today"
+  },
+  "home": {
+    "title": "Activity",
+    "last_sync": "Last sync: {{time}}",
+    "sync_now": "Sync Now",
+    "no_data": "No data available",
+    "tap_to_configure": "Tap to configure"
+  },
+  "settings": {
+    "title": "Settings",
+    "metrics": "Metrics",
+    "appearance": "Appearance",
+    "sync": "Sync",
+    "about": "About",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "sync_strategy": "Sync Strategy",
+    "sync_interval": "Sync Interval",
+    "manual_sync": "Manual Sync Only",
+    "periodic_sync": "Every {{interval}} hours",
+    "version": "Version {{version}}"
+  },
+  "metric_detail": {
+    "title": "{{metric}} Details",
+    "configure": "Configure",
+    "statistics": "Statistics",
+    "average": "Average",
+    "total": "Total",
+    "best_day": "Best Day",
+    "current_streak": "Current Streak",
+    "days": "{{count}} days",
+    "view_range": "View Range",
+    "last_7_days": "Last 7 Days",
+    "last_30_days": "Last 30 Days",
+    "last_90_days": "Last 90 Days",
+    "last_year": "Last Year"
+  },
+  "configuration": {
+    "title": "Configure {{metric}}",
+    "color_settings": "Color Settings",
+    "base_color": "Base Color",
+    "threshold_settings": "Threshold Settings",
+    "range": "Range {{number}}",
+    "threshold_from": "From",
+    "threshold_to": "To",
+    "preview": "Preview",
+    "reset_defaults": "Reset to Defaults"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "no_permission": "Health data permission not granted",
+    "sync_failed": "Failed to sync health data",
+    "save_failed": "Failed to save configuration",
+    "load_failed": "Failed to load data"
+  }
+}
+

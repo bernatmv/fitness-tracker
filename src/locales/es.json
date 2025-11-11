@@ -1,0 +1,101 @@
+{
+  "common": {
+    "app_name": "Rastreador de Fitness",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "done": "Hecho",
+    "error": "Error",
+    "success": "Éxito",
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "continue": "Continuar",
+    "skip": "Omitir",
+    "next": "Siguiente",
+    "back": "Atrás"
+  },
+  "metrics": {
+    "calories_burned": "Calorías Quemadas",
+    "exercise_time": "Tiempo de Ejercicio",
+    "standing_time": "Tiempo de Pie",
+    "steps": "Pasos",
+    "floors_climbed": "Pisos Subidos",
+    "sleep_hours": "Horas de Sueño"
+  },
+  "units": {
+    "calories": "cal",
+    "minutes": "min",
+    "hours": "hrs",
+    "steps": "pasos",
+    "floors": "pisos"
+  },
+  "onboarding": {
+    "welcome_title": "Bienvenido al Rastreador de Fitness",
+    "welcome_description": "Rastrea tu viaje fitness con hermosas visualizaciones de actividad",
+    "permissions_title": "Acceso a Datos de Salud",
+    "permissions_description": "Necesitamos acceso a tus datos de salud para mostrar tu actividad. Tus datos permanecen en tu dispositivo.",
+    "permissions_button": "Otorgar Acceso",
+    "setup_complete": "¡Todo listo!",
+    "setup_complete_description": "Comienza a rastrear tu viaje fitness hoy"
+  },
+  "home": {
+    "title": "Actividad",
+    "last_sync": "Última sincronización: {{time}}",
+    "sync_now": "Sincronizar Ahora",
+    "no_data": "No hay datos disponibles",
+    "tap_to_configure": "Toca para configurar"
+  },
+  "settings": {
+    "title": "Configuración",
+    "metrics": "Métricas",
+    "appearance": "Apariencia",
+    "sync": "Sincronización",
+    "about": "Acerca de",
+    "language": "Idioma",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "sync_strategy": "Estrategia de Sincronización",
+    "sync_interval": "Intervalo de Sincronización",
+    "manual_sync": "Solo Sincronización Manual",
+    "periodic_sync": "Cada {{interval}} horas",
+    "version": "Versión {{version}}"
+  },
+  "metric_detail": {
+    "title": "Detalles de {{metric}}",
+    "configure": "Configurar",
+    "statistics": "Estadísticas",
+    "average": "Promedio",
+    "total": "Total",
+    "best_day": "Mejor Día",
+    "current_streak": "Racha Actual",
+    "days": "{{count}} días",
+    "view_range": "Rango de Vista",
+    "last_7_days": "Últimos 7 Días",
+    "last_30_days": "Últimos 30 Días",
+    "last_90_days": "Últimos 90 Días",
+    "last_year": "Último Año"
+  },
+  "configuration": {
+    "title": "Configurar {{metric}}",
+    "color_settings": "Configuración de Color",
+    "base_color": "Color Base",
+    "threshold_settings": "Configuración de Umbrales",
+    "range": "Rango {{number}}",
+    "threshold_from": "Desde",
+    "threshold_to": "Hasta",
+    "preview": "Vista Previa",
+    "reset_defaults": "Restaurar Valores Predeterminados"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "no_permission": "Permiso de datos de salud no otorgado",
+    "sync_failed": "Error al sincronizar datos de salud",
+    "save_failed": "Error al guardar configuración",
+    "load_failed": "Error al cargar datos"
+  }
+}
+
