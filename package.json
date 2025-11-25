@@ -9,7 +9,9 @@
     "start": "react-native start",
     "test": "jest",
     "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "codegen": "node ./node_modules/react-native/scripts/generate-codegen-artifacts.js -p . -o ios -e false -c ''",
+    "postinstall": "pnpm run codegen"
   },
   "dependencies": {
     "react": "18.2.0",
@@ -57,6 +59,10 @@
   "engines": {
     "node": ">=18"
   },
+  "codegenConfig": {
+    "name": "FitnessTrackerSpec",
+    "type": "all",
+    "jsSrcsDir": "./src"
+  },
   "packageManager": "pnpm@8.15.1"
 }
-
