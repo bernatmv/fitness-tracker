@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+
+- Single responsibility: each code entity should only be responsible for a single task. When in doubt prioritize this rule.
+- Always prefer composition over inheritance.
+- Loose coupling: reduce as much as possible dependencies between modules.
+- Pure functions are prefered.
+- Small functions are prefered.
+- Everything should be typed.
+- Code should follow SOLID principles.
+- Code should follow DRY principle: code should be re-usable, we can achieve this with smaller and less coupled components.
+- Code should follow KISS principle: code should be as simple as possible, as isolated as possible and as testable as possible.
+- Code should follow YAGNI principle: don't over architecture, don't create abstractions where they are not needed, it's easier to maintain something simpler that can be better understood as long as it doesn't violate previous principles.

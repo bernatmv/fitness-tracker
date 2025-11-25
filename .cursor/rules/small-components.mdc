@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+- default to small components
+- default to small diffs
+- once given a task, split it into smaller steps and keep splitting until you can implement with the smallest components/functions

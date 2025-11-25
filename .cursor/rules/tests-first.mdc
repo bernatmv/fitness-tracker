@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+- always create tests covering logic before writing new functions/components
+- tests should always define:
+  - specs and purpose of the new code
+  - critical parts
+  - edge cases

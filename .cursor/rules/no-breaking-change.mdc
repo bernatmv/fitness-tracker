@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+- Don’t introduce breaking changes unless explicitly requested. Ask when in doubt

@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+
+- Allowed without prompt:
+  - read files, list files
+  - tsc single file, prettier, eslint
+  - run test
+- Ask first:
+  - package installs
+  - git commit
+  - git push
+  - deleting files, chmod
+  - running full build or end to end suites

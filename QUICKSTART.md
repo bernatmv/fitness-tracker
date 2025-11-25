@@ -15,7 +15,7 @@ Get the Fitness Tracker app running in 5 minutes!
 # 1. Install dependencies
 pnpm install
 
-# 2. iOS only - Install pods
+# 2. iOS only - Install pods (macOS only)
 cd ios && pod install && cd ..
 
 # 3. Start Metro bundler
@@ -25,11 +25,13 @@ pnpm start
 ## Run the App
 
 ### iOS (macOS only)
+
 ```bash
 pnpm ios
 ```
 
 ### Android
+
 ```bash
 pnpm android
 ```
@@ -43,11 +45,13 @@ pnpm android
 ## First Time Setup
 
 ### iOS
+
 1. Grant HealthKit permissions when prompted
 2. App will sync your health data
 3. Activity walls will populate with your data
 
 ### Android
+
 1. Make sure Health Connect is installed
 2. Grant permissions when prompted
 3. App will sync your data
@@ -55,6 +59,7 @@ pnpm android
 ## Testing Without Real Data
 
 The app works without health data! You can:
+
 - Navigate all screens
 - Configure metrics
 - See the UI components
@@ -63,19 +68,20 @@ The app works without health data! You can:
 ## Common Issues
 
 **"Cannot find module"**
+
 ```bash
 pnpm install
 pnpm start -- --reset-cache
 ```
 
 **iOS build fails**
+
 ```bash
-cd ios
-pod install
-cd ..
+cd ios && pod install && cd ..
 ```
 
 **Android build fails**
+
 ```bash
 cd android
 ./gradlew clean
@@ -112,4 +118,3 @@ pnpm type-check    # Check TypeScript
 - See [Project Summary](./docs/project_summary.md)
 
 Happy tracking! 💪
-

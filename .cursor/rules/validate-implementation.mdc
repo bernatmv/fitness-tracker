@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+
+- Execute tests to validate each implementation after the code has been created.
+- If the tests fail, iterate until they pass.
