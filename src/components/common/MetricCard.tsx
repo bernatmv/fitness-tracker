@@ -29,7 +29,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const CalculateCurrentValue = () => {
     if (currentValue !== undefined) return currentValue;
     if (dataPoints.length === 0) return 0;
-    
+
     // Get most recent data point
     const sorted = [...dataPoints].sort(
       (a, b) => b.date.getTime() - a.date.getTime()
@@ -44,24 +44,19 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <Card containerStyle={styles.card}>
         <View style={styles.header}>
           <Text style={styles.title}>{config.displayName}</Text>
-          <Text style={styles.value}>
-            {value.toFixed(0)}
-          </Text>
+          <Text style={styles.value}>{value.toFixed(0)}</Text>
         </View>
-        
+
         {showMiniWall && dataPoints.length > 0 && (
           <View style={styles.miniWall}>
             <ActivityWall
               dataPoints={dataPoints}
               thresholds={config.colorRange.thresholds}
               colors={config.colorRange.colors}
-              numDays={30}
-              cellSize={8}
-              cellGap={1}
             />
           </View>
         )}
-        
+
         {dataPoints.length === 0 && (
           <Text style={styles.noData}>{t('home.no_data')}</Text>
         )}
@@ -101,4 +96,3 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 });
-

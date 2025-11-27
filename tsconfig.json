@@ -4,8 +4,6 @@
     "target": "esnext",
     "lib": ["esnext"],
     "jsx": "react-native",
-    "module": "commonjs",
-    "moduleResolution": "node",
     "allowJs": true,
     "noEmit": true,
     "isolatedModules": true,
@@ -18,12 +16,15 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@types": ["src/types/index"],
       "@components/*": ["src/components/*"],
       "@screens/*": ["src/screens/*"],
       "@services/*": ["src/services/*"],
+      "@constants": ["src/constants/index"],
       "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"],
       "@constants/*": ["src/constants/*"],
+      "@utils": ["src/utils/index"],
+      "@utils/*": ["src/utils/*"],
       "@locales/*": ["src/locales/*"]
     }
   },
@@ -35,4 +36,3 @@
     "jest.config.js"
   ]
 }
-

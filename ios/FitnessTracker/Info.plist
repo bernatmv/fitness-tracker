@@ -34,7 +34,7 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Fitness Tracker needs read access to your Health data to display daily metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Fitness Tracker writes data only when you explicitly enable syncing to keep your stats up to date.</string>
+	<string></string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>

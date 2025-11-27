@@ -38,14 +38,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
         LoadHealthData(),
         LoadUserPreferences(),
       ]);
-      
+
       setHealthData(data);
       setPreferences(prefs);
-      
+
       if (data?.lastFullSync) {
         setLastSyncText(FormatRelativeTime(data.lastFullSync));
       }
-      
+
       setLoadingState(LoadingState.SUCCESS);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -76,10 +76,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
 
   if (loadingState === LoadingState.ERROR) {
     return (
-      <ErrorMessage
-        message={t('errors.load_failed')}
-        onRetry={LoadData}
-      />
+      <ErrorMessage message={t('errors.load_failed')} onRetry={LoadData} />
     );
   }
 
@@ -168,4 +165,3 @@ const styles = StyleSheet.create({
     width: 200,
   },
 });
-

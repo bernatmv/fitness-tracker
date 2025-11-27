@@ -3,13 +3,9 @@ import AppleHealthKit, {
   HealthValue,
   HealthKitPermissions,
 } from 'react-native-health';
-import {
-  HealthDataPoint,
-  MetricType,
-  MetricUnit,
-  ExerciseDetail,
-} from '@types';
+import { HealthDataPoint, MetricType, ExerciseDetail } from '@types';
 import { METRIC_UNITS } from '@constants';
+import { GetDateArray, GetStartOfDay } from '@utils';
 
 /**
  * Health data permissions required
@@ -29,13 +25,24 @@ const HEALTH_PERMISSIONS: HealthKitPermissions = {
   },
 };
 
+type HealthFetchOptions = {
+  startDate: string;
+  endDate: string;
+  period?: number;
+};
+
+type IOSFetchFunction = (
+  options: HealthFetchOptions,
+  callback: (error: string, results: unknown) => void
+) => void;
+
 /**
  * Request health data permissions
  */
 export const RequestHealthPermissions = async (): Promise<boolean> => {
   if (Platform.OS === 'ios') {
-    return new Promise((resolve) => {
-      AppleHealthKit.initHealthKit(HEALTH_PERMISSIONS, (error) => {
+    return new Promise(resolve => {
+      AppleHealthKit.initHealthKit(HEALTH_PERMISSIONS, error => {
         if (error) {
           console.error('Error requesting health permissions:', error);
           resolve(false);
@@ -57,7 +64,7 @@ export const RequestHealthPermissions = async (): Promise<boolean> => {
  */
 export const CheckHealthPermissions = async (): Promise<boolean> => {
   if (Platform.OS === 'ios') {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       AppleHealthKit.isAvailable((error, available) => {
         if (error || !available) {
           resolve(false);
@@ -97,32 +104,79 @@ const FetchIOSMetricData = async (
   endDate: Date
 ): Promise<HealthDataPoint[]> => {
   return new Promise((resolve, reject) => {
-    const options = {
+    const options: HealthFetchOptions = {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       period: 1440, // Daily aggregation (minutes in a day)
     };
 
-    const fetchFunction = GetIOSFetchFunction(metricType);
-    
+    const fetchFunction = GetIOSFetchFunction(
+      metricType
+    ) as IOSFetchFunction | null;
+
     if (!fetchFunction) {
       reject(new Error(`Unsupported metric type: ${metricType}`));
       return;
     }
 
-    fetchFunction(options, (error: string, results: HealthValue[]) => {
+    fetchFunction(options, (error: string, results: unknown) => {
       if (error) {
         console.error(`Error fetching ${metricType}:`, error);
         reject(new Error(error));
         return;
       }
 
-      const dataPoints: HealthDataPoint[] = results.map((result) => ({
-        date: new Date(result.startDate || result.date),
-        value: result.value,
-        metricType,
-        unit: METRIC_UNITS[metricType],
-      }));
+      let safeResults: HealthValue[] = [];
+      if (Array.isArray(results)) {
+        safeResults = results as HealthValue[];
+      } else if (results) {
+        safeResults = [results as HealthValue];
+      }
+
+      const dailyTotals = new Map<string, number>();
+      safeResults.forEach(result => {
+        const normalized = result as HealthValue & {
+          startDate?: string;
+          date?: string;
+          endDate?: string;
+          quantity?: number;
+        };
+        const startIso =
+          normalized.startDate ??
+          normalized.date ??
+          normalized.endDate ??
+          new Date().toISOString();
+        const startDay = GetStartOfDay(new Date(startIso))
+          .toISOString()
+          .split('T')[0];
+
+        let value = normalized.value ?? normalized.quantity ?? 0;
+
+        if (metricType === MetricType.SLEEP_HOURS) {
+          const endIso = normalized.endDate ?? startIso;
+          const durationHours =
+            (new Date(endIso).getTime() - new Date(startIso).getTime()) /
+            (1000 * 60 * 60);
+          value = isNaN(durationHours) ? 0 : Math.max(durationHours, 0);
+        }
+
+        dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
+      });
+
+      const allDates = GetDateArray(
+        GetStartOfDay(startDate),
+        GetStartOfDay(endDate)
+      );
+
+      const dataPoints: HealthDataPoint[] = allDates.map(date => {
+        const key = date.toISOString().split('T')[0];
+        return {
+          date,
+          value: dailyTotals.get(key) || 0,
+          metricType,
+          unit: METRIC_UNITS[metricType],
+        };
+      });
 
       resolve(dataPoints);
     });
@@ -137,9 +191,9 @@ const GetIOSFetchFunction = (metricType: MetricType) => {
     case MetricType.CALORIES_BURNED:
       return AppleHealthKit.getActiveEnergyBurned;
     case MetricType.STEPS:
-      return AppleHealthKit.getStepCount;
+      return AppleHealthKit.getDailyStepCountSamples;
     case MetricType.FLOORS_CLIMBED:
-      return AppleHealthKit.getFlightsClimbed;
+      return AppleHealthKit.getDailyFlightsClimbedSamples;
     case MetricType.EXERCISE_TIME:
       return AppleHealthKit.getAppleExerciseTime;
     case MetricType.STANDING_TIME:
@@ -155,9 +209,9 @@ const GetIOSFetchFunction = (metricType: MetricType) => {
  * Fetch Android health data
  */
 const FetchAndroidMetricData = async (
-  metricType: MetricType,
-  startDate: Date,
-  endDate: Date
+  _metricType: MetricType,
+  _startDate: Date,
+  _endDate: Date
 ): Promise<HealthDataPoint[]> => {
   // TODO: Implement Android Health Connect data fetching
   console.warn('Android Health Connect not yet implemented');
@@ -191,14 +245,18 @@ const FetchIOSExercises = async (
       endDate: endDate.toISOString(),
     };
 
-    AppleHealthKit.getSamples(options, (error: string, results: unknown[]) => {
+    AppleHealthKit.getSamples(options, (error: string, results?: unknown[]) => {
       if (error) {
         console.error('Error fetching exercises:', error);
         reject(new Error(error));
         return;
       }
 
-      const exercises: ExerciseDetail[] = (results as ExerciseWorkout[]).map((workout) => ({
+      const workouts = (
+        Array.isArray(results) ? results : []
+      ) as ExerciseWorkout[];
+
+      const exercises: ExerciseDetail[] = workouts.map(workout => ({
         id: workout.id || `${workout.activityName}-${workout.start}`,
         date: new Date(workout.start),
         type: workout.activityName,
@@ -217,8 +275,8 @@ const FetchIOSExercises = async (
  * Fetch Android exercise data
  */
 const FetchAndroidExercises = async (
-  startDate: Date,
-  endDate: Date
+  _startDate: Date,
+  _endDate: Date
 ): Promise<ExerciseDetail[]> => {
   // TODO: Implement Android Health Connect exercise fetching
   console.warn('Android Health Connect not yet implemented');
@@ -237,4 +295,3 @@ interface ExerciseWorkout {
   distance?: number;
   metadata?: Record<string, unknown>;
 }
-

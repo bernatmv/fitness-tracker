@@ -40,7 +40,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     enabled: true,
     displayName: 'Steps',
     colorRange: {
-      thresholds: [0, 5000, 8000, 10000, Infinity],
+      thresholds: [0, 3000, 5000, 10000, Infinity],
       colors: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
       baseColor: '#40c463',
     },
@@ -92,4 +92,3 @@ export const DEFAULT_SYNC_CONFIG = {
  * App version
  */
 export const APP_VERSION = '1.0.0';
-
