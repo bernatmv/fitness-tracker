@@ -58,6 +58,8 @@
     "theme_light": "Claro",
     "theme_dark": "Oscuro",
     "theme_system": "Sistema",
+    "multi_row_layout": "Diseño Multi-Fila",
+    "multi_row_layout_description": "Mostrar todas las semanas en múltiples filas",
     "sync_strategy": "Estrategia de Sincronización",
     "sync_interval": "Intervalo de Sincronización",
     "manual_sync": "Solo Sincronización Manual",

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -30,6 +30,7 @@ interface ActivityWallProps {
   showMonthLabels?: boolean;
   showDayLabels?: boolean;
   showDescription?: boolean;
+  enableMultiRowLayout?: boolean;
 }
 
 /**
@@ -45,6 +46,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   showMonthLabels = true,
   showDayLabels = true,
   showDescription = true,
+  enableMultiRowLayout = false,
 }) => {
   const theme = useAppTheme();
 
@@ -71,6 +73,11 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   const labelColumnWidth = 32;
   const [containerWidth, setContainerWidth] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Reset selected date when numDays changes
+  useEffect(() => {
+    setSelectedDate(null);
+  }, [numDays]);
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -135,33 +142,68 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     if (!containerWidth) {
       return weeks.length;
     }
-    const gridWidth = containerWidth - labelColumnWidth - CELL_GAP;
+    const effectiveLabelColumnWidth = showDayLabels ? labelColumnWidth : 0;
+    const gridWidth =
+      containerWidth -
+      effectiveLabelColumnWidth -
+      (showDayLabels ? CELL_GAP : 0);
     const columnWidth = CELL_SIZE + CELL_GAP;
     if (columnWidth <= 0) {
       return weeks.length;
     }
     const maxColumns = Math.floor((gridWidth + CELL_GAP) / columnWidth);
-    return Math.max(1, Math.min(maxColumns, weeks.length));
-  }, [containerWidth, weeks.length]);
+    return Math.max(1, maxColumns);
+  }, [containerWidth, showDayLabels, weeks.length]);
 
-  const visibleWeeks = useMemo(() => {
-    if (weeks.length <= maxWeekColumns) {
-      return weeks;
+  // Split weeks into multiple rows (if enabled) or show only recent weeks (old behavior)
+  const weekRows = useMemo(() => {
+    if (enableMultiRowLayout) {
+      // Multi-row: start from newest weeks, fill first row completely, then distribute rest
+      const rows: Date[][][] = [];
+      let remainingWeeks = [...weeks];
+
+      // Build rows from newest to oldest
+      // First row: take as many weeks as possible (up to maxWeekColumns) from the end
+      if (remainingWeeks.length > 0) {
+        const firstRowSize = Math.min(maxWeekColumns, remainingWeeks.length);
+        rows.unshift(remainingWeeks.slice(-firstRowSize));
+        remainingWeeks = remainingWeeks.slice(0, -firstRowSize);
+      }
+
+      // Remaining rows: distribute the rest of the weeks (oldest weeks)
+      while (remainingWeeks.length > 0) {
+        const rowSize = Math.min(maxWeekColumns, remainingWeeks.length);
+        rows.unshift(remainingWeeks.slice(-rowSize));
+        remainingWeeks = remainingWeeks.slice(0, -rowSize);
+      }
+
+      // rows is now [oldest rows, ..., newest row]
+      // Reverse so newest is first (top row)
+      return rows.reverse();
+    } else {
+      // Single-row: show only the most recent weeks that fit
+      const visibleWeeks =
+        weeks.length <= maxWeekColumns
+          ? weeks
+          : weeks.slice(weeks.length - maxWeekColumns);
+      return [visibleWeeks];
     }
-    return weeks.slice(weeks.length - maxWeekColumns);
-  }, [weeks, maxWeekColumns]);
+  }, [weeks, maxWeekColumns, enableMultiRowLayout]);
 
   const totalWeeks = weeks.length;
 
-  const displayStartTime = displayStart.getTime();
-  const displayEndTime = displayEnd.getTime();
+  const displayStartTime = useMemo(
+    () => displayStart.getTime(),
+    [displayStart]
+  );
+  const displayEndTime = useMemo(() => displayEnd.getTime(), [displayEnd]);
 
   const visibleMonthLabels = useMemo(() => {
     const map = new Map<number, string>();
     const monthsSeen = new Set<string>();
 
-    // Find the first day of each month in the visible range
-    visibleWeeks.forEach(week => {
+    // Find the first day of each month across all weeks
+    weeks.forEach(week => {
       week.forEach(date => {
         if (
           date.getTime() >= displayStartTime &&
@@ -181,9 +223,9 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
               date.getTime() >= displayStartTime;
 
             if (isFirstOfMonth || isFirstVisible) {
-              // Find which week contains this date
+              // Find which week contains this date (absolute index across all weeks)
               let targetWeekIdx = -1;
-              visibleWeeks.forEach((w, wIdx) => {
+              weeks.forEach((w, wIdx) => {
                 if (w.some(d => d.getTime() === date.getTime())) {
                   targetWeekIdx = wIdx;
                 }
@@ -203,7 +245,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     });
 
     return map;
-  }, [visibleWeeks, displayStartTime, displayEndTime]);
+  }, [weeks, displayStartTime, displayEndTime]);
 
   const effectiveLabelColumnWidth = showDayLabels ? labelColumnWidth : 0;
 
@@ -212,7 +254,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
       return CELL_SIZE;
     }
 
-    const columns = Math.max(visibleWeeks.length, 1);
+    const columns = Math.max(maxWeekColumns, 1);
     const gridWidth =
       containerWidth -
       effectiveLabelColumnWidth -
@@ -225,7 +267,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   }, [
     containerWidth,
     totalWeeks,
-    visibleWeeks.length,
+    maxWeekColumns,
     effectiveLabelColumnWidth,
     showDayLabels,
   ]);
@@ -267,9 +309,15 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
 
     const HandlePress = () => {
       if (withinRange) {
-        setSelectedDate(date);
-        if (onCellPress) {
-          onCellPress(date, value);
+        if (isSelected) {
+          // Deselect if already selected
+          setSelectedDate(null);
+        } else {
+          // Select the cell
+          setSelectedDate(date);
+          if (onCellPress) {
+            onCellPress(date, value);
+          }
         }
       }
     };
@@ -311,7 +359,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   };
 
   const formatSelectedDate = (date: Date): string => {
-    return format(date, 'MMM do');
+    return format(date, 'MMM do, yyyy');
   };
 
   return (
@@ -324,91 +372,165 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
           <View style={{ width: effectiveLabelColumnWidth }} />
           <View
             style={[styles.monthLabelsContainer, { marginLeft: CELL_GAP / 2 }]}>
-            {visibleWeeks.map((_, weekIndex) => {
-              const label = visibleMonthLabels.get(weekIndex);
-              const columnWidth = CELL_SIZE + CELL_GAP;
-              return (
-                <View
-                  key={`month-${weekIndex}`}
-                  style={[
-                    styles.monthLabelWrapper,
-                    {
-                      width: columnWidth,
-                      minWidth: columnWidth,
-                      maxWidth: columnWidth,
-                    },
-                  ]}>
-                  {label && (
-                    <Text
-                      numberOfLines={1}
+            {enableMultiRowLayout
+              ? weeks.map((_, weekIndex) => {
+                  const label = visibleMonthLabels.get(weekIndex);
+                  const columnWidth = CELL_SIZE + CELL_GAP;
+                  return (
+                    <View
+                      key={`month-${weekIndex}`}
                       style={[
-                        styles.monthLabel,
+                        styles.monthLabelWrapper,
                         {
-                          width: MONTH_LABEL_WIDTH,
-                          marginLeft: CELL_GAP / 2,
-                          color: theme.colors.activityLabel,
+                          width: columnWidth,
+                          minWidth: columnWidth,
+                          maxWidth: columnWidth,
                         },
                       ]}>
-                      {label}
-                    </Text>
-                  )}
-                </View>
-              );
-            })}
+                      {label && (
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            styles.monthLabel,
+                            {
+                              width: MONTH_LABEL_WIDTH,
+                              marginLeft: CELL_GAP / 2,
+                              color: theme.colors.activityLabel,
+                            },
+                          ]}>
+                          {label}
+                        </Text>
+                      )}
+                    </View>
+                  );
+                })
+              : weekRows[0]?.map((_, weekIndex) => {
+                  // For single-row, map to absolute week index
+                  const absoluteWeekIndex =
+                    weeks.length <= maxWeekColumns
+                      ? weekIndex
+                      : weeks.length - maxWeekColumns + weekIndex;
+                  const label = visibleMonthLabels.get(absoluteWeekIndex);
+                  const columnWidth = CELL_SIZE + CELL_GAP;
+                  return (
+                    <View
+                      key={`month-${weekIndex}`}
+                      style={[
+                        styles.monthLabelWrapper,
+                        {
+                          width: columnWidth,
+                          minWidth: columnWidth,
+                          maxWidth: columnWidth,
+                        },
+                      ]}>
+                      {label && (
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            styles.monthLabel,
+                            {
+                              width: MONTH_LABEL_WIDTH,
+                              marginLeft: CELL_GAP / 2,
+                              color: theme.colors.activityLabel,
+                            },
+                          ]}>
+                          {label}
+                        </Text>
+                      )}
+                    </View>
+                  );
+                })}
           </View>
         </View>
       )}
-      <View style={styles.gridRow}>
-        {showDayLabels && (
-          <View
-            style={[
-              styles.dayLabelsColumn,
-              {
-                width: labelColumnWidth,
-                marginRight: CELL_GAP,
-                height: dayLabelHeight * 7 - CELL_GAP,
-              },
-            ]}>
-            {Array.from({ length: 7 }).map((_, dayIndex) => {
-              const marginBottom = dayIndex === 6 ? 0 : CELL_GAP;
-              return (
+      <View style={styles.weeksGrid}>
+        {weekRows.map((row, rowIndex) => {
+          // Calculate absolute week index accounting for reversed row order
+          // When reversed, rowIndex 0 is the newest weeks (first row with max columns)
+          let absoluteWeekIndex: number;
+          if (enableMultiRowLayout) {
+            // Calculate absolute index by summing up weeks in previous rows
+            let weekCount = 0;
+            for (let i = weekRows.length - 1; i > rowIndex; i--) {
+              weekCount += weekRows[i].length;
+            }
+            absoluteWeekIndex = weekCount;
+          } else {
+            // Single row: use the visible weeks offset
+            absoluteWeekIndex =
+              weeks.length <= maxWeekColumns
+                ? rowIndex * maxWeekColumns
+                : weeks.length - maxWeekColumns + rowIndex * maxWeekColumns;
+          }
+          return (
+            <View key={`row-${rowIndex}`} style={styles.gridRow}>
+              {showDayLabels && (
                 <View
-                  key={`day-${dayIndex}`}
                   style={[
-                    styles.dayLabelWrapper,
+                    styles.dayLabelsColumn,
                     {
-                      height: effectiveCellSize,
-                      marginBottom,
+                      width: labelColumnWidth,
+                      marginRight: CELL_GAP,
+                      height: dayLabelHeight * 7 - CELL_GAP,
                     },
                   ]}>
-                  <Text
-                    style={[
-                      styles.dayLabel,
-                      { color: theme.colors.activityLabel },
-                    ]}>
-                    {DAY_LABELS.get(dayIndex) || ' '}
-                  </Text>
+                  {Array.from({ length: 7 }).map((_, dayIndex) => {
+                    const marginBottom = dayIndex === 6 ? 0 : CELL_GAP;
+                    return (
+                      <View
+                        key={`day-${rowIndex}-${dayIndex}`}
+                        style={[
+                          styles.dayLabelWrapper,
+                          {
+                            height: effectiveCellSize,
+                            marginBottom,
+                          },
+                        ]}>
+                        <Text
+                          style={[
+                            styles.dayLabel,
+                            { color: theme.colors.activityLabel },
+                          ]}>
+                          {DAY_LABELS.get(dayIndex) || ' '}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
-              );
-            })}
-          </View>
-        )}
-        <View style={[styles.weeksContainer, { gap: CELL_GAP }]}>
-          {visibleWeeks.map((week, weekIndex) => (
-            <View
-              key={`week-${weekIndex}`}
-              style={styles.weekColumn}
-              testID={`week-${weekIndex}`}>
-              {week.map((date, dayIndex) =>
-                renderCell(
-                  date,
-                  weekIndex * 7 + dayIndex,
-                  dayIndex === week.length - 1
-                )
               )}
+              <View
+                style={[
+                  styles.weeksContainer,
+                  { gap: CELL_GAP },
+                  enableMultiRowLayout &&
+                    rowIndex === weekRows.length - 1 &&
+                    row.length < maxWeekColumns && {
+                      paddingLeft:
+                        (maxWeekColumns - row.length) *
+                        (effectiveCellSize + CELL_GAP),
+                    },
+                ]}>
+                {row.map(week => {
+                  const currentAbsoluteWeekIndex = absoluteWeekIndex++;
+                  return (
+                    <View
+                      key={`week-${currentAbsoluteWeekIndex}`}
+                      style={styles.weekColumn}
+                      testID={`week-${currentAbsoluteWeekIndex}`}>
+                      {week.map((date, dayIndex) =>
+                        renderCell(
+                          date,
+                          currentAbsoluteWeekIndex * 7 + dayIndex,
+                          dayIndex === week.length - 1
+                        )
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
             </View>
-          ))}
-        </View>
+          );
+        })}
       </View>
       {(showDescription || (selectedDate && selectedData)) && (
         <View style={styles.descriptionContainer}>
@@ -448,9 +570,13 @@ const styles = StyleSheet.create({
   container: {
     padding: 0,
   },
+  weeksGrid: {
+    flexDirection: 'column',
+  },
   gridRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    marginBottom: 8,
   },
   monthRow: {
     flexDirection: 'row',

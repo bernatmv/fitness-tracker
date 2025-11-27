@@ -58,6 +58,8 @@
     "theme_light": "Light",
     "theme_dark": "Dark",
     "theme_system": "System",
+    "multi_row_layout": "Multi-Row Layout",
+    "multi_row_layout_description": "Show all weeks in multiple rows",
     "sync_strategy": "Sync Strategy",
     "sync_interval": "Sync Interval",
     "manual_sync": "Manual Sync Only",

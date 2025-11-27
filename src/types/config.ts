@@ -78,6 +78,7 @@ export interface UserPreferences {
   syncConfig: SyncConfig;
   onboardingCompleted: boolean;
   permissionsGranted: boolean;
+  enableMultiRowLayout: boolean;
 }
 
 /**

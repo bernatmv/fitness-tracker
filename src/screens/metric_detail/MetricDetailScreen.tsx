@@ -6,7 +6,12 @@ import { useAppTheme } from '@utils';
 import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
 import { LoadMetricData, LoadUserPreferences } from '@services/storage';
-import { MetricType, HealthMetricData, MetricConfig } from '@types';
+import {
+  MetricType,
+  HealthMetricData,
+  MetricConfig,
+  UserPreferences,
+} from '@types';
 import { GetDateRange, FormatCompactNumber } from '@utils';
 
 interface MetricDetailScreenProps {
@@ -26,6 +31,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const theme = useAppTheme();
   const [metricData, setMetricData] = useState<HealthMetricData | null>(null);
   const [config, setConfig] = useState<MetricConfig | null>(null);
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(1); // Default to 30 days
   const [numDays, setNumDays] = useState<number | null>(30);
@@ -48,6 +54,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
       setMetricData(data);
       setConfig(prefs?.metricConfigs[metricType] || null);
+      setPreferences(prefs);
     } catch (error) {
       console.error('Error loading metric data:', error);
     } finally {
@@ -160,6 +167,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
       {config && dataPoints.length > 0 && (
         <View style={styles.activityWallContainer}>
           <ActivityWall
+            key={`activity-wall-${numDays || 365}`}
             dataPoints={dataPoints}
             thresholds={config.colorRange.thresholds}
             colors={config.colorRange.colors}
@@ -167,6 +175,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
             showMonthLabels={true}
             showDayLabels={true}
             showDescription={true}
+            enableMultiRowLayout={preferences?.enableMultiRowLayout ?? false}
           />
         </View>
       )}

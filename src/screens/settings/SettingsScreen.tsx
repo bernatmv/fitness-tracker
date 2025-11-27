@@ -95,6 +95,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   };
 
+  const HandleToggleMultiRowLayout = async () => {
+    if (!preferences) return;
+
+    const updatedPreferences = {
+      ...preferences,
+      enableMultiRowLayout: !preferences.enableMultiRowLayout,
+    };
+
+    setPreferences(updatedPreferences);
+    await SaveUserPreferences(updatedPreferences);
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -164,6 +176,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </ListItem.Title>
           </ListItem.Content>
           <ListItem.CheckBox checked={preferences?.theme === 'dark'} />
+        </ListItem>
+        <ListItem bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.multi_row_layout')}
+            </ListItem.Title>
+            <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
+              {t('settings.multi_row_layout_description')}
+            </ListItem.Subtitle>
+          </ListItem.Content>
+          <Switch
+            value={preferences?.enableMultiRowLayout ?? false}
+            onValueChange={HandleToggleMultiRowLayout}
+          />
         </ListItem>
       </View>
 

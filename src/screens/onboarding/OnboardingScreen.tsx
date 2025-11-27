@@ -48,6 +48,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           syncConfig: DEFAULT_SYNC_CONFIG,
           onboardingCompleted: true,
           permissionsGranted: true,
+          enableMultiRowLayout: false,
         };
 
         await SaveUserPreferences(preferences);

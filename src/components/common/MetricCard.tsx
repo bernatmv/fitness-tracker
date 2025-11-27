@@ -16,6 +16,7 @@ interface MetricCardProps {
   cardBackgroundColor?: string;
   textColor?: string;
   secondaryTextColor?: string;
+  enableMultiRowLayout?: boolean;
 }
 
 /**
@@ -31,6 +32,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   cardBackgroundColor,
   textColor,
   secondaryTextColor: customSecondaryTextColor,
+  enableMultiRowLayout = false,
 }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
@@ -104,6 +106,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             showMonthLabels={false}
             showDayLabels={false}
             showDescription={false}
+            enableMultiRowLayout={enableMultiRowLayout}
           />
         </View>
       )}

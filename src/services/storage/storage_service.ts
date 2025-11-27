@@ -109,7 +109,15 @@ export const LoadUserPreferences = async (): Promise<UserPreferences | null> => 
     const jsonData = await AsyncStorage.getItem(STORAGE_KEYS.USER_PREFERENCES);
     if (!jsonData) return null;
     
-    return JSON.parse(jsonData);
+    const preferences = JSON.parse(jsonData);
+    
+    // Migration: add enableMultiRowLayout if it doesn't exist
+    if (preferences && typeof preferences.enableMultiRowLayout === 'undefined') {
+      preferences.enableMultiRowLayout = false;
+      await SaveUserPreferences(preferences);
+    }
+    
+    return preferences;
   } catch (error) {
     console.error('Error loading user preferences:', error);
     return null;

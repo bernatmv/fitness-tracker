@@ -133,6 +133,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
                 cardBackgroundColor={cardBackground}
                 textColor={cardTextColor}
                 secondaryTextColor={cardSecondaryTextColor}
+                enableMultiRowLayout={
+                  preferences?.enableMultiRowLayout ?? false
+                }
               />
             );
           })
