@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TextInput } from 'react-native';
-import { Button, Text, Slider } from '@rneui/themed';
+import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
+import { useAppTheme } from '@utils';
 import {
   LoadUserPreferences,
   SaveUserPreferences,
@@ -26,6 +27,8 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   onSave,
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
+  const isDarkMode = theme.mode === 'dark';
   const [config, setConfig] = useState<MetricConfig | null>(null);
   const [metricData, setMetricData] = useState<HealthMetricData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +36,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
 
   useEffect(() => {
     LoadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metricType]);
 
   const LoadData = async () => {
@@ -43,12 +47,17 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         LoadMetricData(metricType),
       ]);
 
-      if (prefs) {
+      if (prefs && prefs.metricConfigs[metricType]) {
         setConfig(prefs.metricConfigs[metricType]);
+      } else {
+        // Use default config if user config doesn't exist
+        setConfig(DEFAULT_METRIC_CONFIGS[metricType]);
       }
       setMetricData(data);
     } catch (error) {
       console.error('Error loading configuration:', error);
+      // Fallback to default config on error
+      setConfig(DEFAULT_METRIC_CONFIGS[metricType]);
     } finally {
       setIsLoading(false);
     }
@@ -66,21 +75,6 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
       colorRange: {
         ...config.colorRange,
         thresholds: newThresholds,
-      },
-    });
-  };
-
-  const HandleColorChange = (index: number, color: string) => {
-    if (!config) return;
-
-    const newColors = [...config.colorRange.colors];
-    newColors[index] = color;
-
-    setConfig({
-      ...config,
-      colorRange: {
-        ...config.colorRange,
-        colors: newColors,
       },
     });
   };
@@ -124,10 +118,22 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     return null;
   }
 
+  const backgroundColor = isDarkMode ? '#000000' : theme.colors.background;
+  const textColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
+  const secondaryTextColor = isDarkMode
+    ? '#8E8E93'
+    : theme.colors.text.secondary;
+  const borderColor = isDarkMode ? '#38383A' : '#E5E5EA';
+  const inputBorderColor = isDarkMode ? '#48484A' : '#C6C6C8';
+  const inputBackgroundColor = isDarkMode ? '#1C1C1E' : '#FFFFFF';
+  const inputTextColor = isDarkMode ? '#FFFFFF' : '#000000';
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('configuration.preview')}</Text>
+    <ScrollView style={[styles.container, { backgroundColor }]}>
+      <View style={[styles.section, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>
+          {t('configuration.preview')}
+        </Text>
         {metricData && metricData.dataPoints.length > 0 && (
           <View style={styles.previewContainer}>
             <ActivityWall
@@ -140,38 +146,62 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         )}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
+      <View style={[styles.section, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>
           {t('configuration.threshold_settings')}
         </Text>
         {config.colorRange.thresholds.map((threshold, index) => {
-          if (threshold === Infinity) return null;
+          if (
+            threshold === Infinity ||
+            threshold === null ||
+            threshold === undefined
+          ) {
+            return null;
+          }
 
           return (
             <View key={index} style={styles.thresholdRow}>
-              <Text style={styles.thresholdLabel}>
+              <Text style={[styles.thresholdLabel, { color: textColor }]}>
                 {t('configuration.range', { number: index + 1 })}
               </Text>
               <TextInput
-                style={styles.thresholdInput}
+                style={[
+                  styles.thresholdInput,
+                  {
+                    borderColor: inputBorderColor,
+                    backgroundColor: inputBackgroundColor,
+                    color: inputTextColor,
+                  },
+                ]}
                 value={threshold.toString()}
                 onChangeText={value => HandleThresholdChange(index, value)}
                 keyboardType="numeric"
+                placeholderTextColor={secondaryTextColor}
               />
             </View>
           );
         })}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
+      <View style={[styles.section, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>
           {t('configuration.color_settings')}
         </Text>
         <View style={styles.colorGrid}>
           {config.colorRange.colors.map((color, index) => (
             <View key={index} style={styles.colorItem}>
-              <View style={[styles.colorPreview, { backgroundColor: color }]} />
-              <Text style={styles.colorText}>{color}</Text>
+              <View
+                style={[
+                  styles.colorPreview,
+                  {
+                    backgroundColor: color,
+                    borderColor: inputBorderColor,
+                  },
+                ]}
+              />
+              <Text style={[styles.colorText, { color: secondaryTextColor }]}>
+                {color}
+              </Text>
             </View>
           ))}
         </View>
@@ -202,7 +232,6 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
   },
   sectionTitle: {
     fontSize: 17,
@@ -226,7 +255,6 @@ const styles = StyleSheet.create({
     width: 100,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#C6C6C8',
     borderRadius: 8,
     textAlign: 'right',
     fontSize: 16,
@@ -245,7 +273,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#C6C6C8',
   },
   colorText: {
     fontSize: 12,

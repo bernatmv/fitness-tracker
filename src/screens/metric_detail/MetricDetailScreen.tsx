@@ -35,8 +35,8 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState(1); // Default to 30 days
-  const [numDays, setNumDays] = useState<number | null>(30);
+  const [selectedIndex, setSelectedIndex] = useState(0); // Default to Fit
+  const [numDays, setNumDays] = useState<number | null>(-1);
   const [containerWidth, setContainerWidth] = useState(0);
 
   // Use -1 as special value for "Fit"
