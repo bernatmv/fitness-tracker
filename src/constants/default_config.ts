@@ -1,4 +1,10 @@
-import { MetricType, MetricUnit, MetricConfig, SyncStrategy } from '@types';
+import {
+  MetricType,
+  MetricUnit,
+  MetricConfig,
+  SyncStrategy,
+  ThemePreference,
+} from '@types';
 
 /**
  * Default color ranges for each metric type
@@ -14,6 +20,16 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
       // iOS Health app-like reds for calories burned
       colors: ['#f4e4e1', '#f9b8b2', '#f9827c', '#e74c3c', '#c0392b'],
       baseColor: '#e74c3c',
+    },
+  },
+  [MetricType.STEPS]: {
+    metricType: MetricType.STEPS,
+    enabled: true,
+    displayName: 'Steps',
+    colorRange: {
+      thresholds: [0, 2000, 5000, 10000, 15000],
+      colors: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
+      baseColor: '#40c463',
     },
   },
   [MetricType.EXERCISE_TIME]: {
@@ -36,16 +52,6 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
       // iOS Health app-like blues for standing time
       colors: ['#e6f2fa', '#b3dbf7', '#6ec1f6', '#007aff', '#004a99'],
       baseColor: '#6ec1f6',
-    },
-  },
-  [MetricType.STEPS]: {
-    metricType: MetricType.STEPS,
-    enabled: true,
-    displayName: 'Steps',
-    colorRange: {
-      thresholds: [0, 2000, 5000, 10000, 15000],
-      colors: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
-      baseColor: '#40c463',
     },
   },
   [MetricType.FLOORS_CLIMBED]: {
@@ -96,3 +102,8 @@ export const DEFAULT_SYNC_CONFIG = {
  * App version
  */
 export const APP_VERSION = '1.0.0';
+
+/**
+ * Default theme preference
+ */
+export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';

@@ -18,6 +18,16 @@ export interface ThemeColors {
   };
   border: string;
   divider: string;
+  /** Card background color */
+  cardBackground: string;
+  /** Stat card background color */
+  statCardBackground: string;
+  /** Activity wall label color */
+  activityLabel: string;
+  /** Selected cell border color */
+  cellSelectedBorder: string;
+  /** Link/icon color */
+  link: string;
   /** GitHub-like activity colors (default green) */
   activityDefault: {
     level0: string; // No activity

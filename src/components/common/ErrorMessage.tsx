@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '@utils';
 
 interface ErrorMessageProps {
   message: string;
@@ -17,10 +18,13 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   onRetry,
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.errorText}>{message}</Text>
+      <Text style={[styles.errorText, { color: theme.colors.error }]}>
+        {message}
+      </Text>
       {onRetry && (
         <Button
           title={t('common.retry')}
@@ -43,7 +47,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 16,
-    color: '#FF3B30',
   },
   buttonContainer: {
     width: 200,

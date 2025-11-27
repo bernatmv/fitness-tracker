@@ -4,7 +4,7 @@ import { Card, Text, Icon } from '@rneui/themed';
 import { HealthDataPoint, MetricConfig } from '@types';
 import { ActivityWall } from '../activity_wall';
 import { useTranslation } from 'react-i18next';
-import { FormatNumber } from '@utils';
+import { FormatNumber, useAppTheme } from '@utils';
 import { METRIC_UNITS } from '@constants';
 
 interface MetricCardProps {
@@ -13,6 +13,9 @@ interface MetricCardProps {
   onPress?: () => void;
   showMiniWall?: boolean;
   currentValue?: number;
+  cardBackgroundColor?: string;
+  textColor?: string;
+  secondaryTextColor?: string;
 }
 
 /**
@@ -25,8 +28,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   onPress,
   showMiniWall = true,
   currentValue,
+  cardBackgroundColor,
+  textColor,
+  secondaryTextColor: customSecondaryTextColor,
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
+
+  const backgroundColor = cardBackgroundColor || theme.colors.cardBackground;
+  const primaryTextColor = textColor || theme.colors.text.primary;
+  const secondaryTextColor =
+    customSecondaryTextColor || textColor || theme.colors.text.secondary;
 
   const CalculateCurrentValue = () => {
     if (currentValue !== undefined) return currentValue;
@@ -58,11 +70,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const unit = GetUnit();
 
   return (
-    <Card containerStyle={styles.card}>
+    <Card containerStyle={[styles.card, { backgroundColor }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>{config.displayName}</Text>
+        <Text style={[styles.title, { color: primaryTextColor }]}>
+          {config.displayName}
+        </Text>
         <View style={styles.headerRight}>
-          <Text style={styles.value}>
+          <Text style={[styles.value, { color: primaryTextColor }]}>
             {FormatNumber(value, 0)} {unit}
           </Text>
           {onPress && (
@@ -74,7 +88,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 name="chevron-right"
                 type="material"
                 size={22}
-                color="#007AFF"
+                color={theme.colors.link}
               />
             </TouchableOpacity>
           )}
@@ -95,7 +109,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       )}
 
       {dataPoints.length === 0 && (
-        <Text style={styles.noData}>{t('home.no_data')}</Text>
+        <Text style={[styles.noData, { color: secondaryTextColor }]}>
+          {t('home.no_data')}
+        </Text>
       )}
     </Card>
   );
@@ -106,7 +122,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    backgroundColor: '#FAFAFA',
     borderWidth: 0,
     elevation: 0,
     shadowOpacity: 0,

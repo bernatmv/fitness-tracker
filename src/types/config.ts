@@ -62,11 +62,17 @@ export interface SyncConfig {
 }
 
 /**
+ * Theme preference options
+ */
+export type ThemePreference = 'system' | 'light' | 'dark';
+
+/**
  * User preferences
  */
 export interface UserPreferences {
   language: string;
   dateFormat: string;
+  theme: ThemePreference;
   metricConfigs: Record<MetricType, MetricConfig>;
   widgets: WidgetConfig[];
   syncConfig: SyncConfig;

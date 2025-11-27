@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Button, Text, Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '@utils';
 import { RequestHealthPermissions } from '@services/health_data';
 import { SaveUserPreferences, LoadUserPreferences } from '@services/storage';
-import { DEFAULT_METRIC_CONFIGS, DEFAULT_SYNC_CONFIG } from '@constants';
+import {
+  DEFAULT_METRIC_CONFIGS,
+  DEFAULT_SYNC_CONFIG,
+  DEFAULT_THEME_PREFERENCE,
+} from '@constants';
 import { MetricType, UserPreferences } from '@types';
 import { LoadingSpinner } from '@components/common';
 
@@ -20,6 +25,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   onComplete,
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +42,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         const preferences: UserPreferences = {
           language: 'en',
           dateFormat: 'PP',
+          theme: DEFAULT_THEME_PREFERENCE,
           metricConfigs: DEFAULT_METRIC_CONFIGS,
           widgets: [],
           syncConfig: DEFAULT_SYNC_CONFIG,
@@ -72,7 +79,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             name="fitness-center"
             type="material"
             size={80}
-            color="#007AFF"
+            color={theme.colors.link}
           />
           <Text h2 style={styles.title}>
             {t('onboarding.welcome_title')}
@@ -95,7 +102,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             name="health-and-safety"
             type="material"
             size={80}
-            color="#007AFF"
+            color={theme.colors.link}
           />
           <Text h2 style={styles.title}>
             {t('onboarding.permissions_title')}
@@ -104,7 +111,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             {t('onboarding.permissions_description')}
           </Text>
           
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {error}
+            </Text>
+          )}
           
           <Button
             title={t('onboarding.permissions_button')}
@@ -127,7 +138,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             name="check-circle"
             type="material"
             size={80}
-            color="#34C759"
+            color={theme.colors.success}
           />
           <Text h2 style={styles.title}>
             {t('onboarding.setup_complete')}
@@ -176,7 +187,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   errorText: {
-    color: '#FF3B30',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 16,

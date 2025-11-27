@@ -22,6 +22,11 @@ export const LIGHT_THEME: Theme = {
     },
     border: '#C6C6C8',
     divider: '#E5E5EA',
+    cardBackground: '#FAFAFA',
+    statCardBackground: '#F2F2F7',
+    activityLabel: '#8E8E93',
+    cellSelectedBorder: '#F4C430',
+    link: '#007AFF',
     activityDefault: {
       level0: '#ebedf0',
       level1: '#9be9a8',
@@ -94,6 +99,11 @@ export const DARK_THEME: Theme = {
     },
     border: '#38383A',
     divider: '#2C2C2E',
+    cardBackground: '#1C1C1E',
+    statCardBackground: '#2C2C2E',
+    activityLabel: '#8E8E93',
+    cellSelectedBorder: '#FFD60A',
+    link: '#0A84FF',
     activityDefault: {
       level0: '#161b22',
       level1: '#0e4429',

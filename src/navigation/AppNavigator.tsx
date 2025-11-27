@@ -3,11 +3,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '@utils';
 import { HomeScreen } from '@screens/home';
 import { SettingsScreen } from '@screens/settings';
 import { MetricDetailScreen } from '@screens/metric_detail';
 import { MetricConfigScreen } from '@screens/metric_detail/MetricConfigScreen';
-import { MetricType } from '@types';
+import { MetricType, ThemePreference } from '@types';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -23,17 +24,29 @@ type MainTabsParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
+interface MainTabNavigatorProps {
+  onThemePreferenceChange?: (preference: ThemePreference) => void;
+}
+
 /**
  * Main tab navigator
  */
-const MainTabNavigator = () => {
+const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
+  onThemePreferenceChange,
+}) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: theme.colors.link,
+        tabBarInactiveTintColor: theme.colors.text.secondary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
+        },
       }}>
       <Tab.Screen
         name="Home"
@@ -47,14 +60,18 @@ const MainTabNavigator = () => {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreenWrapper}
         options={{
           title: t('settings.title'),
           tabBarIcon: ({ color, size }) => (
             <Icon name="settings" type="material" color={color} size={size} />
           ),
-        }}
-      />
+        }}>
+        {() => (
+          <SettingsScreenWrapper
+            onThemePreferenceChange={onThemePreferenceChange}
+          />
+        )}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 };
@@ -72,29 +89,48 @@ const HomeScreenWrapper = ({ navigation }: { navigation: any }) => {
   );
 };
 
-const SettingsScreenWrapper = ({ navigation }: { navigation: any }) => {
+interface SettingsScreenWrapperProps {
+  navigation: any;
+  onThemePreferenceChange?: (preference: ThemePreference) => void;
+}
+
+const SettingsScreenWrapper: React.FC<SettingsScreenWrapperProps> = ({
+  navigation,
+  onThemePreferenceChange,
+}) => {
   return (
     <SettingsScreen
       onMetricConfigPress={(metricType) =>
         navigation.navigate('MetricConfig', { metricType })
       }
+      onThemePreferenceChange={onThemePreferenceChange}
     />
   );
 };
 
+interface AppNavigatorProps {
+  onThemePreferenceChange?: (preference: ThemePreference) => void;
+}
+
 /**
  * Main app navigator
  */
-export const AppNavigator = () => {
+export const AppNavigator: React.FC<AppNavigatorProps> = ({
+  onThemePreferenceChange,
+}) => {
   const { t } = useTranslation();
 
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="MainTabs"
-        component={MainTabNavigator}
-        options={{ headerShown: false }}
-      />
+        options={{ headerShown: false }}>
+        {() => (
+          <MainTabNavigator
+            onThemePreferenceChange={onThemePreferenceChange}
+          />
+        )}
+      </Stack.Screen>
       <Stack.Screen
         name="MetricDetail"
         component={MetricDetailScreenWrapper}

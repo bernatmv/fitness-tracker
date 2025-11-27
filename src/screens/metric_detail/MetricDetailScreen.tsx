@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Button, Text, ButtonGroup } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '@utils';
 import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
 import { LoadMetricData, LoadUserPreferences } from '@services/storage';
@@ -22,6 +23,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   onConfigurePress,
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
   const [metricData, setMetricData] = useState<HealthMetricData | null>(null);
   const [config, setConfig] = useState<MetricConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,8 +124,6 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
             thresholds={config.colorRange.thresholds}
             colors={config.colorRange.colors}
             numDays={numDays || 365}
-            cellSize={12}
-            cellGap={5}
             showMonthLabels={true}
             showDayLabels={true}
             showDescription={true}
@@ -135,25 +135,61 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
         <Text style={styles.sectionTitle}>{t('metric_detail.statistics')}</Text>
 
         <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue} numberOfLines={1}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.colors.statCardBackground },
+            ]}>
+            <Text
+              style={[styles.statValue, { color: theme.colors.text.primary }]}
+              numberOfLines={1}>
               {FormatCompactNumber(stats.average)}
             </Text>
-            <Text style={styles.statLabel}>{t('metric_detail.average')}</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                { color: theme.colors.text.secondary },
+              ]}>
+              {t('metric_detail.average')}
+            </Text>
           </View>
 
-          <View style={styles.statCard}>
-            <Text style={styles.statValue} numberOfLines={1}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.colors.statCardBackground },
+            ]}>
+            <Text
+              style={[styles.statValue, { color: theme.colors.text.primary }]}
+              numberOfLines={1}>
               {FormatCompactNumber(stats.total)}
             </Text>
-            <Text style={styles.statLabel}>{t('metric_detail.total')}</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                { color: theme.colors.text.secondary },
+              ]}>
+              {t('metric_detail.total')}
+            </Text>
           </View>
 
-          <View style={styles.statCard}>
-            <Text style={styles.statValue} numberOfLines={1}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.colors.statCardBackground },
+            ]}>
+            <Text
+              style={[styles.statValue, { color: theme.colors.text.primary }]}
+              numberOfLines={1}>
               {FormatCompactNumber(stats.bestDay)}
             </Text>
-            <Text style={styles.statLabel}>{t('metric_detail.best_day')}</Text>
+            <Text
+              style={[
+                styles.statLabel,
+                { color: theme.colors.text.secondary },
+              ]}>
+              {t('metric_detail.best_day')}
+            </Text>
           </View>
         </View>
       </View>
@@ -202,7 +238,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#F2F2F7',
     alignItems: 'center',
   },
   statValue: {
@@ -215,7 +250,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 13,
-    opacity: 0.6,
     textAlign: 'center',
   },
 });

@@ -8,11 +8,18 @@ import {
 } from 'react-native';
 import { format } from 'date-fns';
 import { HealthDataPoint, MetricUnit } from '@types';
-import { GetColorForValue, FormatNumber } from '@utils';
+import {
+  GetColorForValue,
+  FormatNumber,
+  useAppTheme,
+  DarkenColor,
+} from '@utils';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import { METRIC_UNITS } from '@constants';
 
 const MONTH_LABEL_WIDTH = 24;
+const CELL_SIZE = 12;
+const CELL_GAP = 5;
 
 interface ActivityWallProps {
   dataPoints: HealthDataPoint[];
@@ -20,8 +27,6 @@ interface ActivityWallProps {
   colors: string[];
   numDays?: number;
   onCellPress?: (date: Date, value: number) => void;
-  cellSize?: number;
-  cellGap?: number;
   showMonthLabels?: boolean;
   showDayLabels?: boolean;
   showDescription?: boolean;
@@ -37,12 +42,23 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   colors,
   numDays = 365,
   onCellPress,
-  cellSize = 12,
-  cellGap = 5,
   showMonthLabels = true,
   showDayLabels = true,
   showDescription = true,
 }) => {
+  const theme = useAppTheme();
+
+  // Darken the base color (first color) in dark mode
+  const adjustedColors = useMemo(() => {
+    if (theme.mode === 'dark' && colors.length > 0) {
+      const adjusted = [...colors];
+      // Darken the first color (base color) for dark mode
+      adjusted[0] = DarkenColor(colors[0], 60);
+      return adjusted;
+    }
+    return colors;
+  }, [colors, theme.mode]);
+
   const DAY_LABELS = useMemo(
     () =>
       new Map<number, string>([
@@ -119,14 +135,14 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     if (!containerWidth) {
       return weeks.length;
     }
-    const gridWidth = containerWidth - labelColumnWidth - cellGap;
-    const columnWidth = cellSize + cellGap;
+    const gridWidth = containerWidth - labelColumnWidth - CELL_GAP;
+    const columnWidth = CELL_SIZE + CELL_GAP;
     if (columnWidth <= 0) {
       return weeks.length;
     }
-    const maxColumns = Math.floor((gridWidth + cellGap) / columnWidth);
+    const maxColumns = Math.floor((gridWidth + CELL_GAP) / columnWidth);
     return Math.max(1, Math.min(maxColumns, weeks.length));
-  }, [containerWidth, weeks.length, cellSize, cellGap]);
+  }, [containerWidth, weeks.length]);
 
   const visibleWeeks = useMemo(() => {
     if (weeks.length <= maxWeekColumns) {
@@ -193,29 +209,28 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
 
   const effectiveCellSize = useMemo(() => {
     if (!containerWidth || totalWeeks === 0) {
-      return cellSize;
+      return CELL_SIZE;
     }
+
     const columns = Math.max(visibleWeeks.length, 1);
     const gridWidth =
       containerWidth -
       effectiveLabelColumnWidth -
-      (showDayLabels ? cellGap : 0);
-    const totalGapSpace = Math.max(0, columns - 1) * cellGap;
+      (showDayLabels ? CELL_GAP : 0);
+    const totalGapSpace = Math.max(0, columns - 1) * CELL_GAP;
     const availableForCells = gridWidth - totalGapSpace;
     const autoSize = availableForCells / columns;
-    const clamped = Math.min(Math.max(autoSize, cellSize), 18);
-    return Number.isFinite(clamped) ? clamped : cellSize;
+    const clamped = Math.min(Math.max(autoSize, CELL_SIZE), 18);
+    return Number.isFinite(clamped) ? clamped : CELL_SIZE;
   }, [
     containerWidth,
     totalWeeks,
     visibleWeeks.length,
-    cellSize,
-    cellGap,
     effectiveLabelColumnWidth,
     showDayLabels,
   ]);
 
-  const dayLabelHeight = effectiveCellSize + cellGap;
+  const dayLabelHeight = effectiveCellSize + CELL_GAP;
 
   const effectiveThresholds = useMemo(() => {
     if (!dataPoints.length) return thresholds;
@@ -243,7 +258,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     const data = withinRange ? dataMap.get(dateKey) : null;
     const value = data?.value || 0;
     const backgroundColor = withinRange
-      ? GetColorForValue(value, effectiveThresholds, colors)
+      ? GetColorForValue(value, effectiveThresholds, adjustedColors)
       : 'transparent';
 
     const isSelected =
@@ -259,7 +274,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
       }
     };
 
-    const marginBottom = isLastRow ? 0 : cellGap;
+    const marginBottom = isLastRow ? 0 : CELL_GAP;
     return (
       <TouchableOpacity
         key={`cell-${index}-${dateKey}`}
@@ -272,7 +287,10 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
             marginBottom,
             backgroundColor,
           },
-          isSelected && styles.cellSelected,
+          isSelected && [
+            styles.cellSelected,
+            { borderColor: theme.colors.cellSelectedBorder },
+          ],
         ]}
         onPress={HandlePress}
         disabled={!withinRange}
@@ -305,10 +323,10 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
         <View style={styles.monthRow}>
           <View style={{ width: effectiveLabelColumnWidth }} />
           <View
-            style={[styles.monthLabelsContainer, { marginLeft: cellGap / 2 }]}>
+            style={[styles.monthLabelsContainer, { marginLeft: CELL_GAP / 2 }]}>
             {visibleWeeks.map((_, weekIndex) => {
               const label = visibleMonthLabels.get(weekIndex);
-              const columnWidth = cellSize + cellGap;
+              const columnWidth = CELL_SIZE + CELL_GAP;
               return (
                 <View
                   key={`month-${weekIndex}`}
@@ -327,7 +345,8 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
                         styles.monthLabel,
                         {
                           width: MONTH_LABEL_WIDTH,
-                          marginLeft: cellGap / 2,
+                          marginLeft: CELL_GAP / 2,
+                          color: theme.colors.activityLabel,
                         },
                       ]}>
                       {label}
@@ -346,12 +365,12 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
               styles.dayLabelsColumn,
               {
                 width: labelColumnWidth,
-                marginRight: cellGap,
-                height: dayLabelHeight * 7 - cellGap,
+                marginRight: CELL_GAP,
+                height: dayLabelHeight * 7 - CELL_GAP,
               },
             ]}>
             {Array.from({ length: 7 }).map((_, dayIndex) => {
-              const marginBottom = dayIndex === 6 ? 0 : cellGap;
+              const marginBottom = dayIndex === 6 ? 0 : CELL_GAP;
               return (
                 <View
                   key={`day-${dayIndex}`}
@@ -362,7 +381,11 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
                       marginBottom,
                     },
                   ]}>
-                  <Text style={styles.dayLabel}>
+                  <Text
+                    style={[
+                      styles.dayLabel,
+                      { color: theme.colors.activityLabel },
+                    ]}>
                     {DAY_LABELS.get(dayIndex) || ' '}
                   </Text>
                 </View>
@@ -370,7 +393,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
             })}
           </View>
         )}
-        <View style={[styles.weeksContainer, { gap: cellGap }]}>
+        <View style={[styles.weeksContainer, { gap: CELL_GAP }]}>
           {visibleWeeks.map((week, weekIndex) => (
             <View
               key={`week-${weekIndex}`}
@@ -389,7 +412,11 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
       </View>
       {(showDescription || (selectedDate && selectedData)) && (
         <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionText}>
+          <Text
+            style={[
+              styles.descriptionText,
+              { color: theme.colors.activityLabel },
+            ]}>
             {selectedDate && selectedData
               ? `${formatValue(selectedData.value, selectedData.unit)} on ${formatSelectedDate(selectedDate)}`
               : (() => {
@@ -435,7 +462,6 @@ const styles = StyleSheet.create({
   },
   monthLabel: {
     fontSize: 10,
-    color: '#8E8E93',
   },
   monthLabelWrapper: {
     alignItems: 'flex-start',
@@ -451,7 +477,6 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 10,
-    color: '#8E8E93',
   },
   dayLabelWrapper: {
     justifyContent: 'center',
@@ -461,7 +486,6 @@ const styles = StyleSheet.create({
   },
   cellSelected: {
     borderWidth: 2,
-    borderColor: '#F4C430',
   },
   descriptionContainer: {
     marginTop: 12,
@@ -471,6 +495,5 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 12,
-    color: '#8E8E93',
   },
 });

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '@utils';
 import { MetricCard, LoadingSpinner, ErrorMessage } from '@components/common';
 import { LoadHealthData, LoadUserPreferences } from '@services/storage';
 import { SyncAllMetrics } from '@services/sync';
@@ -23,6 +24,7 @@ interface HomeScreenProps {
  */
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
   const [loadingState, setLoadingState] = useState<LoadingState>(
     LoadingState.LOADING
   );
@@ -84,11 +86,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
     preferences?.metricConfigs &&
     Object.values(preferences.metricConfigs).filter(config => config.enabled);
 
+  const isDarkMode = theme.mode === 'dark';
+  const backgroundColor = isDarkMode ? '#000000' : theme.colors.background;
+  const titleColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
+  const secondaryTextColor = isDarkMode
+    ? '#8E8E93'
+    : theme.colors.text.secondary;
+  const cardBackground = isDarkMode ? '#1C1C1E' : undefined;
+  const cardTextColor = isDarkMode ? '#FFFFFF' : undefined;
+  const cardSecondaryTextColor = isDarkMode ? '#8E8E93' : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
-        <Text h3>{t('home.title')}</Text>
-        <Text style={styles.lastSync}>
+        <Text h3 style={{ color: titleColor }}>
+          {t('home.title')}
+        </Text>
+        <Text style={[styles.lastSync, { color: secondaryTextColor }]}>
           {lastSyncText && t('home.last_sync', { time: lastSyncText })}
         </Text>
       </View>
@@ -111,12 +125,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
                 dataPoints={dataPoints}
                 onPress={() => onMetricPress(config.metricType)}
                 showMiniWall={true}
+                cardBackgroundColor={cardBackground}
+                textColor={cardTextColor}
+                secondaryTextColor={cardSecondaryTextColor}
               />
             );
           })
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>{t('home.no_data')}</Text>
+            <Text style={[styles.emptyText, { color: secondaryTextColor }]}>
+              {t('home.no_data')}
+            </Text>
             <Button
               title={t('home.sync_now')}
               onPress={HandleSync}
@@ -139,7 +158,6 @@ const styles = StyleSheet.create({
   },
   lastSync: {
     fontSize: 14,
-    opacity: 0.6,
     marginTop: 4,
   },
   scrollView: {
@@ -159,7 +177,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 16,
-    opacity: 0.6,
   },
   syncButton: {
     width: 200,

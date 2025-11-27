@@ -3,12 +3,14 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { ListItem, Switch, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { LoadUserPreferences, SaveUserPreferences } from '@services/storage';
-import { UserPreferences, MetricType } from '@types';
+import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION } from '@constants';
 import { LoadingSpinner } from '@components/common';
+import { useAppTheme } from '@utils';
 
 interface SettingsScreenProps {
   onMetricConfigPress: (metricType: MetricType) => void;
+  onThemePreferenceChange?: (preference: ThemePreference) => void;
 }
 
 /**
@@ -17,8 +19,10 @@ interface SettingsScreenProps {
  */
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onMetricConfigPress,
+  onThemePreferenceChange,
 }) => {
   const { t, i18n } = useTranslation();
+  const theme = useAppTheme();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,19 +73,54 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     await SaveUserPreferences(updatedPreferences);
   };
 
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
+  const HandleThemePreferenceChange = async (newPreference: ThemePreference) => {
+    if (!preferences) return;
+
+    const updatedPreferences = {
+      ...preferences,
+      theme: newPreference,
+    };
+
+    setPreferences(updatedPreferences);
+    await SaveUserPreferences(updatedPreferences);
+    
+    if (onThemePreferenceChange) {
+      onThemePreferenceChange(newPreference);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.header}>
+        <Text
+          h3
+          style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
+          {t('settings.title')}
+        </Text>
+      </View>
+
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.metrics')}</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: theme.colors.text.secondary },
+          ]}>
+          {t('settings.metrics')}
+        </Text>
         {preferences &&
           Object.values(preferences.metricConfigs).map(config => (
             <ListItem key={config.metricType} bottomDivider>
               <ListItem.Content>
-                <ListItem.Title>{config.displayName}</ListItem.Title>
+                <ListItem.Title
+                  style={{ color: theme.colors.text.primary }}>
+                  {config.displayName}
+                </ListItem.Title>
               </ListItem.Content>
               <Switch
                 value={config.enabled}
@@ -95,18 +134,66 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.appearance')}</Text>
-        <ListItem bottomDivider>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: theme.colors.text.secondary },
+          ]}>
+          {t('settings.appearance')}
+        </Text>
+        <ListItem
+          onPress={() => HandleThemePreferenceChange('system')}
+          bottomDivider>
           <ListItem.Content>
-            <ListItem.Title>{t('settings.language')}</ListItem.Title>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.theme_system')}
+            </ListItem.Title>
           </ListItem.Content>
-          <ListItem.Chevron />
+          {preferences?.theme === 'system' && (
+            <ListItem.CheckBox checked={true} />
+          )}
         </ListItem>
+        <ListItem
+          onPress={() => HandleThemePreferenceChange('light')}
+          bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.theme_light')}
+            </ListItem.Title>
+          </ListItem.Content>
+          {preferences?.theme === 'light' && (
+            <ListItem.CheckBox checked={true} />
+          )}
+        </ListItem>
+        <ListItem
+          onPress={() => HandleThemePreferenceChange('dark')}
+          bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.theme_dark')}
+            </ListItem.Title>
+          </ListItem.Content>
+          {preferences?.theme === 'dark' && (
+            <ListItem.CheckBox checked={true} />
+          )}
+        </ListItem>
+      </View>
+
+      <View style={styles.section}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: theme.colors.text.secondary },
+          ]}>
+          {t('settings.language')}
+        </Text>
         <ListItem
           onPress={() => HandleChangeLanguage('en')}
           bottomDivider>
           <ListItem.Content>
-            <ListItem.Title>English</ListItem.Title>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              English
+            </ListItem.Title>
           </ListItem.Content>
           {preferences?.language === 'en' && (
             <ListItem.CheckBox checked={true} />
@@ -116,7 +203,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           onPress={() => HandleChangeLanguage('es')}
           bottomDivider>
           <ListItem.Content>
-            <ListItem.Title>Español</ListItem.Title>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              Español
+            </ListItem.Title>
           </ListItem.Content>
           {preferences?.language === 'es' && (
             <ListItem.CheckBox checked={true} />
@@ -125,11 +214,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.sync')}</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: theme.colors.text.secondary },
+          ]}>
+          {t('settings.sync')}
+        </Text>
         <ListItem bottomDivider>
           <ListItem.Content>
-            <ListItem.Title>{t('settings.sync_strategy')}</ListItem.Title>
-            <ListItem.Subtitle>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.sync_strategy')}
+            </ListItem.Title>
+            <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
               {preferences?.syncConfig.strategy}
             </ListItem.Subtitle>
           </ListItem.Content>
@@ -137,8 +234,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {preferences?.syncConfig.periodicIntervalMinutes && (
           <ListItem bottomDivider>
             <ListItem.Content>
-              <ListItem.Title>{t('settings.sync_interval')}</ListItem.Title>
-              <ListItem.Subtitle>
+              <ListItem.Title style={{ color: theme.colors.text.primary }}>
+                {t('settings.sync_interval')}
+              </ListItem.Title>
+              <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
                 {t('settings.periodic_sync', {
                   interval: preferences.syncConfig.periodicIntervalMinutes / 60,
                 })}
@@ -149,10 +248,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: theme.colors.text.secondary },
+          ]}>
+          {t('settings.about')}
+        </Text>
         <ListItem bottomDivider>
           <ListItem.Content>
-            <ListItem.Title>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
               {t('settings.version', { version: APP_VERSION })}
             </ListItem.Title>
           </ListItem.Content>
@@ -166,6 +271,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingTop: 20,
+  },
+  headerTitle: {
+    flex: 1,
+  },
   section: {
     marginBottom: 24,
   },
@@ -175,7 +288,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    opacity: 0.6,
   },
 });
 

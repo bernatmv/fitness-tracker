@@ -91,7 +91,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     try {
       setIsSaving(true);
       const prefs = await LoadUserPreferences();
-      
+
       if (prefs) {
         const updatedPrefs = {
           ...prefs,
@@ -127,9 +127,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {t('configuration.preview')}
-        </Text>
+        <Text style={styles.sectionTitle}>{t('configuration.preview')}</Text>
         {metricData && metricData.dataPoints.length > 0 && (
           <View style={styles.previewContainer}>
             <ActivityWall
@@ -137,8 +135,6 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
               thresholds={config.colorRange.thresholds}
               colors={config.colorRange.colors}
               numDays={30}
-              cellSize={10}
-              cellGap={2}
             />
           </View>
         )}
@@ -150,7 +146,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         </Text>
         {config.colorRange.thresholds.map((threshold, index) => {
           if (threshold === Infinity) return null;
-          
+
           return (
             <View key={index} style={styles.thresholdRow}>
               <Text style={styles.thresholdLabel}>
@@ -159,7 +155,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
               <TextInput
                 style={styles.thresholdInput}
                 value={threshold.toString()}
-                onChangeText={(value) => HandleThresholdChange(index, value)}
+                onChangeText={value => HandleThresholdChange(index, value)}
                 keyboardType="numeric"
               />
             </View>
@@ -174,9 +170,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         <View style={styles.colorGrid}>
           {config.colorRange.colors.map((color, index) => (
             <View key={index} style={styles.colorItem}>
-              <View
-                style={[styles.colorPreview, { backgroundColor: color }]}
-              />
+              <View style={[styles.colorPreview, { backgroundColor: color }]} />
               <Text style={styles.colorText}>{color}</Text>
             </View>
           ))}
@@ -265,4 +259,3 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 });
-
