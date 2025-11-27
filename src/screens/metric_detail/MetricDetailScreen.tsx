@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Button, Text, ButtonGroup } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
@@ -31,16 +31,11 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const [numDays, setNumDays] = useState<number | null>(30);
 
   const dateRangeOptions: (number | null)[] = [7, 30, 90, 365, null];
-  const dateRangeLabels = [
-    t('metric_detail.days_7'),
-    t('metric_detail.days_30'),
-    t('metric_detail.days_90'),
-    t('metric_detail.months_12'),
-    t('metric_detail.all'),
-  ];
+  const dateRangeLabels = ['7D', '30D', '90D', '12M', 'All'];
 
   useEffect(() => {
     LoadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metricType]);
 
   const LoadData = async () => {
@@ -88,6 +83,36 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
     return { average, total, bestDay };
   };
 
+  const isDarkMode = theme.mode === 'dark';
+  const backgroundColor = isDarkMode ? '#000000' : theme.colors.background;
+  const titleColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
+  const secondaryTextColor = isDarkMode
+    ? '#8E8E93'
+    : theme.colors.text.secondary;
+  const statCardBackground = isDarkMode
+    ? '#1C1C1E'
+    : theme.colors.statCardBackground;
+
+  const buttonGroupStyles = useMemo(
+    () => ({
+      container: {
+        backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+        borderRadius: 8,
+        borderWidth: 0,
+      },
+      selectedButton: {
+        backgroundColor: isDarkMode ? '#2C2C2E' : '#E5E5EA',
+      },
+      buttonText: {
+        color: isDarkMode ? '#8E8E93' : '#3C3C43',
+      },
+      selectedButtonText: {
+        color: isDarkMode ? '#FFFFFF' : '#000000',
+      },
+    }),
+    [isDarkMode]
+  );
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -96,9 +121,11 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const dataPoints = metricData?.dataPoints || [];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
-        <Text h3>{config?.displayName || metricType}</Text>
+        <Text h3 style={{ color: titleColor }}>
+          {config?.displayName || metricType}
+        </Text>
         <Button
           title={t('metric_detail.configure')}
           onPress={onConfigurePress}
@@ -108,12 +135,25 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
       </View>
 
       <View style={styles.rangeSelector}>
-        <Text style={styles.sectionTitle}>{t('metric_detail.view_range')}</Text>
+        <Text style={[styles.sectionTitle, { color: titleColor }]}>
+          {t('metric_detail.view_range')}
+        </Text>
         <ButtonGroup
           buttons={dateRangeLabels}
           selectedIndex={selectedIndex}
           onPress={HandleDateRangeChange}
-          containerStyle={styles.buttonGroup}
+          containerStyle={[styles.buttonGroup, buttonGroupStyles.container]}
+          selectedButtonStyle={[
+            styles.selectedButton,
+            buttonGroupStyles.selectedButton,
+          ]}
+          buttonStyle={styles.button}
+          textStyle={[styles.buttonText, buttonGroupStyles.buttonText]}
+          selectedTextStyle={[
+            styles.selectedButtonText,
+            buttonGroupStyles.selectedButtonText,
+          ]}
+          innerBorderStyle={styles.innerBorder}
         />
       </View>
 
@@ -132,62 +172,43 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
       )}
 
       <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>{t('metric_detail.statistics')}</Text>
+        <Text style={[styles.sectionTitle, { color: titleColor }]}>
+          {t('metric_detail.statistics')}
+        </Text>
 
         <View style={styles.statsGrid}>
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.colors.statCardBackground },
-            ]}>
+            style={[styles.statCard, { backgroundColor: statCardBackground }]}>
             <Text
-              style={[styles.statValue, { color: theme.colors.text.primary }]}
+              style={[styles.statValue, { color: titleColor }]}
               numberOfLines={1}>
               {FormatCompactNumber(stats.average)}
             </Text>
-            <Text
-              style={[
-                styles.statLabel,
-                { color: theme.colors.text.secondary },
-              ]}>
+            <Text style={[styles.statLabel, { color: secondaryTextColor }]}>
               {t('metric_detail.average')}
             </Text>
           </View>
 
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.colors.statCardBackground },
-            ]}>
+            style={[styles.statCard, { backgroundColor: statCardBackground }]}>
             <Text
-              style={[styles.statValue, { color: theme.colors.text.primary }]}
+              style={[styles.statValue, { color: titleColor }]}
               numberOfLines={1}>
               {FormatCompactNumber(stats.total)}
             </Text>
-            <Text
-              style={[
-                styles.statLabel,
-                { color: theme.colors.text.secondary },
-              ]}>
+            <Text style={[styles.statLabel, { color: secondaryTextColor }]}>
               {t('metric_detail.total')}
             </Text>
           </View>
 
           <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.colors.statCardBackground },
-            ]}>
+            style={[styles.statCard, { backgroundColor: statCardBackground }]}>
             <Text
-              style={[styles.statValue, { color: theme.colors.text.primary }]}
+              style={[styles.statValue, { color: titleColor }]}
               numberOfLines={1}>
               {FormatCompactNumber(stats.bestDay)}
             </Text>
-            <Text
-              style={[
-                styles.statLabel,
-                { color: theme.colors.text.secondary },
-              ]}>
+            <Text style={[styles.statLabel, { color: secondaryTextColor }]}>
               {t('metric_detail.best_day')}
             </Text>
           </View>
@@ -221,6 +242,26 @@ const styles = StyleSheet.create({
   },
   buttonGroup: {
     marginBottom: 0,
+  },
+  selectedButton: {
+    borderRadius: 6,
+  },
+  button: {
+    backgroundColor: 'transparent',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    minHeight: 32,
+  },
+  buttonText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  selectedButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  innerBorder: {
+    width: 0,
   },
   activityWallContainer: {
     padding: 16,

@@ -54,7 +54,12 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         options={{
           title: t('home.title'),
           tabBarIcon: ({ color, size }) => (
-            <Icon name="fitness-center" type="material" color={color} size={size} />
+            <Icon
+              name="fitness-center"
+              type="material"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -82,7 +87,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
 const HomeScreenWrapper = ({ navigation }: { navigation: any }) => {
   return (
     <HomeScreen
-      onMetricPress={(metricType) =>
+      onMetricPress={metricType =>
         navigation.navigate('MetricDetail', { metricType })
       }
     />
@@ -100,7 +105,7 @@ const SettingsScreenWrapper: React.FC<SettingsScreenWrapperProps> = ({
 }) => {
   return (
     <SettingsScreen
-      onMetricConfigPress={(metricType) =>
+      onMetricConfigPress={metricType =>
         navigation.navigate('MetricConfig', { metricType })
       }
       onThemePreferenceChange={onThemePreferenceChange}
@@ -119,16 +124,24 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
   onThemePreferenceChange,
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
+
+  const isDarkMode = theme.mode === 'dark';
 
   return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="MainTabs"
-        options={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: isDarkMode ? '#000000' : theme.colors.background,
+        },
+        headerTintColor: isDarkMode ? '#FFFFFF' : theme.colors.text.primary,
+        headerTitleStyle: {
+          color: isDarkMode ? '#FFFFFF' : theme.colors.text.primary,
+        },
+      }}>
+      <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
         {() => (
-          <MainTabNavigator
-            onThemePreferenceChange={onThemePreferenceChange}
-          />
+          <MainTabNavigator onThemePreferenceChange={onThemePreferenceChange} />
         )}
       </Stack.Screen>
       <Stack.Screen
@@ -149,9 +162,15 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
   );
 };
 
-const MetricDetailScreenWrapper = ({ route, navigation }: { route: any; navigation: any }) => {
+const MetricDetailScreenWrapper = ({
+  route,
+  navigation,
+}: {
+  route: any;
+  navigation: any;
+}) => {
   const { metricType } = route.params;
-  
+
   return (
     <MetricDetailScreen
       metricType={metricType}
@@ -165,9 +184,15 @@ const MetricDetailScreenWrapper = ({ route, navigation }: { route: any; navigati
 /**
  * Metric configuration screen wrapper
  */
-const MetricConfigScreenWrapper = ({ route, navigation }: { route: any; navigation: any }) => {
+const MetricConfigScreenWrapper = ({
+  route,
+  navigation,
+}: {
+  route: any;
+  navigation: any;
+}) => {
   const { metricType } = route.params;
-  
+
   return (
     <MetricConfigScreen
       metricType={metricType}
@@ -175,4 +200,3 @@ const MetricConfigScreenWrapper = ({ route, navigation }: { route: any; navigati
     />
   );
 };
-

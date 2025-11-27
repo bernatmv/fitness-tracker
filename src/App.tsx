@@ -6,10 +6,7 @@ import './locales/i18n';
 import { AppNavigator } from './navigation/AppNavigator';
 import { OnboardingScreen } from './screens/onboarding';
 import { LoadingSpinner } from './components/common';
-import {
-  LoadUserPreferences,
-  SaveUserPreferences,
-} from './services/storage';
+import { LoadUserPreferences, SaveUserPreferences } from './services/storage';
 import { GetTheme, DEFAULT_THEME_PREFERENCE } from './utils';
 import type { ThemePreference } from './types';
 
@@ -19,11 +16,12 @@ import type { ThemePreference } from './types';
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [themePreference, setThemePreference] =
-    useState<ThemePreference>(DEFAULT_THEME_PREFERENCE);
-  const [systemColorScheme, setSystemColorScheme] = useState<
-    'light' | 'dark'
-  >(() => (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light'));
+  const [themePreference, setThemePreference] = useState<ThemePreference>(
+    DEFAULT_THEME_PREFERENCE
+  );
+  const [systemColorScheme, setSystemColorScheme] = useState<'light' | 'dark'>(
+    () => (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light')
+  );
 
   useEffect(() => {
     CheckOnboardingStatus();
@@ -81,10 +79,17 @@ const App = () => {
     currentTheme.mode === 'dark' ? 'light-content' : 'dark-content';
 
   if (isLoading) {
+    const loadingTheme = GetTheme(DEFAULT_THEME_PREFERENCE);
     return (
-      <SafeAreaView style={styles.container}>
-        <LoadingSpinner />
-      </SafeAreaView>
+      <ThemeProvider theme={loadingTheme}>
+        <SafeAreaView
+          style={[
+            styles.container,
+            { backgroundColor: loadingTheme.colors.background },
+          ]}>
+          <LoadingSpinner />
+        </SafeAreaView>
+      </ThemeProvider>
     );
   }
 
@@ -112,9 +117,7 @@ const App = () => {
         ]}>
         <StatusBar barStyle={statusBarStyle} />
         <NavigationContainer>
-          <AppNavigator
-            onThemePreferenceChange={HandleThemePreferenceChange}
-          />
+          <AppNavigator onThemePreferenceChange={HandleThemePreferenceChange} />
         </NavigationContainer>
       </SafeAreaView>
     </ThemeProvider>
@@ -128,4 +131,3 @@ const styles = StyleSheet.create({
 });
 
 export default App;
-

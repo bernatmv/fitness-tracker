@@ -63,7 +63,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     if (!preferences) return;
 
     await i18n.changeLanguage(languageCode);
-    
+
     const updatedPreferences = {
       ...preferences,
       language: languageCode,
@@ -73,12 +73,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     await SaveUserPreferences(updatedPreferences);
   };
 
-
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  const HandleThemePreferenceChange = async (newPreference: ThemePreference) => {
+  const HandleThemePreferenceChange = async (
+    newPreference: ThemePreference
+  ) => {
     if (!preferences) return;
 
     const updatedPreferences = {
@@ -88,7 +89,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
     setPreferences(updatedPreferences);
     await SaveUserPreferences(updatedPreferences);
-    
+
     if (onThemePreferenceChange) {
       onThemePreferenceChange(newPreference);
     }
@@ -107,18 +108,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       <View style={styles.section}>
         <Text
-          style={[
-            styles.sectionTitle,
-            { color: theme.colors.text.secondary },
-          ]}>
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.metrics')}
         </Text>
         {preferences &&
           Object.values(preferences.metricConfigs).map(config => (
             <ListItem key={config.metricType} bottomDivider>
               <ListItem.Content>
-                <ListItem.Title
-                  style={{ color: theme.colors.text.primary }}>
+                <ListItem.Title style={{ color: theme.colors.text.primary }}>
                   {config.displayName}
                 </ListItem.Title>
               </ListItem.Content>
@@ -135,10 +132,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       <View style={styles.section}>
         <Text
-          style={[
-            styles.sectionTitle,
-            { color: theme.colors.text.secondary },
-          ]}>
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.appearance')}
         </Text>
         <ListItem
@@ -149,9 +143,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.theme_system')}
             </ListItem.Title>
           </ListItem.Content>
-          {preferences?.theme === 'system' && (
-            <ListItem.CheckBox checked={true} />
-          )}
+          <ListItem.CheckBox checked={preferences?.theme === 'system'} />
         </ListItem>
         <ListItem
           onPress={() => HandleThemePreferenceChange('light')}
@@ -161,9 +153,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.theme_light')}
             </ListItem.Title>
           </ListItem.Content>
-          {preferences?.theme === 'light' && (
-            <ListItem.CheckBox checked={true} />
-          )}
+          <ListItem.CheckBox checked={preferences?.theme === 'light'} />
         </ListItem>
         <ListItem
           onPress={() => HandleThemePreferenceChange('dark')}
@@ -173,52 +163,36 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.theme_dark')}
             </ListItem.Title>
           </ListItem.Content>
-          {preferences?.theme === 'dark' && (
-            <ListItem.CheckBox checked={true} />
-          )}
+          <ListItem.CheckBox checked={preferences?.theme === 'dark'} />
         </ListItem>
       </View>
 
       <View style={styles.section}>
         <Text
-          style={[
-            styles.sectionTitle,
-            { color: theme.colors.text.secondary },
-          ]}>
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.language')}
         </Text>
-        <ListItem
-          onPress={() => HandleChangeLanguage('en')}
-          bottomDivider>
+        <ListItem onPress={() => HandleChangeLanguage('en')} bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               English
             </ListItem.Title>
           </ListItem.Content>
-          {preferences?.language === 'en' && (
-            <ListItem.CheckBox checked={true} />
-          )}
+          <ListItem.CheckBox checked={preferences?.language === 'en'} />
         </ListItem>
-        <ListItem
-          onPress={() => HandleChangeLanguage('es')}
-          bottomDivider>
+        <ListItem onPress={() => HandleChangeLanguage('es')} bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               Español
             </ListItem.Title>
           </ListItem.Content>
-          {preferences?.language === 'es' && (
-            <ListItem.CheckBox checked={true} />
-          )}
+          <ListItem.CheckBox checked={preferences?.language === 'es'} />
         </ListItem>
       </View>
 
       <View style={styles.section}>
         <Text
-          style={[
-            styles.sectionTitle,
-            { color: theme.colors.text.secondary },
-          ]}>
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.sync')}
         </Text>
         <ListItem bottomDivider>
@@ -249,10 +223,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       <View style={styles.section}>
         <Text
-          style={[
-            styles.sectionTitle,
-            { color: theme.colors.text.secondary },
-          ]}>
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.about')}
         </Text>
         <ListItem bottomDivider>
@@ -290,4 +261,3 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 });
-

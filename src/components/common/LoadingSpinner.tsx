@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useAppTheme } from '@utils';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -17,10 +18,14 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'large',
 }) => {
   const { t } = useTranslation();
+  const theme = useAppTheme();
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size={size} />
+      <ActivityIndicator
+        size={size}
+        color={theme.mode === 'dark' ? '#FFFFFF' : theme.colors.primary}
+      />
       {message && (
         <Text style={styles.message}>{message || t('common.loading')}</Text>
       )}
@@ -41,4 +46,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

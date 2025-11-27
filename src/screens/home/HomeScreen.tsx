@@ -111,7 +111,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={HandleSync} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={HandleSync}
+            tintColor={isDarkMode ? '#FFFFFF' : undefined}
+            colors={isDarkMode ? undefined : [theme.colors.primary]}
+          />
         }>
         {enabledMetrics && enabledMetrics.length > 0 ? (
           enabledMetrics.map(config => {
