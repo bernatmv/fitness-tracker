@@ -74,10 +74,11 @@
     "current_streak": "Racha Actual",
     "days": "{{count}} días",
     "view_range": "Rango de Vista",
-    "last_7_days": "Últimos 7 Días",
-    "last_30_days": "Últimos 30 Días",
-    "last_90_days": "Últimos 90 Días",
-    "last_year": "Último Año"
+    "days_7": "7 días",
+    "days_30": "30 días",
+    "days_90": "90 días",
+    "months_12": "12 meses",
+    "all": "Todo"
   },
   "configuration": {
     "title": "Configurar {{metric}}",

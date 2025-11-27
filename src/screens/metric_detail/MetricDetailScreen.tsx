@@ -6,7 +6,7 @@ import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
 import { LoadMetricData, LoadUserPreferences } from '@services/storage';
 import { MetricType, HealthMetricData, MetricConfig } from '@types';
-import { GetDateRange, FormatNumber } from '@utils';
+import { GetDateRange, FormatCompactNumber } from '@utils';
 
 interface MetricDetailScreenProps {
   metricType: MetricType;
@@ -26,14 +26,15 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const [config, setConfig] = useState<MetricConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(1); // Default to 30 days
-  const [numDays, setNumDays] = useState(30);
+  const [numDays, setNumDays] = useState<number | null>(30);
 
-  const dateRangeOptions = [7, 30, 90, 365];
+  const dateRangeOptions: (number | null)[] = [7, 30, 90, 365, null];
   const dateRangeLabels = [
-    t('metric_detail.last_7_days'),
-    t('metric_detail.last_30_days'),
-    t('metric_detail.last_90_days'),
-    t('metric_detail.last_year'),
+    t('metric_detail.days_7'),
+    t('metric_detail.days_30'),
+    t('metric_detail.days_90'),
+    t('metric_detail.months_12'),
+    t('metric_detail.all'),
   ];
 
   useEffect(() => {
@@ -59,7 +60,8 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
   const HandleDateRangeChange = (index: number) => {
     setSelectedIndex(index);
-    setNumDays(dateRangeOptions[index]);
+    const selectedOption = dateRangeOptions[index];
+    setNumDays(selectedOption);
   };
 
   const CalculateStatistics = () => {
@@ -67,8 +69,11 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
       return { average: 0, total: 0, bestDay: 0 };
     }
 
-    const { start } = GetDateRange(numDays);
-    const relevantPoints = metricData.dataPoints.filter(dp => dp.date >= start);
+    let relevantPoints = metricData.dataPoints;
+    if (numDays !== null) {
+      const { start } = GetDateRange(numDays);
+      relevantPoints = relevantPoints.filter(dp => dp.date >= start);
+    }
 
     if (relevantPoints.length === 0) {
       return { average: 0, total: 0, bestDay: 0 };
@@ -116,9 +121,12 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
             dataPoints={dataPoints}
             thresholds={config.colorRange.thresholds}
             colors={config.colorRange.colors}
-            numDays={numDays}
-            cellSize={10}
-            cellGap={2}
+            numDays={numDays || 365}
+            cellSize={12}
+            cellGap={5}
+            showMonthLabels={true}
+            showDayLabels={true}
+            showDescription={true}
           />
         </View>
       )}
@@ -128,20 +136,22 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>
-              {FormatNumber(stats.average, 0)}
+            <Text style={styles.statValue} numberOfLines={1}>
+              {FormatCompactNumber(stats.average)}
             </Text>
             <Text style={styles.statLabel}>{t('metric_detail.average')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{FormatNumber(stats.total, 0)}</Text>
+            <Text style={styles.statValue} numberOfLines={1}>
+              {FormatCompactNumber(stats.total)}
+            </Text>
             <Text style={styles.statLabel}>{t('metric_detail.total')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>
-              {FormatNumber(stats.bestDay, 0)}
+            <Text style={styles.statValue} numberOfLines={1}>
+              {FormatCompactNumber(stats.bestDay)}
             </Text>
             <Text style={styles.statLabel}>{t('metric_detail.best_day')}</Text>
           </View>
@@ -199,6 +209,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 4,
+    textAlign: 'center',
+    minWidth: 0,
+    flexShrink: 1,
   },
   statLabel: {
     fontSize: 13,

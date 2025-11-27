@@ -87,6 +87,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             dataPoints={dataPoints}
             thresholds={config.colorRange.thresholds}
             colors={config.colorRange.colors}
+            showMonthLabels={false}
+            showDayLabels={false}
+            showDescription={false}
           />
         </View>
       )}
@@ -103,6 +106,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    backgroundColor: '#FAFAFA',
+    borderWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   header: {
     flexDirection: 'row',
