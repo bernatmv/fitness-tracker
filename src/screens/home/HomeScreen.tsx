@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '@utils';
 import { MetricCard, LoadingSpinner, ErrorMessage } from '@components/common';
 import { LoadHealthData, LoadUserPreferences } from '@services/storage';
@@ -71,6 +72,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   useEffect(() => {
     LoadData();
   }, [LoadData]);
+
+  // Reload preferences when screen comes into focus (e.g., returning from Settings)
+  useFocusEffect(
+    useCallback(() => {
+      const ReloadPreferences = async () => {
+        try {
+          const prefs = await LoadUserPreferences();
+          if (prefs) {
+            setPreferences(prefs);
+          }
+        } catch (error) {
+          console.error('Error reloading preferences:', error);
+        }
+      };
+      ReloadPreferences();
+    }, [])
+  );
 
   if (loadingState === LoadingState.LOADING) {
     return <LoadingSpinner message={t('common.loading')} />;

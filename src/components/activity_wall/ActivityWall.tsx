@@ -7,6 +7,7 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { HealthDataPoint, MetricUnit } from '@types';
 import {
   GetColorForValue,
@@ -31,6 +32,7 @@ interface ActivityWallProps {
   showDayLabels?: boolean;
   showDescription?: boolean;
   enableMultiRowLayout?: boolean;
+  splitByYear?: boolean;
 }
 
 /**
@@ -47,7 +49,9 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   showDayLabels = true,
   showDescription = true,
   enableMultiRowLayout = false,
+  splitByYear = false,
 }) => {
+  const { t } = useTranslation();
   const theme = useAppTheme();
 
   // Darken the base color (first color) in dark mode
@@ -155,40 +159,162 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     return Math.max(1, maxColumns);
   }, [containerWidth, showDayLabels, weeks.length]);
 
+  // Structure to hold row data with optional year label
+  interface RowData {
+    weeks: (Date | null)[][]; // Weeks can contain null dates for proper weekday alignment
+    year?: number; // Year label to show before this row
+    isLastRowOfYear?: boolean; // Whether this is the last row for its year (for right alignment)
+  }
+
   // Split weeks into multiple rows (if enabled) or show only recent weeks (old behavior)
-  const weekRows = useMemo(() => {
+  const weekRowsData = useMemo(() => {
     if (enableMultiRowLayout) {
-      // Multi-row: start from newest weeks, fill first row completely, then distribute rest
-      const rows: Date[][][] = [];
-      let remainingWeeks = [...weeks];
+      if (splitByYear) {
+        // Split by year: split weeks at year boundaries and group by year
+        const rowsData: RowData[] = [];
+        const yearGroups: Map<number, (Date | null)[][]> = new Map();
 
-      // Build rows from newest to oldest
-      // First row: take as many weeks as possible (up to maxWeekColumns) from the end
-      if (remainingWeeks.length > 0) {
-        const firstRowSize = Math.min(maxWeekColumns, remainingWeeks.length);
-        rows.unshift(remainingWeeks.slice(-firstRowSize));
-        remainingWeeks = remainingWeeks.slice(0, -firstRowSize);
+        // Split weeks at year boundaries and group by year
+        weeks.forEach(week => {
+          if (week.length === 0) return;
+
+          // Check if week spans multiple years
+          const firstYear = week[0].getFullYear();
+          const lastYear = week[week.length - 1].getFullYear();
+
+          if (firstYear === lastYear) {
+            // Week is entirely within one year
+            if (!yearGroups.has(firstYear)) {
+              yearGroups.set(firstYear, []);
+            }
+            yearGroups.get(firstYear)!.push(week);
+          } else {
+            // Week spans year boundary - split it while maintaining weekday alignment
+            // Create padded arrays of 7 elements (null for missing days)
+            const firstYearWeek: (Date | null)[] = new Array(7).fill(null);
+            const secondYearWeek: (Date | null)[] = new Array(7).fill(null);
+
+            week.forEach((date, dayIndex) => {
+              if (date.getFullYear() === firstYear) {
+                firstYearWeek[dayIndex] = date;
+              } else {
+                secondYearWeek[dayIndex] = date;
+              }
+            });
+
+            // Convert to Date[][] format (filter out nulls but maintain structure)
+            // For the first year part, keep the array with nulls for proper alignment
+            const firstYearDates: (Date | null)[] = firstYearWeek;
+            // For the second year part, keep the array with nulls for proper alignment
+            const secondYearDates: (Date | null)[] = secondYearWeek;
+
+            // Add first year part if it has any dates
+            if (firstYearDates.some(d => d !== null)) {
+              if (!yearGroups.has(firstYear)) {
+                yearGroups.set(firstYear, []);
+              }
+              // Keep nulls for proper weekday alignment in rendering
+              yearGroups
+                .get(firstYear)!
+                .push(firstYearDates as (Date | null)[]);
+            }
+
+            // Add second year part if it has any dates
+            if (secondYearDates.some(d => d !== null)) {
+              if (!yearGroups.has(lastYear)) {
+                yearGroups.set(lastYear, []);
+              }
+              // Keep nulls for proper weekday alignment in rendering
+              yearGroups
+                .get(lastYear)!
+                .push(secondYearDates as (Date | null)[]);
+            }
+          }
+        });
+
+        // Process years from newest to oldest
+        const sortedYears = Array.from(yearGroups.keys()).sort((a, b) => b - a);
+
+        sortedYears.forEach((year, yearIndex) => {
+          const yearWeeks = yearGroups.get(year)!;
+          let remainingYearWeeks = [...yearWeeks];
+          const isNewestYear = yearIndex === 0;
+
+          // First row of the year: take as many weeks as possible (up to maxWeekColumns)
+          if (remainingYearWeeks.length > 0) {
+            const firstRowSize = Math.min(
+              maxWeekColumns,
+              remainingYearWeeks.length
+            );
+            const isLastRow = remainingYearWeeks.length <= maxWeekColumns;
+            rowsData.unshift({
+              weeks: remainingYearWeeks.slice(-firstRowSize),
+              // Show year label before first row of each year (except the newest)
+              year: isNewestYear ? undefined : year,
+              // Mark as last row of year if it's the only row or the last one
+              isLastRowOfYear: isLastRow,
+            });
+            remainingYearWeeks = remainingYearWeeks.slice(0, -firstRowSize);
+          }
+
+          // Remaining rows for this year
+          while (remainingYearWeeks.length > 0) {
+            const rowSize = Math.min(maxWeekColumns, remainingYearWeeks.length);
+            const isLastRow = remainingYearWeeks.length <= rowSize;
+            rowsData.unshift({
+              weeks: remainingYearWeeks.slice(-rowSize),
+              isLastRowOfYear: isLastRow,
+            });
+            remainingYearWeeks = remainingYearWeeks.slice(0, -rowSize);
+          }
+        });
+
+        // rowsData is now [oldest rows, ..., newest row]
+        // Reverse so newest is first (top row)
+        return rowsData.reverse();
+      } else {
+        // Multi-row: start from newest weeks, fill first row completely, then distribute rest
+        const rowsData: RowData[] = [];
+        let remainingWeeks = [...weeks];
+
+        // Build rows from newest to oldest
+        // First row: take as many weeks as possible (up to maxWeekColumns) from the end
+        if (remainingWeeks.length > 0) {
+          const firstRowSize = Math.min(maxWeekColumns, remainingWeeks.length);
+          rowsData.unshift({
+            weeks: remainingWeeks.slice(-firstRowSize),
+          });
+          remainingWeeks = remainingWeeks.slice(0, -firstRowSize);
+        }
+
+        // Remaining rows: distribute the rest of the weeks (oldest weeks)
+        while (remainingWeeks.length > 0) {
+          const rowSize = Math.min(maxWeekColumns, remainingWeeks.length);
+          rowsData.unshift({
+            weeks: remainingWeeks.slice(-rowSize),
+          });
+          remainingWeeks = remainingWeeks.slice(0, -rowSize);
+        }
+
+        // rowsData is now [oldest rows, ..., newest row]
+        // Reverse so newest is first (top row)
+        return rowsData.reverse();
       }
-
-      // Remaining rows: distribute the rest of the weeks (oldest weeks)
-      while (remainingWeeks.length > 0) {
-        const rowSize = Math.min(maxWeekColumns, remainingWeeks.length);
-        rows.unshift(remainingWeeks.slice(-rowSize));
-        remainingWeeks = remainingWeeks.slice(0, -rowSize);
-      }
-
-      // rows is now [oldest rows, ..., newest row]
-      // Reverse so newest is first (top row)
-      return rows.reverse();
     } else {
       // Single-row: show only the most recent weeks that fit
       const visibleWeeks =
         weeks.length <= maxWeekColumns
           ? weeks
           : weeks.slice(weeks.length - maxWeekColumns);
-      return [visibleWeeks];
+      return [{ weeks: visibleWeeks }];
     }
-  }, [weeks, maxWeekColumns, enableMultiRowLayout]);
+  }, [weeks, maxWeekColumns, enableMultiRowLayout, splitByYear]);
+
+  // Extract just the weeks arrays for backward compatibility
+  const weekRows = useMemo(
+    () => weekRowsData.map(rowData => rowData.weeks),
+    [weekRowsData]
+  );
 
   const totalWeeks = weeks.length;
 
@@ -290,7 +416,27 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     );
   }, [dataPoints, thresholds]);
 
-  const renderCell = (date: Date, index: number, isLastRow: boolean) => {
+  const renderCell = (date: Date | null, index: number, isLastRow: boolean) => {
+    // Handle null dates (for split weeks maintaining weekday alignment)
+    if (date === null) {
+      const transparentStyle = {
+        backgroundColor: 'transparent' as const,
+      };
+      return (
+        <View
+          key={`cell-${index}`}
+          style={[
+            styles.cell,
+            {
+              width: effectiveCellSize,
+              height: effectiveCellSize,
+              ...transparentStyle,
+            },
+          ]}
+        />
+      );
+    }
+
     const currentTime = date.getTime();
     const withinRange =
       currentTime >= displayStartTime && currentTime <= displayEndTime;
@@ -444,15 +590,16 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
         </View>
       )}
       <View style={styles.weeksGrid}>
-        {weekRows.map((row, rowIndex) => {
+        {weekRowsData.map((rowData, rowIndex) => {
+          const row = rowData.weeks;
           // Calculate absolute week index accounting for reversed row order
           // When reversed, rowIndex 0 is the newest weeks (first row with max columns)
           let absoluteWeekIndex: number;
           if (enableMultiRowLayout) {
             // Calculate absolute index by summing up weeks in previous rows
             let weekCount = 0;
-            for (let i = weekRows.length - 1; i > rowIndex; i--) {
-              weekCount += weekRows[i].length;
+            for (let i = weekRowsData.length - 1; i > rowIndex; i--) {
+              weekCount += weekRowsData[i].weeks.length;
             }
             absoluteWeekIndex = weekCount;
           } else {
@@ -463,72 +610,94 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
                 : weeks.length - maxWeekColumns + rowIndex * maxWeekColumns;
           }
           return (
-            <View key={`row-${rowIndex}`} style={styles.gridRow}>
-              {showDayLabels && (
+            <React.Fragment key={`row-fragment-${rowIndex}`}>
+              {rowData.year !== undefined && (
+                <View style={styles.yearLabelContainer}>
+                  <Text
+                    style={[
+                      styles.yearLabel,
+                      { color: theme.colors.activityLabel },
+                    ]}>
+                    {rowData.year}
+                  </Text>
+                </View>
+              )}
+              <View key={`row-${rowIndex}`} style={styles.gridRow}>
+                {showDayLabels && (
+                  <View
+                    style={[
+                      styles.dayLabelsColumn,
+                      {
+                        width: labelColumnWidth,
+                        marginRight: CELL_GAP,
+                        height: dayLabelHeight * 7 - CELL_GAP,
+                      },
+                    ]}>
+                    {Array.from({ length: 7 }).map((_, dayIndex) => {
+                      const marginBottom = dayIndex === 6 ? 0 : CELL_GAP;
+                      return (
+                        <View
+                          key={`day-${rowIndex}-${dayIndex}`}
+                          style={[
+                            styles.dayLabelWrapper,
+                            {
+                              height: effectiveCellSize,
+                              marginBottom,
+                            },
+                          ]}>
+                          <Text
+                            style={[
+                              styles.dayLabel,
+                              { color: theme.colors.activityLabel },
+                            ]}>
+                            {DAY_LABELS.get(dayIndex) || ' '}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
                 <View
                   style={[
-                    styles.dayLabelsColumn,
-                    {
-                      width: labelColumnWidth,
-                      marginRight: CELL_GAP,
-                      height: dayLabelHeight * 7 - CELL_GAP,
-                    },
+                    styles.weeksContainer,
+                    { gap: CELL_GAP },
+                    // Right-align last row of each year when splitting by year
+                    // OR right-align last row of entire wall when not splitting by year
+                    (splitByYear &&
+                      rowData.isLastRowOfYear &&
+                      row.length < maxWeekColumns) ||
+                    (!splitByYear &&
+                      enableMultiRowLayout &&
+                      rowIndex === weekRowsData.length - 1 &&
+                      row.length < maxWeekColumns)
+                      ? {
+                          paddingLeft:
+                            (maxWeekColumns - row.length) *
+                            (effectiveCellSize + CELL_GAP),
+                        }
+                      : undefined,
                   ]}>
-                  {Array.from({ length: 7 }).map((_, dayIndex) => {
-                    const marginBottom = dayIndex === 6 ? 0 : CELL_GAP;
+                  {row.map(week => {
+                    const currentAbsoluteWeekIndex = absoluteWeekIndex++;
                     return (
                       <View
-                        key={`day-${rowIndex}-${dayIndex}`}
-                        style={[
-                          styles.dayLabelWrapper,
-                          {
-                            height: effectiveCellSize,
-                            marginBottom,
-                          },
-                        ]}>
-                        <Text
-                          style={[
-                            styles.dayLabel,
-                            { color: theme.colors.activityLabel },
-                          ]}>
-                          {DAY_LABELS.get(dayIndex) || ' '}
-                        </Text>
+                        key={`week-${currentAbsoluteWeekIndex}`}
+                        style={styles.weekColumn}
+                        testID={`week-${currentAbsoluteWeekIndex}`}>
+                        {Array.from({ length: 7 }).map((_, dayIndex) => {
+                          const date = week[dayIndex] || null;
+                          return renderCell(
+                            date,
+                            currentAbsoluteWeekIndex * 7 + dayIndex,
+                            dayIndex === 6
+                          );
+                        })}
                       </View>
                     );
                   })}
                 </View>
-              )}
-              <View
-                style={[
-                  styles.weeksContainer,
-                  { gap: CELL_GAP },
-                  enableMultiRowLayout &&
-                    rowIndex === weekRows.length - 1 &&
-                    row.length < maxWeekColumns && {
-                      paddingLeft:
-                        (maxWeekColumns - row.length) *
-                        (effectiveCellSize + CELL_GAP),
-                    },
-                ]}>
-                {row.map(week => {
-                  const currentAbsoluteWeekIndex = absoluteWeekIndex++;
-                  return (
-                    <View
-                      key={`week-${currentAbsoluteWeekIndex}`}
-                      style={styles.weekColumn}
-                      testID={`week-${currentAbsoluteWeekIndex}`}>
-                      {week.map((date, dayIndex) =>
-                        renderCell(
-                          date,
-                          currentAbsoluteWeekIndex * 7 + dayIndex,
-                          dayIndex === week.length - 1
-                        )
-                      )}
-                    </View>
-                  );
-                })}
               </View>
-            </View>
+            </React.Fragment>
           );
         })}
       </View>
@@ -541,24 +710,26 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
             ]}>
             {selectedDate && selectedData
               ? `${formatValue(selectedData.value, selectedData.unit)} on ${formatSelectedDate(selectedDate)}`
-              : (() => {
-                  const visibleDataPoints = dataPoints.filter(
-                    dp =>
-                      dp.date.getTime() >= displayStartTime &&
-                      dp.date.getTime() <= displayEndTime
-                  );
-                  if (visibleDataPoints.length === 0) {
-                    return 'No data';
-                  }
-                  const total = visibleDataPoints.reduce(
-                    (sum, dp) => sum + dp.value,
-                    0
-                  );
-                  const firstPoint = visibleDataPoints[0];
-                  const unit =
-                    METRIC_UNITS[firstPoint.metricType] || firstPoint.unit;
-                  return formatValue(total, unit);
-                })()}
+              : showDescription
+                ? t('metric_detail.select_cell_hint')
+                : (() => {
+                    const visibleDataPoints = dataPoints.filter(
+                      dp =>
+                        dp.date.getTime() >= displayStartTime &&
+                        dp.date.getTime() <= displayEndTime
+                    );
+                    if (visibleDataPoints.length === 0) {
+                      return 'No data';
+                    }
+                    const total = visibleDataPoints.reduce(
+                      (sum, dp) => sum + dp.value,
+                      0
+                    );
+                    const firstPoint = visibleDataPoints[0];
+                    const unit =
+                      METRIC_UNITS[firstPoint.metricType] || firstPoint.unit;
+                    return formatValue(total, unit);
+                  })()}
           </Text>
         </View>
       )}
@@ -621,5 +792,14 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 12,
+  },
+  yearLabelContainer: {
+    paddingVertical: 8,
+    paddingLeft: 16,
+    alignItems: 'flex-start',
+  },
+  yearLabel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

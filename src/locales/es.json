@@ -80,7 +80,8 @@
     "days_30": "30 días",
     "days_90": "90 días",
     "months_12": "12 meses",
-    "all": "Todo"
+    "all": "Todo",
+    "select_cell_hint": "Selecciona una celda para ver los datos de ese día"
   },
   "configuration": {
     "title": "Configurar {{metric}}",
@@ -101,4 +102,3 @@
     "load_failed": "Error al cargar datos"
   }
 }
-

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, LayoutChangeEvent } from 'react-native';
 import { Button, Text, ButtonGroup } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '@utils';
 import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
@@ -12,7 +13,7 @@ import {
   MetricConfig,
   UserPreferences,
 } from '@types';
-import { GetDateRange, FormatCompactNumber } from '@utils';
+import { GetDateRange, FormatCompactNumber, GetStartOfDay } from '@utils';
 
 interface MetricDetailScreenProps {
   metricType: MetricType;
@@ -31,18 +32,38 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const theme = useAppTheme();
   const [metricData, setMetricData] = useState<HealthMetricData | null>(null);
   const [config, setConfig] = useState<MetricConfig | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(1); // Default to 30 days
   const [numDays, setNumDays] = useState<number | null>(30);
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  const dateRangeOptions: (number | null)[] = [7, 30, 90, 365, null];
-  const dateRangeLabels = ['7D', '30D', '90D', '12M', 'All'];
+  // Use -1 as special value for "Fit"
+  const dateRangeOptions: (number | null)[] = [-1, 30, 90, 365, null];
+  const dateRangeLabels = ['Fit', '30D', '90D', '12M', 'All'];
 
   useEffect(() => {
     LoadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metricType]);
+
+  // Reload preferences when screen comes into focus (e.g., returning from Settings)
+  useFocusEffect(
+    useCallback(() => {
+      const ReloadPreferences = async () => {
+        try {
+          const prefs = await LoadUserPreferences();
+          if (prefs) {
+            setPreferences(prefs);
+          }
+        } catch (error) {
+          console.error('Error reloading preferences:', error);
+        }
+      };
+      ReloadPreferences();
+    }, [])
+  );
 
   const LoadData = async () => {
     try {
@@ -74,7 +95,8 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
     }
 
     let relevantPoints = metricData.dataPoints;
-    if (numDays !== null) {
+    if (numDays !== null && numDays !== -1) {
+      // -1 is "Fit", use all data for statistics
       const { start } = GetDateRange(numDays);
       relevantPoints = relevantPoints.filter(dp => dp.date >= start);
     }
@@ -166,17 +188,95 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
       {config && dataPoints.length > 0 && (
         <View style={styles.activityWallContainer}>
-          <ActivityWall
-            key={`activity-wall-${numDays || 365}`}
-            dataPoints={dataPoints}
-            thresholds={config.colorRange.thresholds}
-            colors={config.colorRange.colors}
-            numDays={numDays || 365}
-            showMonthLabels={true}
-            showDayLabels={true}
-            showDescription={true}
-            enableMultiRowLayout={preferences?.enableMultiRowLayout ?? false}
-          />
+          <View
+            style={styles.activityWallWrapper}
+            onLayout={(event: LayoutChangeEvent) => {
+              const width = event.nativeEvent.layout.width;
+              if (Math.abs(width - containerWidth) > 1) {
+                setContainerWidth(width);
+              }
+            }}>
+            {(() => {
+              // Calculate effective numDays
+              let effectiveNumDays: number;
+
+              if (numDays === null) {
+                // "All" - calculate from first available record
+                const sortedPoints = [...dataPoints].sort(
+                  (a, b) => a.date.getTime() - b.date.getTime()
+                );
+                const firstDate = sortedPoints[0]?.date;
+                const today = GetStartOfDay(new Date());
+
+                if (firstDate) {
+                  const daysDiff = Math.ceil(
+                    (today.getTime() - GetStartOfDay(firstDate).getTime()) /
+                      (1000 * 60 * 60 * 24)
+                  );
+                  // Minimum of 12 months (365 days)
+                  effectiveNumDays = Math.max(daysDiff, 365);
+                } else {
+                  effectiveNumDays = 365;
+                }
+              } else if (numDays === -1) {
+                // "Fit" - calculate weeks to fit exactly one row
+                // Account for: container width (which ActivityWall will measure), padding, day labels, gaps
+                const CELL_SIZE = 12;
+                const CELL_GAP = 5;
+                const labelColumnWidth = 32; // Day labels column width
+                const showDayLabels = true;
+                const padding = 32; // 16px left + 16px right from activityWallWrapper
+
+                if (containerWidth > 0) {
+                  // containerWidth is the wrapper width (includes padding)
+                  // ActivityWall's container will be this width, but content is constrained by padding
+                  // So available width for grid = containerWidth - padding
+                  const availableWidth = containerWidth - padding;
+                  const effectiveLabelColumnWidth = showDayLabels
+                    ? labelColumnWidth
+                    : 0;
+                  const gridWidth =
+                    availableWidth -
+                    effectiveLabelColumnWidth -
+                    (showDayLabels ? CELL_GAP : 0);
+                  const columnWidth = CELL_SIZE + CELL_GAP;
+                  if (columnWidth > 0) {
+                    const maxWeeks = Math.floor(
+                      (gridWidth + CELL_GAP) / columnWidth
+                    );
+                    // Convert weeks to days (weeks * 7 days)
+                    effectiveNumDays = Math.max(7, maxWeeks * 7);
+                  } else {
+                    effectiveNumDays = 7;
+                  }
+                } else {
+                  // Default to 7 days if container width not available yet
+                  effectiveNumDays = 7;
+                }
+              } else {
+                effectiveNumDays = numDays;
+              }
+
+              // Enable multi-row layout except for "Fit" which should be single row
+              // Split by year when "All" is selected
+              const shouldEnableMultiRow = numDays !== -1;
+              const shouldSplitByYear = numDays === null;
+              return (
+                <ActivityWall
+                  key={`activity-wall-${effectiveNumDays}`}
+                  dataPoints={dataPoints}
+                  thresholds={config.colorRange.thresholds}
+                  colors={config.colorRange.colors}
+                  numDays={effectiveNumDays}
+                  showMonthLabels={true}
+                  showDayLabels={true}
+                  showDescription={true}
+                  enableMultiRowLayout={shouldEnableMultiRow}
+                  splitByYear={shouldSplitByYear}
+                />
+              );
+            })()}
+          </View>
         </View>
       )}
 
@@ -273,8 +373,14 @@ const styles = StyleSheet.create({
     width: 0,
   },
   activityWallContainer: {
-    padding: 16,
-    alignItems: 'center',
+    marginTop: 8,
+    width: '100%',
+  },
+  activityWallWrapper: {
+    width: '100%',
+    overflow: 'hidden',
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   statsContainer: {
     padding: 16,
