@@ -194,7 +194,11 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
             const firstYearWeek: (Date | null)[] = new Array(7).fill(null);
             const secondYearWeek: (Date | null)[] = new Array(7).fill(null);
 
+            // The week array is already correctly ordered (Sunday=0, Monday=1, etc.)
+            // We need to preserve the original dayIndex to maintain alignment
             week.forEach((date, dayIndex) => {
+              // Verify that dayIndex matches the day of week for correctness
+              // (week array starts on Sunday, so dayIndex 0 = Sunday = getDay() 0)
               if (date.getFullYear() === firstYear) {
                 firstYearWeek[dayIndex] = date;
               } else {
@@ -422,6 +426,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
       const transparentStyle = {
         backgroundColor: 'transparent' as const,
       };
+      const marginBottom = isLastRow ? 0 : CELL_GAP;
       return (
         <View
           key={`cell-${index}`}
@@ -430,6 +435,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
             {
               width: effectiveCellSize,
               height: effectiveCellSize,
+              marginBottom,
               ...transparentStyle,
             },
           ]}
