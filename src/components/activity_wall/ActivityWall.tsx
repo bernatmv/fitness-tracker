@@ -6,9 +6,11 @@ import {
   Text,
   LayoutChangeEvent,
 } from 'react-native';
-import { HealthDataPoint } from '@types';
-import { GetColorForValue } from '@utils';
+import { format } from 'date-fns';
+import { HealthDataPoint, MetricUnit } from '@types';
+import { GetColorForValue, FormatNumber } from '@utils';
 import { GetDateArray, GetStartOfDay } from '@utils';
+import { METRIC_UNITS } from '@constants';
 
 interface ActivityWallProps {
   dataPoints: HealthDataPoint[];
@@ -31,7 +33,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   numDays = 365,
   onCellPress,
   cellSize = 12,
-  cellGap = 2,
+  cellGap = 5,
 }) => {
   const MIN_MONTH_LABEL_WIDTH = 28;
   const DAY_LABELS = useMemo(
@@ -45,6 +47,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   );
   const labelColumnWidth = 32;
   const [containerWidth, setContainerWidth] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -56,17 +59,20 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     [containerWidth]
   );
 
-  // Prepare data map for quick lookup
+  // Prepare data map for quick lookup (value and unit)
+  // Use current METRIC_UNITS mapping to ensure correct unit display
   const dataMap = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, { value: number; unit: MetricUnit }>();
     dataPoints.forEach(dp => {
       const dateKey = GetStartOfDay(dp.date).toISOString().split('T')[0];
-      map.set(dateKey, dp.value);
+      // Use the current unit mapping to ensure consistency (handles unit changes)
+      const currentUnit = METRIC_UNITS[dp.metricType] || dp.unit;
+      map.set(dateKey, { value: dp.value, unit: currentUnit });
     });
     return map;
   }, [dataPoints]);
 
-  const { weeks, displayStart, displayEnd, monthLabels } = useMemo(() => {
+  const { weeks, displayStart, displayEnd } = useMemo(() => {
     const today = GetStartOfDay(new Date());
     const displayStartDate = new Date(today);
     displayStartDate.setDate(today.getDate() - (numDays - 1));
@@ -79,29 +85,12 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
 
     const allDates = GetDateArray(paddedStart, paddedEnd);
     const weeksArray: Date[][] = [];
-    const monthLabelMap = new Map<number, string>();
     let currentWeek: Date[] = [];
-    let lastLabeledMonth: number | null = null;
 
     allDates.forEach(date => {
       currentWeek.push(date);
 
       if (currentWeek.length === 7) {
-        const weekIndex = weeksArray.length;
-        const displayDate = currentWeek.find(
-          d => d >= displayStartDate && d <= today
-        );
-        if (displayDate) {
-          const month = displayDate.getMonth();
-          if (month !== lastLabeledMonth) {
-            monthLabelMap.set(
-              weekIndex,
-              displayDate.toLocaleString(undefined, { month: 'short' })
-            );
-            lastLabeledMonth = month;
-          }
-        }
-
         weeksArray.push(currentWeek);
         currentWeek = [];
       }
@@ -115,7 +104,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
       weeks: weeksArray,
       displayStart: displayStartDate,
       displayEnd: today,
-      monthLabels: monthLabelMap,
+      monthLabels: new Map<number, string>(),
     };
   }, [numDays]);
 
@@ -141,21 +130,57 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
 
   const totalWeeks = weeks.length;
 
-  const visibleMonthLabels = useMemo(() => {
-    const startIndex = totalWeeks - visibleWeeks.length;
-    const map = new Map<number, string>();
-    visibleWeeks.forEach((week, idx) => {
-      const absoluteIndex = startIndex + idx;
-      const label = monthLabels.get(absoluteIndex);
-      if (label) {
-        map.set(idx, label);
-      }
-    });
-    return map;
-  }, [totalWeeks, visibleWeeks, monthLabels]);
-
   const displayStartTime = displayStart.getTime();
   const displayEndTime = displayEnd.getTime();
+
+  const visibleMonthLabels = useMemo(() => {
+    const map = new Map<number, string>();
+    const monthsSeen = new Set<string>();
+
+    // Find the first day of each month in the visible range
+    visibleWeeks.forEach(week => {
+      week.forEach(date => {
+        if (
+          date.getTime() >= displayStartTime &&
+          date.getTime() <= displayEndTime
+        ) {
+          const month = date.getMonth();
+          const year = date.getFullYear();
+          const monthKey = `${year}-${month}`;
+
+          // Check if this is the first day of this month we've seen
+          if (!monthsSeen.has(monthKey)) {
+            // Check if this date is the first of the month, or the first visible day of this month
+            const isFirstOfMonth = date.getDate() === 1;
+            const firstOfMonth = new Date(year, month, 1);
+            const isFirstVisible =
+              firstOfMonth.getTime() < displayStartTime &&
+              date.getTime() >= displayStartTime;
+
+            if (isFirstOfMonth || isFirstVisible) {
+              // Find which week contains this date
+              let targetWeekIdx = -1;
+              visibleWeeks.forEach((w, wIdx) => {
+                if (w.some(d => d.getTime() === date.getTime())) {
+                  targetWeekIdx = wIdx;
+                }
+              });
+
+              if (targetWeekIdx !== -1 && !map.has(targetWeekIdx)) {
+                const monthName = date.toLocaleString(undefined, {
+                  month: 'short',
+                });
+                map.set(targetWeekIdx, monthName);
+                monthsSeen.add(monthKey);
+              }
+            }
+          }
+        }
+      });
+    });
+
+    return map;
+  }, [visibleWeeks, displayStartTime, displayEndTime]);
 
   const effectiveCellSize = useMemo(() => {
     if (!containerWidth || totalWeeks === 0) {
@@ -172,6 +197,97 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   }, [containerWidth, totalWeeks, visibleWeeks.length, cellSize, cellGap]);
 
   const dayLabelHeight = effectiveCellSize + cellGap;
+
+  const monthLabelOffsets = useMemo(() => {
+    const offsets = new Map<number, number>();
+
+    visibleMonthLabels.forEach((label, weekIdx) => {
+      const week = visibleWeeks[weekIdx];
+      if (!week) {
+        offsets.set(weekIdx, 0);
+        return;
+      }
+
+      // Find the first day of this month in the visible range
+      let firstDayOfMonth: Date | null = null;
+      let targetMonth = -1;
+      let targetYear = -1;
+
+      // Determine which month this label represents by finding it in all visible weeks
+      visibleWeeks.forEach(w => {
+        w.forEach(date => {
+          if (
+            date.getTime() >= displayStartTime &&
+            date.getTime() <= displayEndTime
+          ) {
+            const month = date.getMonth();
+            const year = date.getFullYear();
+            const monthName = date.toLocaleString(undefined, {
+              month: 'short',
+            });
+            if (monthName === label && targetMonth === -1) {
+              targetMonth = month;
+              targetYear = year;
+            }
+          }
+        });
+      });
+
+      if (targetMonth === -1) {
+        offsets.set(weekIdx, 0);
+        return;
+      }
+
+      // Find the first day of this month in the visible range
+      visibleWeeks.forEach(w => {
+        w.forEach(d => {
+          if (
+            d.getTime() >= displayStartTime &&
+            d.getTime() <= displayEndTime &&
+            d.getMonth() === targetMonth &&
+            d.getFullYear() === targetYear
+          ) {
+            if (!firstDayOfMonth || d < firstDayOfMonth) {
+              firstDayOfMonth = d;
+            }
+          }
+        });
+      });
+
+      if (!firstDayOfMonth) {
+        offsets.set(weekIdx, 0);
+        return;
+      }
+
+      // Check if the first day is in this week
+      if (!firstDayOfMonth) {
+        offsets.set(weekIdx, 0);
+        return;
+      }
+
+      const firstDay: Date = firstDayOfMonth;
+      const dayInWeek = week.findIndex(d => d.getTime() === firstDay.getTime());
+
+      if (dayInWeek !== -1) {
+        // Calculate offset: day of week (0 = Sunday, 1 = Monday, etc.)
+        const dayOfWeek = firstDay.getDay();
+        // Convert to Monday-based (0 = Monday, 6 = Sunday)
+        const mondayBasedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        offsets.set(weekIdx, mondayBasedDay * (effectiveCellSize + cellGap));
+      } else {
+        offsets.set(weekIdx, 0);
+      }
+    });
+
+    return offsets;
+  }, [
+    visibleWeeks,
+    visibleMonthLabels,
+    displayStartTime,
+    displayEndTime,
+    effectiveCellSize,
+    cellGap,
+  ]);
 
   const effectiveThresholds = useMemo(() => {
     if (!dataPoints.length) return thresholds;
@@ -196,14 +312,22 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     const dateKey = withinRange
       ? GetStartOfDay(date).toISOString().split('T')[0]
       : '';
-    const value = withinRange ? dataMap.get(dateKey) || 0 : 0;
+    const data = withinRange ? dataMap.get(dateKey) : null;
+    const value = data?.value || 0;
     const backgroundColor = withinRange
       ? GetColorForValue(value, effectiveThresholds, colors)
       : 'transparent';
 
+    const isSelected =
+      selectedDate &&
+      GetStartOfDay(selectedDate).toISOString().split('T')[0] === dateKey;
+
     const HandlePress = () => {
-      if (withinRange && onCellPress) {
-        onCellPress(date, value);
+      if (withinRange) {
+        setSelectedDate(date);
+        if (onCellPress) {
+          onCellPress(date, value);
+        }
       }
     };
 
@@ -220,12 +344,28 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
             marginBottom,
             backgroundColor,
           },
+          isSelected && styles.cellSelected,
         ]}
         onPress={HandlePress}
         disabled={!withinRange}
         activeOpacity={0.7}
       />
     );
+  };
+
+  const selectedData = useMemo(() => {
+    if (!selectedDate) return null;
+    const dateKey = GetStartOfDay(selectedDate).toISOString().split('T')[0];
+    return dataMap.get(dateKey) || null;
+  }, [selectedDate, dataMap]);
+
+  const formatValue = (val: number, unit: MetricUnit): string => {
+    const formattedValue = FormatNumber(val, 0);
+    return `${formattedValue} ${unit}`;
+  };
+
+  const formatSelectedDate = (date: Date): string => {
+    return format(date, 'MMM do');
   };
 
   return (
@@ -243,6 +383,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
           {visibleWeeks.map((_, weekIndex) => {
             const label = visibleMonthLabels.get(weekIndex);
             const columnWidth = effectiveCellSize + cellGap;
+            const offset = monthLabelOffsets.get(weekIndex) || 0;
             return (
               <View
                 key={`month-${weekIndex}`}
@@ -253,7 +394,10 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
                     ellipsizeMode="tail"
                     style={[
                       styles.monthLabel,
-                      { minWidth: MIN_MONTH_LABEL_WIDTH },
+                      {
+                        minWidth: MIN_MONTH_LABEL_WIDTH,
+                        marginLeft: offset,
+                      },
                     ]}>
                     {label}
                   </Text>
@@ -309,6 +453,14 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
           ))}
         </View>
       </View>
+      {selectedDate && selectedData && (
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.descriptionText}>
+            {formatValue(selectedData.value, selectedData.unit)} on{' '}
+            {formatSelectedDate(selectedDate)}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -354,5 +506,17 @@ const styles = StyleSheet.create({
   },
   cell: {
     borderRadius: 2,
+  },
+  cellSelected: {
+    borderWidth: 2,
+    borderColor: '#F4C430',
+  },
+  descriptionContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  descriptionText: {
+    fontSize: 12,
+    color: '#8E8E93',
   },
 });

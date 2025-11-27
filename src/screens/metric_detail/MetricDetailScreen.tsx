@@ -6,7 +6,7 @@ import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
 import { LoadMetricData, LoadUserPreferences } from '@services/storage';
 import { MetricType, HealthMetricData, MetricConfig } from '@types';
-import { GetDateRange } from '@utils';
+import { GetDateRange, FormatNumber } from '@utils';
 
 interface MetricDetailScreenProps {
   metricType: MetricType;
@@ -68,9 +68,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
     }
 
     const { start } = GetDateRange(numDays);
-    const relevantPoints = metricData.dataPoints.filter(
-      dp => dp.date >= start
-    );
+    const relevantPoints = metricData.dataPoints.filter(dp => dp.date >= start);
 
     if (relevantPoints.length === 0) {
       return { average: 0, total: 0, bestDay: 0 };
@@ -126,23 +124,25 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
       )}
 
       <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>
-          {t('metric_detail.statistics')}
-        </Text>
-        
+        <Text style={styles.sectionTitle}>{t('metric_detail.statistics')}</Text>
+
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.average.toFixed(0)}</Text>
+            <Text style={styles.statValue}>
+              {FormatNumber(stats.average, 0)}
+            </Text>
             <Text style={styles.statLabel}>{t('metric_detail.average')}</Text>
           </View>
-          
+
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.total.toFixed(0)}</Text>
+            <Text style={styles.statValue}>{FormatNumber(stats.total, 0)}</Text>
             <Text style={styles.statLabel}>{t('metric_detail.total')}</Text>
           </View>
-          
+
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.bestDay.toFixed(0)}</Text>
+            <Text style={styles.statValue}>
+              {FormatNumber(stats.bestDay, 0)}
+            </Text>
             <Text style={styles.statLabel}>{t('metric_detail.best_day')}</Text>
           </View>
         </View>
@@ -206,4 +206,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

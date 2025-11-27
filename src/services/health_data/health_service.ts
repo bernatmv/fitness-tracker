@@ -158,6 +158,10 @@ const FetchIOSMetricData = async (
             (new Date(endIso).getTime() - new Date(startIso).getTime()) /
             (1000 * 60 * 60);
           value = isNaN(durationHours) ? 0 : Math.max(durationHours, 0);
+        } else if (metricType === MetricType.STANDING_TIME) {
+          // Convert minutes to hours and round to nearest hour
+          const hours = value / 60;
+          value = Math.round(hours);
         }
 
         dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);

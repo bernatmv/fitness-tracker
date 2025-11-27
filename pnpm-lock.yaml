@@ -53,6 +53,9 @@ dependencies:
   react-native-screens:
     specifier: ^3.29.0
     version: 3.37.0(react-native@0.73.2)(react@18.2.0)
+  react-native-vector-icons:
+    specifier: ^10.3.0
+    version: 10.3.0
 
 devDependencies:
   '@babel/core':

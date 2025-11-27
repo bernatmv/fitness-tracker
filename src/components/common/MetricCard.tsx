@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Text } from '@rneui/themed';
+import { Card, Text, Icon } from '@rneui/themed';
 import { HealthDataPoint, MetricConfig } from '@types';
 import { ActivityWall } from '../activity_wall';
 import { useTranslation } from 'react-i18next';
+import { FormatNumber } from '@utils';
+import { METRIC_UNITS } from '@constants';
 
 interface MetricCardProps {
   config: MetricConfig;
@@ -37,31 +39,62 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     return sorted[0]?.value || 0;
   };
 
+  const GetUnit = () => {
+    // Use current METRIC_UNITS mapping to ensure correct unit display
+    if (dataPoints.length > 0) {
+      const sorted = [...dataPoints].sort(
+        (a, b) => b.date.getTime() - a.date.getTime()
+      );
+      const mostRecent = sorted[0];
+      if (mostRecent) {
+        return METRIC_UNITS[mostRecent.metricType] || mostRecent.unit;
+      }
+    }
+    // Fallback to unit from config if no data points
+    return METRIC_UNITS[config.metricType];
+  };
+
   const value = CalculateCurrentValue();
+  const unit = GetUnit();
 
   return (
-    <TouchableOpacity onPress={onPress} disabled={!onPress} activeOpacity={0.7}>
-      <Card containerStyle={styles.card}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{config.displayName}</Text>
-          <Text style={styles.value}>{value.toFixed(0)}</Text>
+    <Card containerStyle={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{config.displayName}</Text>
+        <View style={styles.headerRight}>
+          <Text style={styles.value}>
+            {FormatNumber(value, 0)} {unit}
+          </Text>
+          {onPress && (
+            <TouchableOpacity
+              onPress={onPress}
+              style={styles.arrowButton}
+              activeOpacity={0.7}>
+              <Icon
+                name="chevron-right"
+                type="material"
+                size={22}
+                color="#007AFF"
+              />
+            </TouchableOpacity>
+          )}
         </View>
+      </View>
 
-        {showMiniWall && dataPoints.length > 0 && (
-          <View style={styles.miniWall}>
-            <ActivityWall
-              dataPoints={dataPoints}
-              thresholds={config.colorRange.thresholds}
-              colors={config.colorRange.colors}
-            />
-          </View>
-        )}
+      {showMiniWall && dataPoints.length > 0 && (
+        <View style={styles.miniWall}>
+          <ActivityWall
+            dataPoints={dataPoints}
+            thresholds={config.colorRange.thresholds}
+            colors={config.colorRange.colors}
+          />
+        </View>
+      )}
 
-        {dataPoints.length === 0 && (
-          <Text style={styles.noData}>{t('home.no_data')}</Text>
-        )}
-      </Card>
-    </TouchableOpacity>
+      {dataPoints.length === 0 && (
+        <Text style={styles.noData}>{t('home.no_data')}</Text>
+      )}
+    </Card>
   );
 };
 
@@ -80,10 +113,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   value: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: '700',
+  },
+  arrowButton: {
+    padding: 4,
   },
   miniWall: {
     marginTop: 8,
