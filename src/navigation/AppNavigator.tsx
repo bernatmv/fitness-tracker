@@ -54,12 +54,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         options={{
           title: t('home.title'),
           tabBarIcon: ({ color, size }) => (
-            <Icon
-              name="fitness-center"
-              type="material"
-              color={color}
-              size={size}
-            />
+            <Icon name="home" type="material" color={color} size={size} />
           ),
         }}
       />
