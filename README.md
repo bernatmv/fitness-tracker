@@ -15,7 +15,8 @@ A beautiful cross-platform mobile app to track your fitness journey with GitHub-
 
 ### 🎨 Beautiful Visualizations
 - **Activity Wall** - GitHub-style heat map for each metric
-- **Customizable Colors** - Choose your preferred color schemes
+- **Customizable Colors** - Built-in color picker with hex input and suggested colors
+- **Theme-Aware Colors** - Colors automatically adapt to light/dark mode
 - **Configurable Thresholds** - Set personal goals and ranges
 - **Interactive Details** - Tap any day to see detailed statistics
 
@@ -124,10 +125,13 @@ pnpm test -- --watch # Run tests in watch mode
 - Home screen with metric cards
 - Settings screen
 - Metric detail screen
-- Metric configuration screen
+- Metric configuration screen with color picker
+- Theme-aware color ordering (darkest first for dark mode, lightest first for light mode)
 - Onboarding flow
 - Navigation structure
 - Internationalization (EN, ES)
+- Dark mode support
+- Icon system (react-native-vector-icons)
 
 🚧 In Progress
 - Android Health Connect integration
@@ -137,7 +141,6 @@ pnpm test -- --watch # Run tests in watch mode
 - Background sync optimization
 - Data export/import
 - Additional languages
-- Dark mode
 - Social features
 - Achievements
 

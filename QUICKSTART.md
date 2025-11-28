@@ -16,6 +16,8 @@ Get the Fitness Tracker app running in 5 minutes!
 pnpm install
 
 # 2. iOS only - Install pods (macOS only)
+# Note: Set LANG environment variable if you encounter encoding issues
+export LANG=en_US.UTF-8
 cd ios && pod install && cd ..
 
 # 3. Start Metro bundler
@@ -77,8 +79,20 @@ pnpm start -- --reset-cache
 **iOS build fails**
 
 ```bash
-cd ios && pod install && cd ..
+# Clean and reinstall pods
+export LANG=en_US.UTF-8
+cd ios
+rm -rf Pods Podfile.lock
+pod install
+cd ..
 ```
+
+**Icons not appearing**
+
+The app uses `react-native-vector-icons` which requires:
+- iOS: Fonts configured in `Info.plist` (already set up)
+- Android: Fonts configured in `build.gradle` (already set up)
+- After setup, rebuild the app
 
 **Android build fails**
 
@@ -98,9 +112,10 @@ cd ..
 
 1. **Pull to refresh** - Sync your health data
 2. **Tap a metric card** - View detailed statistics
-3. **Settings** - Configure metrics and preferences
+3. **Settings** - Configure metrics, theme, and preferences
 4. **Metric details** - Change date ranges
-5. **Configure metrics** - Customize colors and thresholds
+5. **Configure metrics** - Customize colors and thresholds with the built-in color picker
+6. **Theme switching** - Switch between light and dark mode in settings
 
 ## Development Commands
 
