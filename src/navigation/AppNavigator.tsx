@@ -52,7 +52,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         name="Home"
         component={HomeScreenWrapper}
         options={{
-          title: t('home.title'),
+          title: t('home.nav'),
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" type="material" color={color} size={size} />
           ),

@@ -41,7 +41,8 @@
     "setup_complete_description": "Start tracking your fitness journey today"
   },
   "home": {
-    "title": "Activity",
+    "nav": "Home",
+    "title": "Wall of Truth",
     "last_sync": "Last sync: {{time}}",
     "sync_now": "Sync Now",
     "no_data": "No data available",

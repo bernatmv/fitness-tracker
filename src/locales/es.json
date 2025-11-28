@@ -41,7 +41,8 @@
     "setup_complete_description": "Comienza a rastrear tu viaje fitness hoy"
   },
   "home": {
-    "title": "Actividad",
+    "nav": "Inicio",
+    "title": "Muro de la Verdad",
     "last_sync": "Última sincronización: {{time}}",
     "sync_now": "Sincronizar Ahora",
     "no_data": "No hay datos disponibles",
