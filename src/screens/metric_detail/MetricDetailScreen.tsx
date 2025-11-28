@@ -48,7 +48,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metricType]);
 
-  // Reload preferences when screen comes into focus (e.g., returning from Settings)
+  // Reload preferences and config when screen comes into focus (e.g., returning from Config)
   useFocusEffect(
     useCallback(() => {
       const ReloadPreferences = async () => {
@@ -56,13 +56,15 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
           const prefs = await LoadUserPreferences();
           if (prefs) {
             setPreferences(prefs);
+            // Update config to reflect any changes made in MetricConfigScreen
+            setConfig(prefs.metricConfigs[metricType] || null);
           }
         } catch (error) {
           console.error('Error reloading preferences:', error);
         }
       };
       ReloadPreferences();
-    }, [])
+    }, [metricType])
   );
 
   const LoadData = async () => {

@@ -45,6 +45,9 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(
     null
   );
+  const [originalConfig, setOriginalConfig] = useState<MetricConfig | null>(
+    null
+  );
   const numDays = -1; // Use "Fit" mode
 
   useEffect(() => {
@@ -60,17 +63,24 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         LoadMetricData(metricType),
       ]);
 
+      let loadedConfig: MetricConfig;
       if (prefs && prefs.metricConfigs[metricType]) {
-        setConfig(prefs.metricConfigs[metricType]);
+        loadedConfig = prefs.metricConfigs[metricType];
       } else {
         // Use default config if user config doesn't exist
-        setConfig(DEFAULT_METRIC_CONFIGS[metricType]);
+        loadedConfig = DEFAULT_METRIC_CONFIGS[metricType];
       }
+
+      setConfig(loadedConfig);
+      // Store a deep copy as the original for comparison
+      setOriginalConfig(JSON.parse(JSON.stringify(loadedConfig)));
       setMetricData(data);
     } catch (error) {
       console.error('Error loading configuration:', error);
       // Fallback to default config on error
-      setConfig(DEFAULT_METRIC_CONFIGS[metricType]);
+      const fallbackConfig = DEFAULT_METRIC_CONFIGS[metricType];
+      setConfig(fallbackConfig);
+      setOriginalConfig(JSON.parse(JSON.stringify(fallbackConfig)));
     } finally {
       setIsLoading(false);
     }
@@ -114,6 +124,8 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         };
 
         await SaveUserPreferences(updatedPrefs);
+        // Update original config after successful save
+        setOriginalConfig(JSON.parse(JSON.stringify(config)));
         onSave();
       }
     } catch (error) {
@@ -126,6 +138,8 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const HandleResetDefaults = () => {
     const defaultConfig = DEFAULT_METRIC_CONFIGS[metricType];
     setConfig(defaultConfig);
+    // Don't update originalConfig here - keep it so save button is enabled
+    // to allow saving the reset to defaults
   };
 
   const HandleColorIndicatorPress = (index: number) => {
@@ -193,6 +207,44 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     }
     return numDays;
   }, [containerWidth, numDays]);
+
+  // Check if there are any changes to save
+  const hasChanges = useMemo(() => {
+    if (!config || !originalConfig) return false;
+
+    // Compare thresholds
+    if (
+      config.colorRange.thresholds.length !==
+      originalConfig.colorRange.thresholds.length
+    ) {
+      return true;
+    }
+
+    for (let i = 0; i < config.colorRange.thresholds.length; i++) {
+      if (
+        config.colorRange.thresholds[i] !==
+        originalConfig.colorRange.thresholds[i]
+      ) {
+        return true;
+      }
+    }
+
+    // Compare colors
+    if (
+      config.colorRange.colors.length !==
+      originalConfig.colorRange.colors.length
+    ) {
+      return true;
+    }
+
+    for (let i = 0; i < config.colorRange.colors.length; i++) {
+      if (config.colorRange.colors[i] !== originalConfig.colorRange.colors[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [config, originalConfig]);
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -317,6 +369,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
           title={t('common.save')}
           onPress={HandleSave}
           loading={isSaving}
+          disabled={!hasChanges || isSaving}
           containerStyle={styles.actionButton}
         />
       </View>
