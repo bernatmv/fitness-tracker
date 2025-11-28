@@ -107,3 +107,22 @@ export const APP_VERSION = '1.0.0';
  * Default theme preference
  */
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
+
+/**
+ * Get all default colors for a specific threshold level across all metrics
+ * This is used to provide suggested colors in the color picker
+ */
+export const GetSuggestedColorsForThreshold = (
+  thresholdIndex: number
+): string[] => {
+  const suggestedColors = new Set<string>();
+
+  Object.values(DEFAULT_METRIC_CONFIGS).forEach(config => {
+    if (thresholdIndex < config.colorRange.colors.length) {
+      suggestedColors.add(config.colorRange.colors[thresholdIndex]);
+    }
+  });
+
+  // Convert to array and remove duplicates
+  return Array.from(suggestedColors);
+};

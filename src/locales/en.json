@@ -92,7 +92,11 @@
     "threshold_from": "From",
     "threshold_to": "To",
     "preview": "Preview",
-    "reset_defaults": "Reset to Defaults"
+    "reset_defaults": "Reset to Defaults",
+    "color_picker_title": "Select Color",
+    "hex_color": "Hex Color",
+    "suggested_colors": "Suggested Colors",
+    "invalid_color": "Invalid color format"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

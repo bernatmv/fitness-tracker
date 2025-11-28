@@ -92,7 +92,11 @@
     "threshold_from": "Desde",
     "threshold_to": "Hasta",
     "preview": "Vista Previa",
-    "reset_defaults": "Restaurar Valores Predeterminados"
+    "reset_defaults": "Restaurar Valores Predeterminados",
+    "color_picker_title": "Seleccionar Color",
+    "hex_color": "Color Hex",
+    "suggested_colors": "Colores Sugeridos",
+    "invalid_color": "Formato de color inválido"
   },
   "errors": {
     "generic": "Algo salió mal. Por favor, inténtalo de nuevo.",

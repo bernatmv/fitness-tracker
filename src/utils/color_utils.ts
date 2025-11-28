@@ -95,3 +95,13 @@ export const IsValidHexColor = (hex: string): boolean => {
   return /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.test(hex);
 };
 
+/**
+ * Normalize hex color to include # prefix
+ */
+export const NormalizeHexColor = (hex: string): string => {
+  if (hex.startsWith('#')) {
+    return hex.toLowerCase();
+  }
+  return `#${hex.toLowerCase()}`;
+};
+

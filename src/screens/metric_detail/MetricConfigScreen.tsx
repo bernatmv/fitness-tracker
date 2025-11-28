@@ -5,11 +5,12 @@ import {
   ScrollView,
   TextInput,
   LayoutChangeEvent,
+  TouchableOpacity,
 } from 'react-native';
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { ActivityWall } from '@components/activity_wall';
-import { LoadingSpinner } from '@components/common';
+import { LoadingSpinner, ColorPicker } from '@components/common';
 import { useAppTheme } from '@utils';
 import {
   LoadUserPreferences,
@@ -40,6 +41,10 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [colorPickerVisible, setColorPickerVisible] = useState(false);
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(
+    null
+  );
   const numDays = -1; // Use "Fit" mode
 
   useEffect(() => {
@@ -121,6 +126,31 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const HandleResetDefaults = () => {
     const defaultConfig = DEFAULT_METRIC_CONFIGS[metricType];
     setConfig(defaultConfig);
+  };
+
+  const HandleColorIndicatorPress = (index: number) => {
+    setSelectedColorIndex(index);
+    setColorPickerVisible(true);
+  };
+
+  const HandleColorChange = (color: string) => {
+    if (!config || selectedColorIndex === null) return;
+
+    const newColors = [...config.colorRange.colors];
+    newColors[selectedColorIndex] = color;
+
+    setConfig({
+      ...config,
+      colorRange: {
+        ...config.colorRange,
+        colors: newColors,
+      },
+    });
+  };
+
+  const HandleColorPickerClose = () => {
+    setColorPickerVisible(false);
+    setSelectedColorIndex(null);
   };
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
@@ -260,7 +290,8 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
                     placeholderTextColor={secondaryTextColor}
                   />
                 )}
-                <View
+                <TouchableOpacity
+                  onPress={() => HandleColorIndicatorPress(index)}
                   style={[
                     styles.thresholdColorIndicator,
                     {
@@ -289,6 +320,17 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
           containerStyle={styles.actionButton}
         />
       </View>
+
+      {config && selectedColorIndex !== null && (
+        <ColorPicker
+          visible={colorPickerVisible}
+          currentColor={config.colorRange.colors[selectedColorIndex]}
+          thresholdIndex={selectedColorIndex}
+          onColorChange={HandleColorChange}
+          onClose={HandleColorPickerClose}
+          theme={theme}
+        />
+      )}
     </ScrollView>
   );
 };
