@@ -105,3 +105,28 @@ export const NormalizeHexColor = (hex: string): string => {
   return `#${hex.toLowerCase()}`;
 };
 
+/**
+ * Reorder colors based on theme mode
+ * Colors are stored in canonical order (darkest first from index 1)
+ * - Dark mode: darkest first (keep canonical order)
+ * - Light mode: lightest first (reverse from index 1)
+ */
+export const ReorderColorsForTheme = (
+  colors: string[],
+  isDarkMode: boolean
+): string[] => {
+  if (colors.length <= 1) return colors;
+
+  // Keep index 0 (light gray for no data) unchanged
+  const firstColor = colors[0];
+  const restColors = colors.slice(1);
+
+  if (isDarkMode) {
+    // Dark mode: darkest first (canonical order)
+    return [firstColor, ...restColors];
+  } else {
+    // Light mode: lightest first (reverse from index 1)
+    return [firstColor, ...restColors.reverse()];
+  }
+};
+

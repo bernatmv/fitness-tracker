@@ -11,7 +11,7 @@ import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner, ColorPicker } from '@components/common';
-import { useAppTheme } from '@utils';
+import { useAppTheme, ReorderColorsForTheme } from '@utils';
 import {
   LoadUserPreferences,
   SaveUserPreferences,
@@ -71,16 +71,38 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         loadedConfig = DEFAULT_METRIC_CONFIGS[metricType];
       }
 
-      setConfig(loadedConfig);
-      // Store a deep copy as the original for comparison
-      setOriginalConfig(JSON.parse(JSON.stringify(loadedConfig)));
+      // Reorder colors for current theme (canonical -> theme order)
+      const themeOrderedConfig = {
+        ...loadedConfig,
+        colorRange: {
+          ...loadedConfig.colorRange,
+          colors: ReorderColorsForTheme(
+            loadedConfig.colorRange.colors,
+            isDarkMode
+          ),
+        },
+      };
+
+      setConfig(themeOrderedConfig);
+      // Store a deep copy as the original for comparison (in theme order)
+      setOriginalConfig(JSON.parse(JSON.stringify(themeOrderedConfig)));
       setMetricData(data);
     } catch (error) {
       console.error('Error loading configuration:', error);
       // Fallback to default config on error
       const fallbackConfig = DEFAULT_METRIC_CONFIGS[metricType];
-      setConfig(fallbackConfig);
-      setOriginalConfig(JSON.parse(JSON.stringify(fallbackConfig)));
+      const themeOrderedFallback = {
+        ...fallbackConfig,
+        colorRange: {
+          ...fallbackConfig.colorRange,
+          colors: ReorderColorsForTheme(
+            fallbackConfig.colorRange.colors,
+            isDarkMode
+          ),
+        },
+      };
+      setConfig(themeOrderedFallback);
+      setOriginalConfig(JSON.parse(JSON.stringify(themeOrderedFallback)));
     } finally {
       setIsLoading(false);
     }
@@ -115,16 +137,28 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
       const prefs = await LoadUserPreferences();
 
       if (prefs) {
+        // Convert colors back to canonical order (darkest first) before saving
+        const canonicalConfig = {
+          ...config,
+          colorRange: {
+            ...config.colorRange,
+            colors: ReorderColorsForTheme(
+              config.colorRange.colors,
+              true // Use dark mode order (canonical) for storage
+            ),
+          },
+        };
+
         const updatedPrefs = {
           ...prefs,
           metricConfigs: {
             ...prefs.metricConfigs,
-            [metricType]: config,
+            [metricType]: canonicalConfig,
           },
         };
 
         await SaveUserPreferences(updatedPrefs);
-        // Update original config after successful save
+        // Update original config after successful save (keep in theme order for comparison)
         setOriginalConfig(JSON.parse(JSON.stringify(config)));
         onSave();
       }
@@ -137,7 +171,19 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
 
   const HandleResetDefaults = () => {
     const defaultConfig = DEFAULT_METRIC_CONFIGS[metricType];
-    setConfig(defaultConfig);
+    // Reorder colors for current theme (darkest first for dark mode, lightest first for light mode)
+    // Defaults are stored in canonical order (darkest first), so we reorder based on current theme
+    const themeOrderedConfig = {
+      ...defaultConfig,
+      colorRange: {
+        ...defaultConfig.colorRange,
+        colors: ReorderColorsForTheme(
+          defaultConfig.colorRange.colors,
+          isDarkMode
+        ),
+      },
+    };
+    setConfig(themeOrderedConfig);
     // Don't update originalConfig here - keep it so save button is enabled
     // to allow saving the reset to defaults
   };
@@ -277,7 +323,10 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
               key={`activity-wall-${effectiveNumDays}`}
               dataPoints={metricData.dataPoints}
               thresholds={config.colorRange.thresholds}
-              colors={config.colorRange.colors}
+              colors={ReorderColorsForTheme(
+                config.colorRange.colors,
+                true // Convert to canonical order (darkest first) for ActivityWall
+              )}
               numDays={effectiveNumDays}
               enableMultiRowLayout={false}
               interactive={false}
@@ -296,20 +345,31 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
             return null;
           }
 
+          // Skip the first threshold (index 0) - it's not editable
+          if (index === 0) {
+            return null;
+          }
+
           const isFirstThreshold = index === 0;
           const isLastThreshold = threshold === Infinity;
           const isEditable = !isFirstThreshold && !isLastThreshold;
 
           // Get the corresponding color for this threshold rank
-          const thresholdColor =
+          // Index 0 uses theme-specific color: #151b23 for dark mode, #EFF2F5 for light mode
+          let thresholdColor =
             index < config.colorRange.colors.length
               ? config.colorRange.colors[index]
               : config.colorRange.colors[config.colorRange.colors.length - 1];
 
+          // Override index 0 with theme-specific color
+          if (index === 0) {
+            thresholdColor = isDarkMode ? '#151b23' : '#EFF2F5';
+          }
+
           return (
             <View key={index} style={styles.thresholdRow}>
               <Text style={[styles.thresholdLabel, { color: textColor }]}>
-                {t('configuration.range', { number: index + 1 })}
+                {t('configuration.range', { number: index })}
               </Text>
               <View style={styles.thresholdInputContainer}>
                 {isEditable ? (

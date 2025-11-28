@@ -181,7 +181,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.theme_system')}
             </ListItem.Title>
           </ListItem.Content>
-          <ListItem.CheckBox checked={preferences?.theme === 'system'} />
+          <ListItem.CheckBox
+            checked={preferences?.theme === 'system'}
+            onPress={() => HandleThemePreferenceChange('system')}
+          />
         </ListItem>
         <ListItem
           onPress={() => HandleThemePreferenceChange('light')}
@@ -191,7 +194,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.theme_light')}
             </ListItem.Title>
           </ListItem.Content>
-          <ListItem.CheckBox checked={preferences?.theme === 'light'} />
+          <ListItem.CheckBox
+            checked={preferences?.theme === 'light'}
+            onPress={() => HandleThemePreferenceChange('light')}
+          />
         </ListItem>
         <ListItem
           onPress={() => HandleThemePreferenceChange('dark')}
@@ -201,7 +207,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.theme_dark')}
             </ListItem.Title>
           </ListItem.Content>
-          <ListItem.CheckBox checked={preferences?.theme === 'dark'} />
+          <ListItem.CheckBox
+            checked={preferences?.theme === 'dark'}
+            onPress={() => HandleThemePreferenceChange('dark')}
+          />
         </ListItem>
         <ListItem bottomDivider>
           <ListItem.Content>

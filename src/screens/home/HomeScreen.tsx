@@ -110,7 +110,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   const secondaryTextColor = isDarkMode
     ? '#8E8E93'
     : theme.colors.text.secondary;
-  const cardBackground = isDarkMode ? '#1C1C1E' : undefined;
+  // Card background should match home background
+  const cardBackground = backgroundColor;
   const cardTextColor = isDarkMode ? '#FFFFFF' : undefined;
   const cardSecondaryTextColor = isDarkMode ? '#8E8E93' : undefined;
 

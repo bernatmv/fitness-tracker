@@ -13,7 +13,7 @@ import {
   GetColorForValue,
   FormatNumber,
   useAppTheme,
-  DarkenColor,
+  ReorderColorsForTheme,
 } from '@utils';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import { METRIC_UNITS } from '@constants';
@@ -56,15 +56,19 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   const { t } = useTranslation();
   const theme = useAppTheme();
 
-  // Darken the base color (first color) in dark mode
+  // Reorder colors based on theme mode and set index 0 color for theme
   const adjustedColors = useMemo(() => {
-    if (theme.mode === 'dark' && colors.length > 0) {
-      const adjusted = [...colors];
-      // Darken the first color (base color) for dark mode
-      adjusted[0] = DarkenColor(colors[0], 60);
+    // First reorder colors based on theme (canonical -> theme order)
+    const themeOrdered = ReorderColorsForTheme(colors, theme.mode === 'dark');
+
+    // Set index 0 color based on theme
+    if (themeOrdered.length > 0) {
+      const adjusted = [...themeOrdered];
+      // Index 0: #151b23 for dark mode, #EFF2F5 for light mode
+      adjusted[0] = theme.mode === 'dark' ? '#151b23' : '#EFF2F5';
       return adjusted;
     }
-    return colors;
+    return themeOrdered;
   }, [colors, theme.mode]);
 
   const DAY_LABELS = useMemo(

@@ -37,10 +37,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const { t } = useTranslation();
   const theme = useAppTheme();
 
-  const backgroundColor = cardBackgroundColor || theme.colors.cardBackground;
+  // Use cardBackgroundColor if provided (should match home background), otherwise fallback
+  const backgroundColor = cardBackgroundColor || theme.colors.background;
   const primaryTextColor = textColor || theme.colors.text.primary;
   const secondaryTextColor =
     customSecondaryTextColor || textColor || theme.colors.text.secondary;
+  const borderColor = theme.colors.border;
 
   const CalculateCurrentValue = () => {
     if (currentValue !== undefined) return currentValue;
@@ -72,7 +74,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const unit = GetUnit();
 
   return (
-    <Card containerStyle={[styles.card, { backgroundColor }]}>
+    <Card containerStyle={[styles.card, { backgroundColor, borderColor }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: primaryTextColor }]}>
           {config.displayName}
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 0,
+    borderWidth: 1,
     elevation: 0,
     shadowOpacity: 0,
   },
