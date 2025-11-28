@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { ListItem, Switch, Text } from '@rneui/themed';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { ListItem, Switch, Text, Button } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
-import { LoadUserPreferences, SaveUserPreferences } from '@services/storage';
+import {
+  LoadUserPreferences,
+  SaveUserPreferences,
+  ClearUserPreferences,
+} from '@services/storage';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION } from '@constants';
 import { LoadingSpinner } from '@components/common';
 import { useAppTheme } from '@utils';
 
 interface SettingsScreenProps {
-  onMetricConfigPress: (metricType: MetricType) => void;
   onThemePreferenceChange?: (preference: ThemePreference) => void;
 }
 
@@ -18,7 +21,6 @@ interface SettingsScreenProps {
  * App settings and configuration
  */
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
-  onMetricConfigPress,
   onThemePreferenceChange,
 }) => {
   const { t, i18n } = useTranslation();
@@ -107,6 +109,33 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     await SaveUserPreferences(updatedPreferences);
   };
 
+  const HandleClearPreferences = async () => {
+    Alert.alert(
+      'Clear Preferences',
+      'This will clear all user preferences and reset to defaults. Are you sure?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await ClearUserPreferences();
+              await LoadPreferences();
+              Alert.alert('Success', 'Preferences cleared successfully');
+            } catch (error) {
+              console.error('Error clearing preferences:', error);
+              Alert.alert('Error', 'Failed to clear preferences');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -134,9 +163,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <Switch
                 value={config.enabled}
                 onValueChange={() => HandleToggleMetric(config.metricType)}
-              />
-              <ListItem.Chevron
-                onPress={() => onMetricConfigPress(config.metricType)}
               />
             </ListItem>
           ))}
@@ -260,6 +286,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </ListItem.Content>
         </ListItem>
       </View>
+
+      {__DEV__ && (
+        <View style={styles.devSection}>
+          <Button
+            title="Clear User Preferences (Dev Only)"
+            onPress={HandleClearPreferences}
+            buttonStyle={styles.clearButton}
+            titleStyle={styles.clearButtonTitle}
+          />
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -285,5 +322,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  devSection: {
+    padding: 16,
+    marginBottom: 24,
+  },
+  clearButton: {
+    backgroundColor: '#FF3B30',
+  },
+  clearButtonTitle: {
+    color: '#FFFFFF',
   },
 });

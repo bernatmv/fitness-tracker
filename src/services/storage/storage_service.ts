@@ -37,7 +37,7 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
   try {
     const jsonData = await AsyncStorage.getItem(STORAGE_KEYS.HEALTH_DATA);
     if (!jsonData) return null;
-    
+
     const data = JSON.parse(jsonData);
     // Convert date strings back to Date objects
     data.lastFullSync = new Date(data.lastFullSync);
@@ -49,7 +49,7 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
         date: new Date(dp.date),
       }));
     });
-    
+
     return data;
   } catch (error) {
     console.error('Error loading health data:', error);
@@ -77,10 +77,10 @@ export const LoadAppConfig = async (): Promise<AppConfig | null> => {
   try {
     const jsonData = await AsyncStorage.getItem(STORAGE_KEYS.APP_CONFIG);
     if (!jsonData) return null;
-    
+
     const config = JSON.parse(jsonData);
     config.lastModified = new Date(config.lastModified);
-    
+
     return config;
   } catch (error) {
     console.error('Error loading app config:', error);
@@ -91,7 +91,9 @@ export const LoadAppConfig = async (): Promise<AppConfig | null> => {
 /**
  * Save user preferences
  */
-export const SaveUserPreferences = async (preferences: UserPreferences): Promise<void> => {
+export const SaveUserPreferences = async (
+  preferences: UserPreferences
+): Promise<void> => {
   try {
     const jsonData = JSON.stringify(preferences);
     await AsyncStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, jsonData);
@@ -104,25 +106,31 @@ export const SaveUserPreferences = async (preferences: UserPreferences): Promise
 /**
  * Load user preferences
  */
-export const LoadUserPreferences = async (): Promise<UserPreferences | null> => {
-  try {
-    const jsonData = await AsyncStorage.getItem(STORAGE_KEYS.USER_PREFERENCES);
-    if (!jsonData) return null;
-    
-    const preferences = JSON.parse(jsonData);
-    
-    // Migration: add enableMultiRowLayout if it doesn't exist
-    if (preferences && typeof preferences.enableMultiRowLayout === 'undefined') {
-      preferences.enableMultiRowLayout = false;
-      await SaveUserPreferences(preferences);
+export const LoadUserPreferences =
+  async (): Promise<UserPreferences | null> => {
+    try {
+      const jsonData = await AsyncStorage.getItem(
+        STORAGE_KEYS.USER_PREFERENCES
+      );
+      if (!jsonData) return null;
+
+      const preferences = JSON.parse(jsonData);
+
+      // Migration: add enableMultiRowLayout if it doesn't exist
+      if (
+        preferences &&
+        typeof preferences.enableMultiRowLayout === 'undefined'
+      ) {
+        preferences.enableMultiRowLayout = false;
+        await SaveUserPreferences(preferences);
+      }
+
+      return preferences;
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
+      return null;
     }
-    
-    return preferences;
-  } catch (error) {
-    console.error('Error loading user preferences:', error);
-    return null;
-  }
-};
+  };
 
 /**
  * Save metric data for a specific metric type
@@ -136,7 +144,7 @@ export const SaveMetricData = async (
     if (!healthData) {
       throw new Error('Health data store not initialized');
     }
-    
+
     healthData.metrics[metricType] = data;
     await SaveHealthData(healthData);
   } catch (error) {
@@ -154,11 +162,23 @@ export const LoadMetricData = async (
   try {
     const healthData = await LoadHealthData();
     if (!healthData) return null;
-    
+
     return healthData.metrics[metricType] || null;
   } catch (error) {
     console.error(`Error loading metric data for ${metricType}:`, error);
     return null;
+  }
+};
+
+/**
+ * Clear user preferences (for testing or reset)
+ */
+export const ClearUserPreferences = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.USER_PREFERENCES);
+  } catch (error) {
+    console.error('Error clearing user preferences:', error);
+    throw new Error('Failed to clear user preferences');
   }
 };
 
@@ -198,4 +218,3 @@ export const GetLastSyncTime = async (): Promise<Date | null> => {
     return null;
   }
 };
-

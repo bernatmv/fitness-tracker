@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TextInput } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  LayoutChangeEvent,
+} from 'react-native';
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { ActivityWall } from '@components/activity_wall';
@@ -33,6 +39,8 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const [metricData, setMetricData] = useState<HealthMetricData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const numDays = -1; // Use "Fit" mode
 
   useEffect(() => {
     LoadData();
@@ -65,6 +73,11 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
 
   const HandleThresholdChange = (index: number, value: string) => {
     if (!config) return;
+
+    // Prevent editing the first threshold (index 0, value 0)
+    if (index === 0) {
+      return;
+    }
 
     const numValue = parseFloat(value) || 0;
     const newThresholds = [...config.colorRange.thresholds];
@@ -110,6 +123,47 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     setConfig(defaultConfig);
   };
 
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width;
+    setContainerWidth(prevWidth => {
+      // Only update if the change is significant (more than 1px)
+      if (Math.abs(width - prevWidth) > 1) {
+        return width;
+      }
+      return prevWidth;
+    });
+  }, []);
+
+  // Calculate effective numDays for "Fit" mode - memoized to prevent re-render loops
+  const effectiveNumDays = useMemo(() => {
+    if (numDays === -1) {
+      // "Fit" - calculate weeks to fit exactly one row
+      const CELL_SIZE = 12;
+      const CELL_GAP = 5;
+      const labelColumnWidth = 32; // Day labels column width
+      const showDayLabels = true;
+      const padding = 32; // 16px left + 16px right from previewContainer
+
+      if (containerWidth > 0) {
+        const availableWidth = containerWidth - padding;
+        const effectiveLabelColumnWidth = showDayLabels ? labelColumnWidth : 0;
+        const gridWidth =
+          availableWidth -
+          effectiveLabelColumnWidth -
+          (showDayLabels ? CELL_GAP : 0);
+        const columnWidth = CELL_SIZE + CELL_GAP;
+        if (columnWidth > 0) {
+          const maxWeeks = Math.floor((gridWidth + CELL_GAP) / columnWidth);
+          // Convert weeks to days (weeks * 7 days)
+          return Math.max(7, maxWeeks * 7);
+        }
+      }
+      // Default to 7 days if container width not available yet
+      return 7;
+    }
+    return numDays;
+  }, [containerWidth, numDays]);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -127,6 +181,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const inputBorderColor = isDarkMode ? '#48484A' : '#C6C6C8';
   const inputBackgroundColor = isDarkMode ? '#1C1C1E' : '#FFFFFF';
   const inputTextColor = isDarkMode ? '#FFFFFF' : '#000000';
+  const disabledInputBackgroundColor = isDarkMode ? '#2C2C2E' : '#F2F2F7';
 
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
@@ -135,12 +190,16 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
           {t('configuration.preview')}
         </Text>
         {metricData && metricData.dataPoints.length > 0 && (
-          <View style={styles.previewContainer}>
+          <View style={styles.previewContainer} onLayout={handleLayout}>
             <ActivityWall
+              key={`activity-wall-${effectiveNumDays}`}
               dataPoints={metricData.dataPoints}
               thresholds={config.colorRange.thresholds}
               colors={config.colorRange.colors}
-              numDays={30}
+              numDays={effectiveNumDays}
+              enableMultiRowLayout={false}
+              interactive={false}
+              showDescription={false}
             />
           </View>
         )}
@@ -151,60 +210,69 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
           {t('configuration.threshold_settings')}
         </Text>
         {config.colorRange.thresholds.map((threshold, index) => {
-          if (
-            threshold === Infinity ||
-            threshold === null ||
-            threshold === undefined
-          ) {
+          if (threshold === null || threshold === undefined) {
             return null;
           }
+
+          const isFirstThreshold = index === 0;
+          const isLastThreshold = threshold === Infinity;
+          const isEditable = !isFirstThreshold && !isLastThreshold;
+
+          // Get the corresponding color for this threshold rank
+          const thresholdColor =
+            index < config.colorRange.colors.length
+              ? config.colorRange.colors[index]
+              : config.colorRange.colors[config.colorRange.colors.length - 1];
 
           return (
             <View key={index} style={styles.thresholdRow}>
               <Text style={[styles.thresholdLabel, { color: textColor }]}>
                 {t('configuration.range', { number: index + 1 })}
               </Text>
-              <TextInput
-                style={[
-                  styles.thresholdInput,
-                  {
-                    borderColor: inputBorderColor,
-                    backgroundColor: inputBackgroundColor,
-                    color: inputTextColor,
-                  },
-                ]}
-                value={threshold.toString()}
-                onChangeText={value => HandleThresholdChange(index, value)}
-                keyboardType="numeric"
-                placeholderTextColor={secondaryTextColor}
-              />
+              <View style={styles.thresholdInputContainer}>
+                {isEditable ? (
+                  <TextInput
+                    style={[
+                      styles.thresholdInput,
+                      {
+                        borderColor: inputBorderColor,
+                        backgroundColor: inputBackgroundColor,
+                        color: inputTextColor,
+                      },
+                    ]}
+                    value={threshold.toString()}
+                    onChangeText={value => HandleThresholdChange(index, value)}
+                    keyboardType="numeric"
+                    placeholderTextColor={secondaryTextColor}
+                  />
+                ) : (
+                  <TextInput
+                    style={[
+                      styles.thresholdInput,
+                      {
+                        borderColor: inputBorderColor,
+                        backgroundColor: disabledInputBackgroundColor,
+                        color: secondaryTextColor,
+                      },
+                    ]}
+                    value={isLastThreshold ? 'Max' : threshold.toString()}
+                    editable={false}
+                    placeholderTextColor={secondaryTextColor}
+                  />
+                )}
+                <View
+                  style={[
+                    styles.thresholdColorIndicator,
+                    {
+                      backgroundColor: thresholdColor,
+                      borderColor: inputBorderColor,
+                    },
+                  ]}
+                />
+              </View>
             </View>
           );
         })}
-      </View>
-
-      <View style={[styles.section, { borderBottomColor: borderColor }]}>
-        <Text style={[styles.sectionTitle, { color: textColor }]}>
-          {t('configuration.color_settings')}
-        </Text>
-        <View style={styles.colorGrid}>
-          {config.colorRange.colors.map((color, index) => (
-            <View key={index} style={styles.colorItem}>
-              <View
-                style={[
-                  styles.colorPreview,
-                  {
-                    backgroundColor: color,
-                    borderColor: inputBorderColor,
-                  },
-                ]}
-              />
-              <Text style={[styles.colorText, { color: secondaryTextColor }]}>
-                {color}
-              </Text>
-            </View>
-          ))}
-        </View>
       </View>
 
       <View style={styles.actions}>
@@ -251,6 +319,11 @@ const styles = StyleSheet.create({
   thresholdLabel: {
     fontSize: 16,
   },
+  thresholdInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   thresholdInput: {
     width: 100,
     padding: 8,
@@ -258,6 +331,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     textAlign: 'right',
     fontSize: 16,
+  },
+  thresholdColorIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   colorGrid: {
     flexDirection: 'row',

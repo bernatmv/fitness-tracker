@@ -103,14 +103,7 @@ const SettingsScreenWrapper: React.FC<SettingsScreenWrapperProps> = ({
   navigation,
   onThemePreferenceChange,
 }) => {
-  return (
-    <SettingsScreen
-      onMetricConfigPress={metricType =>
-        navigation.navigate('MetricConfig', { metricType })
-      }
-      onThemePreferenceChange={onThemePreferenceChange}
-    />
-  );
+  return <SettingsScreen onThemePreferenceChange={onThemePreferenceChange} />;
 };
 
 interface AppNavigatorProps {
@@ -147,15 +140,15 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
       <Stack.Screen
         name="MetricDetail"
         component={MetricDetailScreenWrapper}
-        options={({ route }) => ({
-          title: t('metric_detail.title', { metric: route.params.metricType }),
+        options={() => ({
+          title: t('metric_detail.title'),
         })}
       />
       <Stack.Screen
         name="MetricConfig"
         component={MetricConfigScreenWrapper}
-        options={({ route }) => ({
-          title: t('configuration.title', { metric: route.params.metricType }),
+        options={() => ({
+          title: t('configuration.title'),
         })}
       />
     </Stack.Navigator>

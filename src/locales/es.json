@@ -67,7 +67,7 @@
     "version": "Versión {{version}}"
   },
   "metric_detail": {
-    "title": "Detalles de {{metric}}",
+    "title": "Detalles",
     "configure": "Configurar",
     "statistics": "Estadísticas",
     "average": "Promedio",
@@ -84,11 +84,11 @@
     "select_cell_hint": "Selecciona una celda para ver los datos de ese día"
   },
   "configuration": {
-    "title": "Configurar {{metric}}",
+    "title": "Configuración",
     "color_settings": "Configuración de Color",
     "base_color": "Color Base",
     "threshold_settings": "Configuración de Umbrales",
-    "range": "Rango {{number}}",
+    "range": "Umbral {{number}}",
     "threshold_from": "Desde",
     "threshold_to": "Hasta",
     "preview": "Vista Previa",

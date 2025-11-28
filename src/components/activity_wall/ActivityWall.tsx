@@ -33,6 +33,7 @@ interface ActivityWallProps {
   showDescription?: boolean;
   enableMultiRowLayout?: boolean;
   splitByYear?: boolean;
+  interactive?: boolean;
 }
 
 /**
@@ -50,6 +51,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   showDescription = true,
   enableMultiRowLayout = false,
   splitByYear = false,
+  interactive = true,
 }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
@@ -142,9 +144,11 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     };
   }, [numDays]);
 
+  const FALLBACK_MAX_COLUMNS = 12;
+
   const maxWeekColumns = useMemo(() => {
     if (!containerWidth) {
-      return weeks.length;
+      return Math.min(weeks.length, FALLBACK_MAX_COLUMNS);
     }
     const effectiveLabelColumnWidth = showDayLabels ? labelColumnWidth : 0;
     const gridWidth =
@@ -475,23 +479,35 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     };
 
     const marginBottom = isLastRow ? 0 : CELL_GAP;
+    const cellStyle = [
+      styles.cell,
+      {
+        width: effectiveCellSize,
+        height: effectiveCellSize,
+        marginBottom,
+        backgroundColor,
+      },
+      isSelected && [
+        styles.cellSelected,
+        { borderColor: theme.colors.cellSelectedBorder },
+      ],
+    ];
+
+    if (!interactive) {
+      return (
+        <View
+          key={`cell-${index}-${dateKey}`}
+          testID={`activity-cell-${index}`}
+          style={cellStyle}
+        />
+      );
+    }
+
     return (
       <TouchableOpacity
         key={`cell-${index}-${dateKey}`}
         testID={`activity-cell-${index}`}
-        style={[
-          styles.cell,
-          {
-            width: effectiveCellSize,
-            height: effectiveCellSize,
-            marginBottom,
-            backgroundColor,
-          },
-          isSelected && [
-            styles.cellSelected,
-            { borderColor: theme.colors.cellSelectedBorder },
-          ],
-        ]}
+        style={cellStyle}
         onPress={HandlePress}
         disabled={!withinRange}
         activeOpacity={0.7}
