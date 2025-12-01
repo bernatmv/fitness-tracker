@@ -74,6 +74,7 @@ For detailed setup instructions, see [Setup Guide](./docs/setup_guide.md).
 - **[Development Guide](./docs/development_guide.md)** - Development workflow and best practices
 - **[Architecture](./docs/architecture.md)** - Technical architecture and patterns
 - **[Implementation Plan](./docs/implementation_plan.md)** - Project roadmap and features
+- **[TestFlight Setup](./docs/testflight_setup.md)** - Guide to distribute app via TestFlight
 
 ## Project Structure
 
