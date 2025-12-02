@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StatusBar, StyleSheet, Appearance } from 'react-native';
+import { View, StatusBar, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
@@ -7,8 +7,13 @@ import './locales/i18n';
 import { AppNavigator } from './navigation/AppNavigator';
 import { OnboardingScreen } from './screens/onboarding';
 import { LoadingSpinner } from './components/common';
-import { LoadUserPreferences, SaveUserPreferences } from './services/storage';
+import {
+  LoadUserPreferences,
+  SaveUserPreferences,
+  LoadHealthData,
+} from './services/storage';
 import { GetTheme, DEFAULT_THEME_PREFERENCE } from './utils';
+import { SyncAllDataFromAllTime } from './services/sync';
 import type { ThemePreference } from './types';
 
 /**
@@ -20,19 +25,9 @@ const App = () => {
   const [themePreference, setThemePreference] = useState<ThemePreference>(
     DEFAULT_THEME_PREFERENCE
   );
-  const [systemColorScheme, setSystemColorScheme] = useState<'light' | 'dark'>(
-    () => (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light')
-  );
-
   useEffect(() => {
     CheckOnboardingStatus();
     LoadThemePreference();
-
-    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      setSystemColorScheme(colorScheme === 'dark' ? 'dark' : 'light');
-    });
-
-    return () => subscription.remove();
   }, []);
 
   const LoadThemePreference = async () => {
@@ -66,9 +61,29 @@ const App = () => {
     }
   };
 
-  const HandleOnboardingComplete = () => {
+  const HandleOnboardingComplete = async () => {
     setShowOnboarding(false);
     LoadThemePreference();
+
+    // Check if we should trigger initial sync
+    // This handles the case where permissions were granted during onboarding
+    try {
+      const preferences = await LoadUserPreferences();
+      if (preferences?.permissionsGranted) {
+        const healthData = await LoadHealthData();
+        // If no health data exists or last sync is very old, trigger initial sync
+        if (!healthData || !healthData.lastFullSync) {
+          try {
+            await SyncAllDataFromAllTime();
+          } catch (syncError) {
+            console.error('Error syncing initial health data:', syncError);
+            // Don't block app from loading if sync fails
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for initial sync:', error);
+    }
   };
 
   const HandleThemePreferenceChange = (preference: ThemePreference) => {
@@ -124,7 +139,9 @@ const App = () => {
           ]}>
           <StatusBar barStyle={statusBarStyle} />
           <NavigationContainer>
-            <AppNavigator onThemePreferenceChange={HandleThemePreferenceChange} />
+            <AppNavigator
+              onThemePreferenceChange={HandleThemePreferenceChange}
+            />
           </NavigationContainer>
         </View>
       </ThemeProvider>

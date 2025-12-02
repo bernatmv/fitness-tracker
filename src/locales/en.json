@@ -38,7 +38,8 @@
     "permissions_description": "We need access to your health data to display your activity. Your data stays on your device.",
     "permissions_button": "Grant Access",
     "setup_complete": "You're all set!",
-    "setup_complete_description": "Start tracking your fitness journey today"
+    "setup_complete_description": "Start tracking your fitness journey today",
+    "syncing_data": "Syncing health data..."
   },
   "home": {
     "nav": "Home",

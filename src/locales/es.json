@@ -38,7 +38,8 @@
     "permissions_description": "Necesitamos acceso a tus datos de salud para mostrar tu actividad. Tus datos permanecen en tu dispositivo.",
     "permissions_button": "Otorgar Acceso",
     "setup_complete": "¡Todo listo!",
-    "setup_complete_description": "Comienza a rastrear tu viaje fitness hoy"
+    "setup_complete_description": "Comienza a rastrear tu viaje fitness hoy",
+    "syncing_data": "Sincronizando datos de salud..."
   },
   "home": {
     "nav": "Inicio",

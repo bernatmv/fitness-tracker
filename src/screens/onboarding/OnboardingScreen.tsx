@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppTheme } from '@utils';
 import { RequestHealthPermissions } from '@services/health_data';
 import { SaveUserPreferences, LoadUserPreferences } from '@services/storage';
+import { SyncAllDataFromAllTime } from '@services/sync';
 import {
   DEFAULT_METRIC_CONFIGS,
   DEFAULT_SYNC_CONFIG,
@@ -28,6 +29,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const theme = useAppTheme();
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const HandleGrantPermissions = async () => {
@@ -36,7 +38,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
     try {
       const granted = await RequestHealthPermissions();
-      
+
       if (granted) {
         // Initialize user preferences
         const preferences: UserPreferences = {
@@ -52,6 +54,18 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         };
 
         await SaveUserPreferences(preferences);
+
+        // Trigger initial sync of all health data
+        setIsSyncing(true);
+        try {
+          await SyncAllDataFromAllTime();
+        } catch (syncError) {
+          console.error('Error syncing initial health data:', syncError);
+          // Don't block onboarding completion if sync fails
+        } finally {
+          setIsSyncing(false);
+        }
+
         setStep(2); // Move to completion step
       } else {
         setError(t('errors.no_permission'));
@@ -68,8 +82,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     onComplete();
   };
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('common.loading')} />;
+  if (isLoading || isSyncing) {
+    const message = isSyncing
+      ? t('onboarding.syncing_data') || 'Syncing health data...'
+      : t('common.loading');
+    return <LoadingSpinner message={message} />;
   }
 
   return (
@@ -111,13 +128,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           <Text style={styles.description}>
             {t('onboarding.permissions_description')}
           </Text>
-          
+
           {error && (
             <Text style={[styles.errorText, { color: theme.colors.error }]}>
               {error}
             </Text>
           )}
-          
+
           <Button
             title={t('onboarding.permissions_button')}
             onPress={HandleGrantPermissions}
@@ -193,4 +210,3 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
-
