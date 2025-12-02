@@ -5,7 +5,9 @@ import {
   UserPreferences,
   MetricType,
   HealthMetricData,
+  MetricConfig,
 } from '@types';
+import { GetAllPalettes, GetPaletteColorsById } from '@constants';
 
 /**
  * Storage keys
@@ -16,6 +18,34 @@ const STORAGE_KEYS = {
   USER_PREFERENCES: '@fitness_tracker:user_preferences',
   LAST_SYNC: '@fitness_tracker:last_sync',
 } as const;
+
+/**
+ * Find matching palette for old color array
+ * Compares colors with palette light mode colors
+ */
+const FindMatchingPalette = (colors: string[]): string => {
+  const palettes = GetAllPalettes();
+  
+  // Normalize colors for comparison (lowercase, remove spaces)
+  const normalizeColor = (color: string) => color.toLowerCase().trim();
+  const normalizedOldColors = colors.map(normalizeColor);
+
+  // Try to find exact match with light mode colors
+  for (const palette of palettes) {
+    const paletteColors = GetPaletteColorsById(palette.id, 'light');
+    const normalizedPaletteColors = paletteColors.map(normalizeColor);
+    
+    if (
+      normalizedOldColors.length === normalizedPaletteColors.length &&
+      normalizedOldColors.every((color, index) => color === normalizedPaletteColors[index])
+    ) {
+      return palette.id;
+    }
+  }
+
+  // If no exact match, default to github_green
+  return 'github_green';
+};
 
 /**
  * Save health data to storage
@@ -123,6 +153,42 @@ export const LoadUserPreferences =
       ) {
         preferences.enableMultiRowLayout = false;
         await SaveUserPreferences(preferences);
+      }
+
+      // Migration: convert old colorRange.colors to colorRange.paletteId
+      if (preferences && preferences.metricConfigs) {
+        let needsMigration = false;
+        const migratedConfigs: Record<MetricType, MetricConfig> = {
+          ...preferences.metricConfigs,
+        };
+
+        Object.entries(preferences.metricConfigs).forEach(([metricType, config]) => {
+          const metricConfig = config as MetricConfig;
+          // Check if this is old format (has colors array instead of paletteId)
+          if (
+            metricConfig.colorRange &&
+            'colors' in metricConfig.colorRange &&
+            !('paletteId' in metricConfig.colorRange)
+          ) {
+            needsMigration = true;
+            // Try to find matching palette by comparing colors
+            const oldColors = (metricConfig.colorRange as { colors: string[] }).colors;
+            const matchingPalette = FindMatchingPalette(oldColors);
+            
+            migratedConfigs[metricType as MetricType] = {
+              ...metricConfig,
+              colorRange: {
+                thresholds: metricConfig.colorRange.thresholds,
+                paletteId: matchingPalette,
+              },
+            };
+          }
+        });
+
+        if (needsMigration) {
+          preferences.metricConfigs = migratedConfigs;
+          await SaveUserPreferences(preferences);
+        }
       }
 
       return preferences;

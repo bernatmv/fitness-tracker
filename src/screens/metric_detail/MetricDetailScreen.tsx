@@ -14,6 +14,7 @@ import {
   UserPreferences,
 } from '@types';
 import { GetDateRange, FormatCompactNumber, GetStartOfDay } from '@utils';
+import { GetColorsForMetricConfig } from '@services/theme';
 
 interface MetricDetailScreenProps {
   metricType: MetricType;
@@ -263,12 +264,13 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
               // Split by year when "All" is selected
               const shouldEnableMultiRow = numDays !== -1;
               const shouldSplitByYear = numDays === null;
+              const colors = GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode);
               return (
                 <ActivityWall
                   key={`activity-wall-${effectiveNumDays}`}
                   dataPoints={dataPoints}
                   thresholds={config.colorRange.thresholds}
-                  colors={config.colorRange.colors}
+                  colors={colors}
                   numDays={effectiveNumDays}
                   showMonthLabels={true}
                   showDayLabels={true}

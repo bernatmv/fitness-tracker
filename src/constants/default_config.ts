@@ -5,10 +5,11 @@ import {
   SyncStrategy,
   ThemePreference,
 } from '@types';
+import { GetPaletteColorsById } from './color_palettes';
 
 /**
  * Default color ranges for each metric type
- * Using GitHub-like green color scheme as default
+ * Using palette IDs instead of color arrays
  */
 export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
   [MetricType.CALORIES_BURNED]: {
@@ -17,8 +18,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Calories Burned',
     colorRange: {
       thresholds: [0, 500, 800, 950, 1200],
-      // iOS Health app-like reds for calories burned (darkest first)
-      colors: ['#EFF2F5', '#c0392b', '#e74c3c', '#f9827c', '#f9b8b2'],
+      paletteId: 'ios_health_red',
     },
   },
   [MetricType.STEPS]: {
@@ -27,7 +27,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Steps',
     colorRange: {
       thresholds: [0, 2000, 5000, 10000, 15000],
-      colors: ['#EFF2F5', '#033a16', '#196c2e', '#2ea043', '#56d364'],
+      paletteId: 'github_green',
     },
   },
   [MetricType.EXERCISE_TIME]: {
@@ -36,8 +36,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Exercise Time',
     colorRange: {
       thresholds: [0, 15, 30, 60, 120],
-      // Greens inspired by the iOS Health app (darkest first)
-      colors: ['#EFF2F5', '#033a16', '#196c2e', '#2ea043', '#56d364'],
+      paletteId: 'github_green',
     },
   },
   [MetricType.STANDING_TIME]: {
@@ -46,8 +45,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Standing Time',
     colorRange: {
       thresholds: [0, 6, 8, 10, 12],
-      // iOS Health app-like blues for standing time (darkest first)
-      colors: ['#EFF2F5', '#004a99', '#007aff', '#6ec1f6', '#b3dbf7'],
+      paletteId: 'ios_health_blue',
     },
   },
   [MetricType.FLOORS_CLIMBED]: {
@@ -56,7 +54,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Floors Climbed',
     colorRange: {
       thresholds: [0, 5, 10, 15, 25],
-      colors: ['#EFF2F5', '#033a16', '#196c2e', '#2ea043', '#56d364'],
+      paletteId: 'github_green',
     },
   },
   [MetricType.SLEEP_HOURS]: {
@@ -65,8 +63,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Hours of Sleep',
     colorRange: {
       thresholds: [0, 6, 7, 8, 9],
-      // Purples inspired by the iOS Health app for sleep hours (darkest first)
-      colors: ['#EFF2F5', '#5e3370', '#8e44ad', '#a580e8', '#d1b3ff'],
+      paletteId: 'ios_health_purple',
     },
   },
 };
@@ -105,15 +102,19 @@ export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
 /**
  * Get all default colors for a specific threshold level across all metrics
  * This is used to provide suggested colors in the color picker
+ * @param thresholdIndex - The index of the threshold (0-4)
+ * @param mode - The theme mode ('light' or 'dark')
  */
 export const GetSuggestedColorsForThreshold = (
-  thresholdIndex: number
+  thresholdIndex: number,
+  mode: 'light' | 'dark' = 'light'
 ): string[] => {
   const suggestedColors = new Set<string>();
 
   Object.values(DEFAULT_METRIC_CONFIGS).forEach(config => {
-    if (thresholdIndex < config.colorRange.colors.length) {
-      suggestedColors.add(config.colorRange.colors[thresholdIndex]);
+    const colors = GetPaletteColorsById(config.colorRange.paletteId, mode);
+    if (thresholdIndex < colors.length) {
+      suggestedColors.add(colors[thresholdIndex]);
     }
   });
 

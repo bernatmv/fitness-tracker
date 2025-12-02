@@ -46,7 +46,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   const [hexInput, setHexInput] = useState(currentColor);
   const [isValidColor, setIsValidColor] = useState(true);
 
-  const suggestedColors = GetSuggestedColorsForThreshold(thresholdIndex);
+  const suggestedColors = GetSuggestedColorsForThreshold(thresholdIndex, isDarkMode ? 'dark' : 'light');
 
   const backgroundColor = isDarkMode ? '#1C1C1E' : '#FFFFFF';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';

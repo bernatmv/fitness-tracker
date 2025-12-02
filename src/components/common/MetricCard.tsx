@@ -6,6 +6,7 @@ import { ActivityWall } from '../activity_wall';
 import { useTranslation } from 'react-i18next';
 import { FormatNumber, useAppTheme } from '@utils';
 import { METRIC_UNITS } from '@constants';
+import { GetColorsForMetricConfig } from '@services/theme';
 
 interface MetricCardProps {
   config: MetricConfig;
@@ -72,6 +73,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   const value = CalculateCurrentValue();
   const unit = GetUnit();
+  const isDarkMode = theme.mode === 'dark';
+  const colors = GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode);
 
   return (
     <Card containerStyle={[styles.card, { backgroundColor, borderColor }]}>
@@ -104,7 +107,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <ActivityWall
             dataPoints={dataPoints}
             thresholds={config.colorRange.thresholds}
-            colors={config.colorRange.colors}
+            colors={colors}
             showMonthLabels={false}
             showDayLabels={false}
             showDescription={false}

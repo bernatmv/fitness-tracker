@@ -6,8 +6,8 @@ import { MetricType } from './health_metrics';
 export interface ColorRange {
   /** Array of threshold values defining range boundaries */
   thresholds: number[];
-  /** Array of colors corresponding to each range (hex format) */
-  colors: string[];
+  /** Palette ID to use for colors */
+  paletteId: string;
 }
 
 /**

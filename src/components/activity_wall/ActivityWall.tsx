@@ -13,7 +13,6 @@ import {
   GetColorForValue,
   FormatNumber,
   useAppTheme,
-  ReorderColorsForTheme,
 } from '@utils';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import { METRIC_UNITS } from '@constants';
@@ -55,21 +54,6 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
-
-  // Reorder colors based on theme mode and set index 0 color for theme
-  const adjustedColors = useMemo(() => {
-    // First reorder colors based on theme (canonical -> theme order)
-    const themeOrdered = ReorderColorsForTheme(colors, theme.mode === 'dark');
-
-    // Set index 0 color based on theme
-    if (themeOrdered.length > 0) {
-      const adjusted = [...themeOrdered];
-      // Index 0: #151b23 for dark mode, #EFF2F5 for light mode
-      adjusted[0] = theme.mode === 'dark' ? '#151b23' : '#EFF2F5';
-      return adjusted;
-    }
-    return themeOrdered;
-  }, [colors, theme.mode]);
 
   const DAY_LABELS = useMemo(
     () =>
@@ -460,7 +444,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
     const data = withinRange ? dataMap.get(dateKey) : null;
     const value = data?.value || 0;
     const backgroundColor = withinRange
-      ? GetColorForValue(value, effectiveThresholds, adjustedColors)
+      ? GetColorForValue(value, effectiveThresholds, colors)
       : 'transparent';
 
     const isSelected =
