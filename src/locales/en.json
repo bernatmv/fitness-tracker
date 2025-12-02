@@ -50,6 +50,7 @@
   },
   "settings": {
     "title": "Settings",
+    "data": "Data",
     "metrics": "Metrics",
     "appearance": "Appearance",
     "sync": "Sync",
@@ -65,6 +66,17 @@
     "sync_interval": "Sync Interval",
     "manual_sync": "Manual Sync Only",
     "periodic_sync": "Every {{interval}} hours",
+    "sync_all_data": "Sync All Health Data",
+    "sync_all_data_title": "Sync All Health Data",
+    "sync_all_data_message": "This will import all available health data from all time. Existing data for each day will be overwritten. This may take a while.",
+    "sync_all_data_description": "Import all available health data from all time",
+    "sync_all_data_success": "All health data has been synced successfully",
+    "sync_all_data_error": "Failed to sync health data. Please check your permissions.",
+    "clear_all_data": "Clear All Health Data",
+    "clear_all_data_title": "Clear All Health Data",
+    "clear_all_data_message": "This will permanently delete all imported health data from the app. This action cannot be undone.",
+    "clear_all_data_success": "All health data has been cleared successfully",
+    "clear_all_data_error": "Failed to clear health data",
     "version": "Version {{version}}"
   },
   "metric_detail": {

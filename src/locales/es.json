@@ -50,6 +50,7 @@
   },
   "settings": {
     "title": "Configuración",
+    "data": "Datos",
     "metrics": "Métricas",
     "appearance": "Apariencia",
     "sync": "Sincronización",
@@ -65,6 +66,17 @@
     "sync_interval": "Intervalo de Sincronización",
     "manual_sync": "Solo Sincronización Manual",
     "periodic_sync": "Cada {{interval}} horas",
+    "sync_all_data": "Sincronizar Todos los Datos de Salud",
+    "sync_all_data_title": "Sincronizar Todos los Datos de Salud",
+    "sync_all_data_message": "Esto importará todos los datos de salud disponibles desde siempre. Los datos existentes para cada día se sobrescribirán. Esto puede tardar un tiempo.",
+    "sync_all_data_description": "Importar todos los datos de salud disponibles desde siempre",
+    "sync_all_data_success": "Todos los datos de salud se han sincronizado correctamente",
+    "sync_all_data_error": "Error al sincronizar datos de salud. Por favor, verifica tus permisos.",
+    "clear_all_data": "Eliminar Todos los Datos de Salud",
+    "clear_all_data_title": "Eliminar Todos los Datos de Salud",
+    "clear_all_data_message": "Esto eliminará permanentemente todos los datos de salud importados de la aplicación. Esta acción no se puede deshacer.",
+    "clear_all_data_success": "Todos los datos de salud se han eliminado correctamente",
+    "clear_all_data_error": "Error al eliminar datos de salud",
     "version": "Versión {{version}}"
   },
   "metric_detail": {

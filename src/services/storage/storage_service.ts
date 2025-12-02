@@ -220,6 +220,18 @@ export const SaveMetricData = async (
 };
 
 /**
+ * Clear all health data from storage
+ */
+export const ClearAllHealthData = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.HEALTH_DATA);
+  } catch (error) {
+    console.error('Error clearing health data:', error);
+    throw new Error('Failed to clear health data');
+  }
+};
+
+/**
  * Load metric data for a specific metric type
  */
 export const LoadMetricData = async (

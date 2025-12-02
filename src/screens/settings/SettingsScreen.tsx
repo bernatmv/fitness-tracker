@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { ListItem, Switch, Text, Button } from '@rneui/themed';
+import { ListItem, Switch, Text, Button, Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   LoadUserPreferences,
   SaveUserPreferences,
   ClearUserPreferences,
+  ClearAllHealthData,
 } from '@services/storage';
+import { SyncAllDataFromAllTime } from '@services/sync';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION } from '@constants';
 import { LoadingSpinner } from '@components/common';
@@ -29,6 +31,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const insets = useSafeAreaInsets();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [isClearingData, setIsClearingData] = useState(false);
 
   useEffect(() => {
     LoadPreferences();
@@ -111,6 +115,81 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     await SaveUserPreferences(updatedPreferences);
   };
 
+  const HandleSyncAllData = async () => {
+    Alert.alert(
+      t('settings.sync_all_data_title') || 'Sync All Health Data',
+      t('settings.sync_all_data_message') ||
+        'This will import all available health data from all time. Existing data for each day will be overwritten. This may take a while.',
+      [
+        {
+          text: t('common.cancel') || 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: t('settings.sync_all_data') || 'Sync All',
+          onPress: async () => {
+            try {
+              setIsSyncingAll(true);
+              await SyncAllDataFromAllTime();
+              Alert.alert(
+                t('common.success') || 'Success',
+                t('settings.sync_all_data_success') ||
+                  'All health data has been synced successfully'
+              );
+            } catch (error) {
+              console.error('Error syncing all data:', error);
+              Alert.alert(
+                t('common.error') || 'Error',
+                t('settings.sync_all_data_error') ||
+                  'Failed to sync health data. Please check your permissions.'
+              );
+            } finally {
+              setIsSyncingAll(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const HandleClearAllData = async () => {
+    Alert.alert(
+      t('settings.clear_all_data_title') || 'Clear All Health Data',
+      t('settings.clear_all_data_message') ||
+        'This will permanently delete all imported health data from the app. This action cannot be undone.',
+      [
+        {
+          text: t('common.cancel') || 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: t('settings.clear_all_data') || 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsClearingData(true);
+              await ClearAllHealthData();
+              Alert.alert(
+                t('common.success') || 'Success',
+                t('settings.clear_all_data_success') ||
+                  'All health data has been cleared successfully'
+              );
+            } catch (error) {
+              console.error('Error clearing all data:', error);
+              Alert.alert(
+                t('common.error') || 'Error',
+                t('settings.clear_all_data_error') ||
+                  'Failed to clear health data'
+              );
+            } finally {
+              setIsClearingData(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const HandleClearPreferences = async () => {
     Alert.alert(
       'Clear Preferences',
@@ -147,6 +226,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
           {t('settings.title')}
         </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
+          {t('settings.data') || 'Data'}
+        </Text>
+        <ListItem
+          onPress={HandleSyncAllData}
+          bottomDivider
+          disabled={isSyncingAll}>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.sync_all_data') || 'Sync All Health Data'}
+            </ListItem.Title>
+            <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
+              {t('settings.sync_all_data_description') ||
+                'Import all available health data from all time'}
+            </ListItem.Subtitle>
+          </ListItem.Content>
+          {isSyncingAll ? (
+            <View style={{ marginRight: 8 }}>
+              <LoadingSpinner />
+            </View>
+          ) : (
+            <Icon
+              name="refresh"
+              type="material"
+              color={theme.colors.link}
+              size={24}
+            />
+          )}
+        </ListItem>
       </View>
 
       <View style={styles.section}>
@@ -296,6 +408,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </ListItem.Title>
           </ListItem.Content>
         </ListItem>
+      </View>
+
+      <View style={styles.devSection}>
+        <Button
+          title={t('settings.clear_all_data') || 'Clear All Health Data'}
+          onPress={HandleClearAllData}
+          loading={isClearingData}
+          disabled={isClearingData}
+          buttonStyle={[
+            styles.clearButton,
+            { backgroundColor: theme.colors.error },
+          ]}
+          titleStyle={styles.clearButtonTitle}
+        />
       </View>
 
       {__DEV__ && (
