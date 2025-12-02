@@ -164,30 +164,162 @@ xcodebuild -workspace FitnessTracker.xcworkspace \
 
 ## Troubleshooting
 
+### App Store Connect Authentication Errors
+
+**"App Store Connect Credentials Error" / "Fetching DVTActor for account" / Request timed out**
+
+This is a common authentication issue. Try these solutions:
+
+1. **Re-authenticate in Xcode:**
+   - Go to **Xcode** → **Preferences** (or **Settings** on newer versions)
+   - Go to **Accounts** tab
+   - Select your Apple ID
+   - Click **Download Manual Profiles** (if available)
+   - Click the **-** button to remove the account
+   - Click **+** to add it back
+   - Sign in again with your Apple ID
+
+2. **Clear Xcode Derived Data:**
+
+   ```bash
+   rm -rf ~/Library/Developer/Xcode/DerivedData
+   ```
+
+3. **Use App-Specific Password (if 2FA enabled):**
+   - Go to [appleid.apple.com](https://appleid.apple.com)
+   - Sign in → **Sign-In and Security** → **App-Specific Passwords**
+   - Generate a new password
+   - Use this password when Xcode prompts for authentication
+
+4. **Try Alternative Upload Method:**
+   - Instead of uploading from Xcode Organizer, export the archive:
+     - In Organizer: Select archive → **Distribute App** → **Export**
+     - Save as `.ipa` file
+   - Use **Transporter** app (from Mac App Store) to upload
+   - Or use command line: `xcrun altool --upload-app --file YourApp.ipa --type ios --apiKey YOUR_API_KEY --apiIssuer YOUR_ISSUER_ID`
+
+5. **Check Network/Firewall:**
+   - Ensure you're not behind a restrictive firewall
+   - Try a different network connection
+   - Disable VPN if active
+
+6. **Wait and Retry:**
+   - Sometimes Apple's servers are slow
+   - Wait 10-15 minutes and try again
+   - Check [Apple System Status](https://www.apple.com/support/systemstatus/) for outages
+
 ### Build Errors
 
 **"No signing certificate found"**
+
 - Go to Xcode → Preferences → Accounts
 - Add your Apple ID
 - Download certificates manually if needed
 
 **"Provisioning profile doesn't match"**
+
 - In Xcode, go to Signing & Capabilities
 - Uncheck and recheck "Automatically manage signing"
 - Clean build folder (Cmd+Shift+K) and rebuild
 
 **"Bundle identifier is already in use"**
+
 - Change to a unique bundle identifier
 - Make sure it matches the App ID in Apple Developer Portal
+
+### Validation Errors
+
+**"Missing Info.plist value. A value for the Info.plist key 'CFBundleIconName' is missing"**
+
+This error occurs when the app icon asset catalog isn't properly referenced. The fix has been applied to `Info.plist`:
+
+- Added `CFBundleIconName` key with value `AppIcon`
+- This references the `AppIcon.appiconset` in your asset catalog
+- Rebuild and re-archive after this change
+
+**"Missing required icon file. The bundle does not contain an app icon for iPhone / iPod Touch of exactly '120x120' pixels"**
+
+This error means the icon asset catalog is configured but the actual icon image files are missing. You need to add icon images to your app:
+
+**Option 1: Add Icons Manually in Xcode (Recommended)**
+
+1. Open your project in Xcode
+2. Navigate to `ios/FitnessTracker/Images.xcassets/AppIcon.appiconset`
+3. You'll see placeholder slots for different icon sizes
+4. Drag and drop your icon images into the appropriate slots:
+   - **60x60@2x** = 120x120 pixels (required for iOS 10.0+)
+   - **60x60@3x** = 180x180 pixels
+   - **1024x1024** = App Store icon (required)
+   - Other sizes as needed
+
+5. Make sure all required sizes are filled (at minimum: 120x120 and 1024x1024)
+6. Clean build folder (Cmd+Shift+K)
+7. Rebuild and re-archive
+
+**Option 2: Generate Icons from a Single Image**
+
+If you have a 1024x1024 master icon:
+
+1. Use an online tool like [AppIcon.co](https://www.appicon.co/) or [IconKitchen](https://icon.kitchen/)
+2. Upload your 1024x1024 icon
+3. Download the generated icon set
+4. Replace the contents of `ios/FitnessTracker/Images.xcassets/AppIcon.appiconset/` with the generated icons
+5. Update `Contents.json` if the tool generates a new one
+
+**Option 3: Use React Native Asset Tools**
+
+```bash
+# Install react-native-asset (if not already installed)
+pnpm add -D react-native-asset
+
+# Create icons from a 1024x1024 source image
+# Place your icon.png (1024x1024) in the project root, then:
+npx react-native-asset --icon ./icon.png
+```
+
+**Minimum Required Icons:**
+
+- **120x120** (60x60@2x) - Required for iOS 10.0+
+- **180x180** (60x60@3x) - Required for modern devices
+- **1024x1024** (App Store) - Required for App Store submission
+
+After adding icons, clean build and re-archive.
+
+**"Invalid purpose string value. The "" value for the NSHealthUpdateUsageDescription key isn't allowed"**
+
+This error occurs when your app has HealthKit entitlements but the `NSHealthUpdateUsageDescription` key in `Info.plist` is empty. Apple requires a non-empty description for privacy compliance.
+
+**Fix:**
+
+- The fix has been applied to `Info.plist`
+- Added a proper description: "Fitness Tracker may need write access to sync your health data and enable background updates for accurate tracking."
+- Rebuild and re-archive after this change
+
+**Note**: Even if your app only reads health data, Apple requires this key to be present and non-empty if HealthKit entitlements are enabled.
+
+**"Upload Symbols Failed" / "The archive did not include a dSYM for the hermes.framework"**
+
+This is a **warning, not a critical error**. It's a known React Native/Hermes issue and can usually be ignored:
+
+- The app will still upload and work correctly
+- This only affects crash symbolication for Hermes crashes
+- If you need Hermes symbols, you can:
+  1. In Xcode: **Product** → **Archive** → **Distribute App** → **Upload**
+  2. Check **"Upload your app's symbols to receive symbolicated crash logs from Apple"**
+  3. Or manually upload dSYMs later if needed
+
+**Note**: For most React Native apps, this warning doesn't prevent TestFlight distribution.
 
 ### Upload Errors
 
 **"Invalid Bundle"**
+
 - Make sure you're uploading a Release build, not Debug
 - Check that all required capabilities are enabled
 - Verify bundle identifier matches App Store Connect
 
 **"Missing Compliance"**
+
 - In App Store Connect, go to your app → App Information
 - Answer export compliance questions
 - Usually: "No, this app does not use encryption"
@@ -195,11 +327,13 @@ xcodebuild -workspace FitnessTracker.xcworkspace \
 ### TestFlight Issues
 
 **Build stuck in "Processing"**
+
 - Wait at least 30 minutes
 - Check email for any issues
 - Try uploading a new build with incremented build number
 
 **Testers can't install**
+
 - Make sure they're using the same Apple ID email that received the invitation
 - Check that the build has finished processing
 - Verify the tester's device is compatible (iOS version)
@@ -229,9 +363,9 @@ pnpm ios --device
 ## Next Steps After TestFlight
 
 Once you're ready for App Store release:
+
 1. Complete App Store listing (screenshots, description, etc.)
 2. Submit for App Review
 3. Wait for approval (typically 1-3 days)
 
 For more details, see [Apple's TestFlight Documentation](https://developer.apple.com/testflight/)
-

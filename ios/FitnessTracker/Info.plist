@@ -34,9 +34,11 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Fitness Tracker needs read access to your Health data to display daily metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string></string>
+	<string>Fitness Tracker may need write access to sync your health data and enable background updates for accurate tracking.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
