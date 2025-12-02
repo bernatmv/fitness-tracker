@@ -124,7 +124,7 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: isDarkMode ? '#000000' : theme.colors.background,
+          backgroundColor: theme.colors.background,
         },
         headerTintColor: isDarkMode ? '#FFFFFF' : theme.colors.text.primary,
         headerTitleStyle: {

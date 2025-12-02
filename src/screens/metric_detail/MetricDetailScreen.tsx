@@ -116,7 +116,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   };
 
   const isDarkMode = theme.mode === 'dark';
-  const backgroundColor = isDarkMode ? '#000000' : theme.colors.background;
+  const backgroundColor = theme.colors.background;
   const titleColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
   const secondaryTextColor = isDarkMode
     ? '#8E8E93'

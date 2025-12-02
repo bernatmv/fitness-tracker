@@ -107,7 +107,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
     Object.values(preferences.metricConfigs).filter(config => config.enabled);
 
   const isDarkMode = theme.mode === 'dark';
-  const backgroundColor = isDarkMode ? '#000000' : theme.colors.background;
+  const backgroundColor = theme.colors.background;
   const titleColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
   const secondaryTextColor = isDarkMode
     ? '#8E8E93'
