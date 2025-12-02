@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { ListItem, Switch, Text, Button } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   LoadUserPreferences,
   SaveUserPreferences,
@@ -25,6 +26,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -139,7 +141,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text
           h3
           style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
@@ -316,8 +318,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: 20,
+    paddingBottom: 16,
   },
   headerTitle: {
     flex: 1,

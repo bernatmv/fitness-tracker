@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Appearance } from 'react-native';
+import { View, StatusBar, StyleSheet, Appearance } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import './locales/i18n';
 import { AppNavigator } from './navigation/AppNavigator';
@@ -81,46 +82,53 @@ const App = () => {
   if (isLoading) {
     const loadingTheme = GetTheme(DEFAULT_THEME_PREFERENCE);
     return (
-      <ThemeProvider theme={loadingTheme}>
-        <SafeAreaView
-          style={[
-            styles.container,
-            { backgroundColor: loadingTheme.colors.background },
-          ]}>
-          <LoadingSpinner />
-        </SafeAreaView>
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider theme={loadingTheme}>
+          <View
+            style={[
+              styles.container,
+              { backgroundColor: loadingTheme.colors.background },
+            ]}>
+            <StatusBar barStyle="dark-content" />
+            <LoadingSpinner />
+          </View>
+        </ThemeProvider>
+      </SafeAreaProvider>
     );
   }
 
   if (showOnboarding) {
     return (
+      <SafeAreaProvider>
+        <ThemeProvider theme={currentTheme}>
+          <View
+            style={[
+              styles.container,
+              { backgroundColor: currentTheme.colors.background },
+            ]}>
+            <StatusBar barStyle={statusBarStyle} />
+            <OnboardingScreen onComplete={HandleOnboardingComplete} />
+          </View>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
       <ThemeProvider theme={currentTheme}>
-        <SafeAreaView
+        <View
           style={[
             styles.container,
             { backgroundColor: currentTheme.colors.background },
           ]}>
           <StatusBar barStyle={statusBarStyle} />
-          <OnboardingScreen onComplete={HandleOnboardingComplete} />
-        </SafeAreaView>
+          <NavigationContainer>
+            <AppNavigator onThemePreferenceChange={HandleThemePreferenceChange} />
+          </NavigationContainer>
+        </View>
       </ThemeProvider>
-    );
-  }
-
-  return (
-    <ThemeProvider theme={currentTheme}>
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: currentTheme.colors.background },
-        ]}>
-        <StatusBar barStyle={statusBarStyle} />
-        <NavigationContainer>
-          <AppNavigator onThemePreferenceChange={HandleThemePreferenceChange} />
-        </NavigationContainer>
-      </SafeAreaView>
-    </ThemeProvider>
+    </SafeAreaProvider>
   );
 };
 

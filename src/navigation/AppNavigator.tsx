@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@utils';
 import { HomeScreen } from '@screens/home';
 import { SettingsScreen } from '@screens/settings';
@@ -36,6 +37,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -46,6 +48,8 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
+          paddingBottom: insets.bottom,
+          height: 50 + insets.bottom,
         },
       }}>
       <Tab.Screen

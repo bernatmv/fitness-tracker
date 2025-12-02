@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@utils';
 import { MetricCard, LoadingSpinner, ErrorMessage } from '@components/common';
 import { LoadHealthData, LoadUserPreferences } from '@services/storage';
@@ -26,6 +27,7 @@ interface HomeScreenProps {
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
   const [loadingState, setLoadingState] = useState<LoadingState>(
     LoadingState.LOADING
   );
@@ -117,7 +119,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Text h3 style={{ color: titleColor }}>
           {t('home.title')}
         </Text>
@@ -180,8 +182,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 16,
-    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   lastSync: {
     fontSize: 14,
