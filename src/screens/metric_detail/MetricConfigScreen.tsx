@@ -10,7 +10,7 @@ import {
 import { Button, Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { ActivityWall } from '@components/activity_wall';
-import { LoadingSpinner, ColorPicker } from '@components/common';
+import { LoadingSpinner } from '@components/common';
 import { useAppTheme } from '@utils';
 import {
   LoadUserPreferences,
@@ -18,7 +18,7 @@ import {
   LoadMetricData,
 } from '@services/storage';
 import { MetricType, MetricConfig, HealthMetricData } from '@types';
-import { DEFAULT_METRIC_CONFIGS } from '@constants';
+import { DEFAULT_METRIC_CONFIGS, GetAllPalettes } from '@constants';
 import { GetColorsForMetricConfig } from '@services/theme';
 
 interface MetricConfigScreenProps {
@@ -42,10 +42,6 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [colorPickerVisible, setColorPickerVisible] = useState(false);
-  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(
-    null
-  );
   const [originalConfig, setOriginalConfig] = useState<MetricConfig | null>(
     null
   );
@@ -143,21 +139,39 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     // to allow saving the reset to defaults
   };
 
-  const HandleColorIndicatorPress = (index: number) => {
-    setSelectedColorIndex(index);
-    setColorPickerVisible(true);
-  };
+  const HandlePaletteChange = async (paletteId: string) => {
+    if (!config) return;
 
-  const HandleColorChange = (color: string) => {
-    // Color editing is disabled when using palette-based system
-    // Users should select a different palette instead
-    // This functionality can be re-enabled later with palette selection UI
-    console.warn('Color editing is not supported with palette-based configuration. Please select a different palette.');
-  };
+    const updatedConfig: MetricConfig = {
+      ...config,
+      colorRange: {
+        ...config.colorRange,
+        paletteId,
+      },
+    };
 
-  const HandleColorPickerClose = () => {
-    setColorPickerVisible(false);
-    setSelectedColorIndex(null);
+    // Update local state immediately for UI feedback
+    setConfig(updatedConfig);
+
+    // Auto-save the theme change
+    try {
+      const prefs = await LoadUserPreferences();
+      if (prefs) {
+        const updatedPrefs = {
+          ...prefs,
+          metricConfigs: {
+            ...prefs.metricConfigs,
+            [metricType]: updatedConfig,
+          },
+        };
+
+        await SaveUserPreferences(updatedPrefs);
+        // Update original config to reflect the saved state
+        setOriginalConfig(JSON.parse(JSON.stringify(updatedConfig)));
+      }
+    } catch (error) {
+      console.error('Error auto-saving theme change:', error);
+    }
   };
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
@@ -201,11 +215,11 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     return numDays;
   }, [containerWidth, numDays]);
 
-  // Check if there are any changes to save
+  // Check if there are any changes to save (only thresholds, not theme)
   const hasChanges = useMemo(() => {
     if (!config || !originalConfig) return false;
 
-    // Compare thresholds
+    // Compare thresholds only (theme changes are auto-saved)
     if (
       config.colorRange.thresholds.length !==
       originalConfig.colorRange.thresholds.length
@@ -220,11 +234,6 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
       ) {
         return true;
       }
-    }
-
-    // Compare paletteId
-    if (config.colorRange.paletteId !== originalConfig.colorRange.paletteId) {
-      return true;
     }
 
     return false;
@@ -269,6 +278,56 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
             />
           </View>
         )}
+      </View>
+
+      <View style={[styles.section, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>
+          {t('settings.theme')}
+        </Text>
+        <View style={styles.paletteGrid}>
+          {GetAllPalettes().map(palette => {
+            const isSelected = config.colorRange.paletteId === palette.id;
+            const paletteColors = GetColorsForMetricConfig(palette.id, isDarkMode);
+            
+            return (
+              <TouchableOpacity
+                key={palette.id}
+                onPress={() => HandlePaletteChange(palette.id)}
+                style={[
+                  styles.paletteItem,
+                  {
+                    borderColor: isSelected ? theme.colors.primary : borderColor,
+                    borderWidth: isSelected ? 2 : 1,
+                    backgroundColor: isSelected 
+                      ? (isDarkMode ? '#1a1f2e' : '#e8f4fd')
+                      : 'transparent',
+                  },
+                ]}>
+                <View style={styles.palettePreview}>
+                  {paletteColors.slice(1, 5).map((color, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.paletteColorSwatch,
+                        { backgroundColor: color },
+                      ]}
+                    />
+                  ))}
+                </View>
+                <Text
+                  style={[
+                    styles.paletteName,
+                    {
+                      color: isSelected ? theme.colors.primary : textColor,
+                      fontWeight: isSelected ? '600' : '400',
+                    },
+                  ]}>
+                  {palette.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       <View style={[styles.section, { borderBottomColor: borderColor }]}>
@@ -332,8 +391,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
                     placeholderTextColor={secondaryTextColor}
                   />
                 )}
-                <TouchableOpacity
-                  onPress={() => HandleColorIndicatorPress(index)}
+                <View
                   style={[
                     styles.thresholdColorIndicator,
                     {
@@ -355,25 +413,22 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
           type="outline"
           containerStyle={styles.actionButton}
         />
-        <Button
-          title={t('common.save')}
-          onPress={HandleSave}
-          loading={isSaving}
-          disabled={!hasChanges || isSaving}
-          containerStyle={styles.actionButton}
-        />
+        {hasChanges && (
+          <Button
+            title={t('common.save')}
+            onPress={HandleSave}
+            loading={isSaving}
+            disabled={isSaving}
+            containerStyle={styles.actionButton}
+            buttonStyle={{
+              backgroundColor: theme.colors.primary,
+            }}
+            titleStyle={{
+              color: isDarkMode ? '#FFFFFF' : '#FFFFFF',
+            }}
+          />
+        )}
       </View>
-
-      {config && selectedColorIndex !== null && (
-        <ColorPicker
-          visible={colorPickerVisible}
-          currentColor={GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode)[selectedColorIndex]}
-          thresholdIndex={selectedColorIndex}
-          onColorChange={HandleColorChange}
-          onClose={HandleColorPickerClose}
-          theme={theme}
-        />
-      )}
     </ScrollView>
   );
 };
@@ -423,24 +478,31 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
   },
-  colorGrid: {
+  paletteGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    marginTop: 8,
   },
-  colorItem: {
+  paletteItem: {
+    width: '47%',
+    padding: 12,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  colorPreview: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    marginBottom: 4,
-    borderWidth: 1,
+  palettePreview: {
+    flexDirection: 'row',
+    gap: 4,
+    marginBottom: 8,
   },
-  colorText: {
-    fontSize: 12,
-    fontFamily: 'monospace',
+  paletteColorSwatch: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+  },
+  paletteName: {
+    fontSize: 14,
+    textAlign: 'center',
   },
   actions: {
     padding: 16,

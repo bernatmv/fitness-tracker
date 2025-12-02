@@ -8,6 +8,8 @@
 	<string>Fitness Tracker</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -37,8 +39,6 @@
 	<string>Fitness Tracker may need write access to sync your health data and enable background updates for accurate tracking.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
-	<key>CFBundleIconName</key>
-	<string>AppIcon</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
