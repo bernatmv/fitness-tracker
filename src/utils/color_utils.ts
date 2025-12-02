@@ -53,25 +53,6 @@ export const DarkenColor = (hex: string, percent: number): string => {
 };
 
 /**
- * Generate color range from base color
- */
-export const GenerateColorRange = (baseColor: string, levels: number = 5): string[] => {
-  const colors: string[] = [];
-  
-  // First color is very light (almost white/gray)
-  colors.push('#ebedf0');
-  
-  // Generate intermediate colors
-  const step = 100 / (levels - 1);
-  for (let i = 1; i < levels; i++) {
-    const darkness = (i - 1) * step;
-    colors.push(DarkenColor(baseColor, darkness * 0.4));
-  }
-  
-  return colors;
-};
-
-/**
  * Get color for value based on thresholds
  */
 export const GetColorForValue = (

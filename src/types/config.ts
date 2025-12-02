@@ -8,8 +8,6 @@ export interface ColorRange {
   thresholds: number[];
   /** Array of colors corresponding to each range (hex format) */
   colors: string[];
-  /** Base color for generating shades */
-  baseColor: string;
 }
 
 /**

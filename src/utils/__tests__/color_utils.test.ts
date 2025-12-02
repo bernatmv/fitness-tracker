@@ -3,7 +3,6 @@ import {
   RgbToHex,
   LightenColor,
   DarkenColor,
-  GenerateColorRange,
   GetColorForValue,
   IsValidHexColor,
 } from '../color_utils';
@@ -57,21 +56,6 @@ describe('color_utils', () => {
     it('should not go below min RGB values', () => {
       const darkened = DarkenColor('#000000', 50);
       expect(darkened).toBe('#000000');
-    });
-  });
-
-  describe('GenerateColorRange', () => {
-    it('should generate correct number of colors', () => {
-      const colors = GenerateColorRange('#40c463', 5);
-      expect(colors).toHaveLength(5);
-      expect(colors[0]).toBe('#ebedf0'); // First should be light gray
-    });
-
-    it('should generate valid hex colors', () => {
-      const colors = GenerateColorRange('#40c463', 4);
-      colors.forEach(color => {
-        expect(IsValidHexColor(color)).toBe(true);
-      });
     });
   });
 

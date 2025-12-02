@@ -19,7 +19,6 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
       thresholds: [0, 500, 800, 950, 1200],
       // iOS Health app-like reds for calories burned (darkest first)
       colors: ['#EFF2F5', '#c0392b', '#e74c3c', '#f9827c', '#f9b8b2'],
-      baseColor: '#e74c3c',
     },
   },
   [MetricType.STEPS]: {
@@ -28,8 +27,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Steps',
     colorRange: {
       thresholds: [0, 2000, 5000, 10000, 15000],
-      colors: ['#EFF2F5', '#216e39', '#30a14e', '#40c463', '#9be9a8'],
-      baseColor: '#40c463',
+      colors: ['#EFF2F5', '#033a16', '#196c2e', '#2ea043', '#56d364'],
     },
   },
   [MetricType.EXERCISE_TIME]: {
@@ -39,8 +37,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     colorRange: {
       thresholds: [0, 15, 30, 60, 120],
       // Greens inspired by the iOS Health app (darkest first)
-      colors: ['#EFF2F5', '#1eae4a', '#34c759', '#7cefa1', '#bdf6d8'],
-      baseColor: '#34c759',
+      colors: ['#EFF2F5', '#033a16', '#196c2e', '#2ea043', '#56d364'],
     },
   },
   [MetricType.STANDING_TIME]: {
@@ -51,7 +48,6 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
       thresholds: [0, 6, 8, 10, 12],
       // iOS Health app-like blues for standing time (darkest first)
       colors: ['#EFF2F5', '#004a99', '#007aff', '#6ec1f6', '#b3dbf7'],
-      baseColor: '#6ec1f6',
     },
   },
   [MetricType.FLOORS_CLIMBED]: {
@@ -60,8 +56,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     displayName: 'Floors Climbed',
     colorRange: {
       thresholds: [0, 5, 10, 15, 25],
-      colors: ['#EFF2F5', '#216e39', '#30a14e', '#40c463', '#9be9a8'],
-      baseColor: '#40c463',
+      colors: ['#EFF2F5', '#033a16', '#196c2e', '#2ea043', '#56d364'],
     },
   },
   [MetricType.SLEEP_HOURS]: {
@@ -72,7 +67,6 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
       thresholds: [0, 6, 7, 8, 9],
       // Purples inspired by the iOS Health app for sleep hours (darkest first)
       colors: ['#EFF2F5', '#5e3370', '#8e44ad', '#a580e8', '#d1b3ff'],
-      baseColor: '#8e44ad',
     },
   },
 };
