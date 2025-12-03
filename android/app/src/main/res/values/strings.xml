@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Fitness Tracker</string>
+    <string name="widget_description">Display your fitness activity wall</string>
 </resources>
