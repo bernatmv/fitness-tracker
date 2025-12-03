@@ -8,6 +8,7 @@ import {
   MetricConfig,
 } from '@types';
 import { GetAllPalettes, GetPaletteColorsById } from '@constants';
+import { appGroupStorage } from './app_group_storage';
 
 /**
  * Storage keys
@@ -18,6 +19,68 @@ const STORAGE_KEYS = {
   USER_PREFERENCES: '@fitness_tracker:user_preferences',
   LAST_SYNC: '@fitness_tracker:last_sync',
 } as const;
+
+/**
+ * Storage adapter that uses App Group storage on iOS when available,
+ * otherwise falls back to AsyncStorage
+ */
+class StorageAdapter {
+  private useAppGroup: boolean | null = null;
+
+  private async ShouldUseAppGroup(): Promise<boolean> {
+    if (this.useAppGroup !== null) {
+      return this.useAppGroup;
+    }
+
+    try {
+      this.useAppGroup = await appGroupStorage.IsAvailable();
+      return this.useAppGroup;
+    } catch (error) {
+      console.warn('Failed to check App Group availability:', error);
+      this.useAppGroup = false;
+      return false;
+    }
+  }
+
+  async SetItem(key: string, value: string): Promise<void> {
+    const useAppGroup = await this.ShouldUseAppGroup();
+    if (useAppGroup) {
+      await appGroupStorage.SetItem(key, value);
+    } else {
+      await AsyncStorage.setItem(key, value);
+    }
+  }
+
+  async GetItem(key: string): Promise<string | null> {
+    const useAppGroup = await this.ShouldUseAppGroup();
+    if (useAppGroup) {
+      return await appGroupStorage.GetItem(key);
+    } else {
+      return await AsyncStorage.getItem(key);
+    }
+  }
+
+  async RemoveItem(key: string): Promise<void> {
+    const useAppGroup = await this.ShouldUseAppGroup();
+    if (useAppGroup) {
+      await appGroupStorage.RemoveItem(key);
+    } else {
+      await AsyncStorage.removeItem(key);
+    }
+  }
+
+  async MultiRemove(keys: string[]): Promise<void> {
+    const useAppGroup = await this.ShouldUseAppGroup();
+    if (useAppGroup) {
+      // App Group storage doesn't have multiRemove, so remove one by one
+      await Promise.all(keys.map(key => appGroupStorage.RemoveItem(key)));
+    } else {
+      await AsyncStorage.multiRemove(keys);
+    }
+  }
+}
+
+const storageAdapter = new StorageAdapter();
 
 /**
  * Find matching palette for old color array
@@ -53,7 +116,7 @@ const FindMatchingPalette = (colors: string[]): string => {
 export const SaveHealthData = async (data: HealthDataStore): Promise<void> => {
   try {
     const jsonData = JSON.stringify(data);
-    await AsyncStorage.setItem(STORAGE_KEYS.HEALTH_DATA, jsonData);
+    await storageAdapter.SetItem(STORAGE_KEYS.HEALTH_DATA, jsonData);
   } catch (error) {
     console.error('Error saving health data:', error);
     throw new Error('Failed to save health data');
@@ -65,7 +128,7 @@ export const SaveHealthData = async (data: HealthDataStore): Promise<void> => {
  */
 export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
   try {
-    const jsonData = await AsyncStorage.getItem(STORAGE_KEYS.HEALTH_DATA);
+    const jsonData = await storageAdapter.GetItem(STORAGE_KEYS.HEALTH_DATA);
     if (!jsonData) return null;
 
     const data = JSON.parse(jsonData);
@@ -93,7 +156,7 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
 export const SaveAppConfig = async (config: AppConfig): Promise<void> => {
   try {
     const jsonData = JSON.stringify(config);
-    await AsyncStorage.setItem(STORAGE_KEYS.APP_CONFIG, jsonData);
+    await storageAdapter.SetItem(STORAGE_KEYS.APP_CONFIG, jsonData);
   } catch (error) {
     console.error('Error saving app config:', error);
     throw new Error('Failed to save app config');
@@ -105,7 +168,7 @@ export const SaveAppConfig = async (config: AppConfig): Promise<void> => {
  */
 export const LoadAppConfig = async (): Promise<AppConfig | null> => {
   try {
-    const jsonData = await AsyncStorage.getItem(STORAGE_KEYS.APP_CONFIG);
+    const jsonData = await storageAdapter.GetItem(STORAGE_KEYS.APP_CONFIG);
     if (!jsonData) return null;
 
     const config = JSON.parse(jsonData);
@@ -126,7 +189,7 @@ export const SaveUserPreferences = async (
 ): Promise<void> => {
   try {
     const jsonData = JSON.stringify(preferences);
-    await AsyncStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, jsonData);
+    await storageAdapter.SetItem(STORAGE_KEYS.USER_PREFERENCES, jsonData);
   } catch (error) {
     console.error('Error saving user preferences:', error);
     throw new Error('Failed to save user preferences');
@@ -139,7 +202,7 @@ export const SaveUserPreferences = async (
 export const LoadUserPreferences =
   async (): Promise<UserPreferences | null> => {
     try {
-      const jsonData = await AsyncStorage.getItem(
+      const jsonData = await storageAdapter.GetItem(
         STORAGE_KEYS.USER_PREFERENCES
       );
       if (!jsonData) return null;
@@ -224,7 +287,7 @@ export const SaveMetricData = async (
  */
 export const ClearAllHealthData = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem(STORAGE_KEYS.HEALTH_DATA);
+    await storageAdapter.RemoveItem(STORAGE_KEYS.HEALTH_DATA);
   } catch (error) {
     console.error('Error clearing health data:', error);
     throw new Error('Failed to clear health data');
@@ -253,7 +316,7 @@ export const LoadMetricData = async (
  */
 export const ClearUserPreferences = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem(STORAGE_KEYS.USER_PREFERENCES);
+    await storageAdapter.RemoveItem(STORAGE_KEYS.USER_PREFERENCES);
   } catch (error) {
     console.error('Error clearing user preferences:', error);
     throw new Error('Failed to clear user preferences');
@@ -265,7 +328,7 @@ export const ClearUserPreferences = async (): Promise<void> => {
  */
 export const ClearAllStorage = async (): Promise<void> => {
   try {
-    await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
+    await storageAdapter.MultiRemove(Object.values(STORAGE_KEYS));
   } catch (error) {
     console.error('Error clearing storage:', error);
     throw new Error('Failed to clear storage');
@@ -278,7 +341,7 @@ export const ClearAllStorage = async (): Promise<void> => {
 export const UpdateLastSyncTime = async (): Promise<void> => {
   try {
     const timestamp = new Date().toISOString();
-    await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, timestamp);
+    await storageAdapter.SetItem(STORAGE_KEYS.LAST_SYNC, timestamp);
   } catch (error) {
     console.error('Error updating last sync time:', error);
   }
@@ -289,7 +352,7 @@ export const UpdateLastSyncTime = async (): Promise<void> => {
  */
 export const GetLastSyncTime = async (): Promise<Date | null> => {
   try {
-    const timestamp = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+    const timestamp = await storageAdapter.GetItem(STORAGE_KEYS.LAST_SYNC);
     return timestamp ? new Date(timestamp) : null;
   } catch (error) {
     console.error('Error getting last sync time:', error);
