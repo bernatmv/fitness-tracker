@@ -12,10 +12,24 @@ struct ActivityWallView: View {
     let dataPoints: [HealthDataPoint]
     let thresholds: [Double]
     let colors: [String]
-    let numDays: Int
+    let availableWidth: CGFloat
+    let minDays: Int
     
-    private let cellSize: CGFloat = 12
-    private let cellGap: CGFloat = 5
+    private let cellSize: CGFloat = 11
+    private let cellGap: CGFloat = 3
+    
+    // Calculate how many days can fit in the available width
+    private var numDays: Int {
+        let columnWidth = cellSize + cellGap
+        // Calculate how many week columns can fit
+        let maxColumns = max(1, Int(floor((availableWidth + cellGap) / columnWidth)))
+        // Each column represents a week (7 days)
+        // We want to show enough days to fill all available columns
+        // Start from today and go back enough weeks to fill the width
+        let calculatedDays = maxColumns * 7
+        // Ensure we show at least the minimum days requested
+        return max(calculatedDays, minDays)
+    }
     
     private var weeks: [[Date]] {
         calculateWeeks()
@@ -23,6 +37,7 @@ struct ActivityWallView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: cellGap) {
+            Spacer(minLength: 0)
             ForEach(0..<weeks.count, id: \.self) { weekIndex in
                 VStack(spacing: cellGap) {
                     ForEach(0..<7, id: \.self) { dayIndex in
@@ -46,6 +61,7 @@ struct ActivityWallView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
     
     private var displayStart: Date {
@@ -60,36 +76,51 @@ struct ActivityWallView: View {
     private func calculateWeeks() -> [[Date]] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let startDate = calendar.date(byAdding: .day, value: -(numDays - 1), to: today) ?? today
         
-        // Pad to start of week
-        let weekday = calendar.component(.weekday, from: startDate)
-        let daysFromMonday = (weekday + 5) % 7 // Convert to Monday = 0
-        let paddedStart = calendar.date(byAdding: .day, value: -daysFromMonday, to: startDate) ?? startDate
+        // Calculate how many week columns we need to fill the width
+        let columnWidth = cellSize + cellGap
+        let maxColumns = max(1, Int(floor((availableWidth + cellGap) / columnWidth)))
         
-        // Pad to end of week
-        let endWeekday = calendar.component(.weekday, from: today)
-        let daysToSunday = (7 - endWeekday) % 7
-        let paddedEnd = calendar.date(byAdding: .day, value: daysToSunday, to: today) ?? today
+        // Find Monday of the week containing today
+        let todayWeekday = calendar.component(.weekday, from: today)
+        let daysFromMonday = (todayWeekday + 5) % 7 // Monday = 0, Sunday = 6
+        let thisWeekMonday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today) ?? today
+        
+        // Calculate how many complete weeks we need before today's week
+        let weeksBefore = max(0, maxColumns - 1) // -1 because today's week is one column
+        
+        // Start from Monday of the first week we need to show
+        let firstMonday = calendar.date(byAdding: .day, value: -(weeksBefore * 7), to: thisWeekMonday) ?? thisWeekMonday
         
         var weeks: [[Date]] = []
-        var currentWeek: [Date] = []
-        var currentDate = paddedStart
+        var currentDate = firstMonday
         
-        while currentDate <= paddedEnd {
-            currentWeek.append(currentDate)
-            
-            if currentWeek.count == 7 {
-                weeks.append(currentWeek)
-                currentWeek = []
+        // Build complete weeks before today's week
+        for _ in 0..<weeksBefore {
+            var week: [Date] = []
+            for i in 0..<7 {
+                if let date = calendar.date(byAdding: .day, value: i, to: currentDate) {
+                    week.append(date)
+                }
             }
-            
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+            weeks.append(week)
+            currentDate = calendar.date(byAdding: .day, value: 7, to: currentDate) ?? currentDate
         }
         
-        if !currentWeek.isEmpty {
-            weeks.append(currentWeek)
+        // Build the last week (today's week) - from Monday to today, then pad with future dates
+        var lastWeek: [Date] = []
+        var weekDate = thisWeekMonday
+        while weekDate <= today {
+            lastWeek.append(weekDate)
+            weekDate = calendar.date(byAdding: .day, value: 1, to: weekDate) ?? weekDate
         }
+        
+        // Pad the last week to 7 days with future dates (transparent)
+        while lastWeek.count < 7 {
+            let futureDate = calendar.date(byAdding: .day, value: lastWeek.count, to: thisWeekMonday) ?? today
+            lastWeek.append(futureDate)
+        }
+        weeks.append(lastWeek)
         
         return weeks
     }
@@ -107,7 +138,14 @@ struct ActivityCell: View {
     private var cellColor: Color {
         let calendar = Calendar.current
         let dateStart = calendar.startOfDay(for: date)
+        let today = calendar.startOfDay(for: Date())
         
+        // If date is in the future (beyond today), make it transparent
+        guard dateStart <= today else {
+            return Color.clear
+        }
+        
+        // If date is before display range, make it transparent
         guard dateStart >= calendar.startOfDay(for: displayStart),
               dateStart <= calendar.startOfDay(for: displayEnd) else {
             return Color.clear
@@ -121,13 +159,20 @@ struct ActivityCell: View {
         }
         
         guard let value = dataPoint?.value else {
-            // No data - use first color (level 0)
-            return hexToColor(colors.first ?? "#eff2f5")
+            // No data point for this date - use transparent/clear
+            return Color.clear
         }
         
         // Find color based on thresholds
+        // Match React Native logic: value >= thresholds[i] && value < thresholds[i+1] -> colors[i]
+        // For value >= last threshold -> colors[colors.length - 1]
+        guard !thresholds.isEmpty else {
+            // No thresholds, use first color
+            return hexToColor(colors.first ?? "#eff2f5")
+        }
+        
         let colorIndex = getColorIndex(for: value, thresholds: thresholds)
-        let colorHex = colors[min(colorIndex, colors.count - 1)]
+        let colorHex = colors[min(max(colorIndex, 0), colors.count - 1)]
         return hexToColor(colorHex)
     }
     
@@ -144,7 +189,19 @@ struct ActivityCell: View {
     }
     
     private func getColorIndex(for value: Double, thresholds: [Double]) -> Int {
-        guard thresholds.count > 1 else { return 0 }
+        guard !thresholds.isEmpty else { return 0 }
+        guard thresholds.count > 1 else {
+            // Only one threshold - if value >= threshold, use last color, otherwise first
+            return value >= thresholds[0] ? (colors.count - 1) : 0
+        }
+        
+        // Match React Native GetColorForValue logic:
+        // for (let i = 0; i < thresholds.length - 1; i++) {
+        //   if (value >= thresholds[i] && value < thresholds[i + 1]) {
+        //     return colors[i];
+        //   }
+        // }
+        // return colors[colors.length - 1]; // for value >= last threshold
         
         for i in 0..<(thresholds.count - 1) {
             if value >= thresholds[i] && value < thresholds[i + 1] {
@@ -152,8 +209,8 @@ struct ActivityCell: View {
             }
         }
         
-        // Value >= last threshold
-        return thresholds.count - 1
+        // Value >= last threshold - use last color
+        return colors.count - 1
     }
     
     private func hexToColor(_ hex: String) -> Color {

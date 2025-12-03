@@ -74,6 +74,7 @@ struct SimpleEntry: TimelineEntry {
 struct FitnessTrackerWidgetEntryView : View {
     var entry: Provider.Entry
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) var colorScheme
     
     private var enabledMetrics: [MetricConfig] {
         guard let preferences = entry.preferences else { return [] }
@@ -127,66 +128,90 @@ struct FitnessTrackerWidgetEntryView : View {
     }
     
     private var isDarkMode: Bool {
-        // Check user preferences for theme, default to system appearance
-        guard let preferences = entry.preferences else {
-            // Default to light mode if no preferences
-            return false
+        // Check user preferences for theme first (this is the source of truth from the app)
+        if let preferences = entry.preferences {
+            switch preferences.theme {
+            case "dark":
+                return true
+            case "light":
+                return false
+            case "system":
+                // For "system", use the actual system color scheme
+                return colorScheme == .dark
+            default:
+                // Default to system if unknown
+                return colorScheme == .dark
+            }
         }
         
-        // Check theme preference
-        switch preferences.theme {
-        case "dark":
-            return true
-        case "light":
-            return false
-        case "system":
-            // For widgets, we can't easily detect system appearance
-            // Default to light mode for widgets
-            return false
-        default:
-            return false
-        }
+        // If no preferences, use system color scheme as fallback
+        return colorScheme == .dark
     }
     
     private func getColors(for paletteId: String) -> [String] {
         return WidgetDataManager.getColorsForPalette(paletteId: paletteId, isDarkMode: isDarkMode)
     }
+    
+    private func calculateActivityWallHeight() -> CGFloat {
+        // Height = 7 rows * (cellSize + gap) - gap (last row has no gap after it)
+        let cellSize: CGFloat = 11
+        let cellGap: CGFloat = 3
+        return 7 * (cellSize + cellGap) - cellGap
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             if let (config, data) = selectedMetricData {
-                // Display metric name
-                Text(config.displayName)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                // Display current value
+                // Display metric name and current value on same row
                 if let mostRecent = mostRecentDataPoint {
-                    HStack {
-                        Text("\(Int(mostRecent.point.value))")
-                            .font(.title2)
-                            .fontWeight(.bold)
+                    HStack(alignment: .center) {
+                        // Metric name on left
+                        Text(config.displayName)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
                         
-                        Text(mostRecent.point.unit)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Spacer()
+                        
+                        // Value on right
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text("\(Int(mostRecent.point.value))")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            
+                            Text(mostRecent.point.unit)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
+                } else {
+                    // Fallback if no recent data point
+                    Text(config.displayName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
                 }
                 
                 // Activity Wall
                 if !data.dataPoints.isEmpty {
                     let colors = getColors(for: config.colorRange.paletteId)
-                    ActivityWallView(
-                        dataPoints: data.dataPoints,
-                        thresholds: config.colorRange.thresholds,
-                        colors: colors,
-                        numDays: numDays
-                    )
+                    GeometryReader { geometry in
+                        ActivityWallView(
+                            dataPoints: data.dataPoints,
+                            thresholds: config.colorRange.thresholds,
+                            colors: colors,
+                            availableWidth: geometry.size.width,
+                            minDays: numDays
+                        )
+                    }
+                    .frame(height: calculateActivityWallHeight())
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 } else {
                     Text("No data available")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .padding(.top, 4)
+                        .padding(.top, 2)
                 }
                 
                 // Last sync time (only for larger widgets)
@@ -195,6 +220,7 @@ struct FitnessTrackerWidgetEntryView : View {
                         Text("Updated: \(lastSync, style: .relative)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                            .padding(.top, 2)
                     }
                 }
             } else if let preferences = entry.preferences,
@@ -208,6 +234,7 @@ struct FitnessTrackerWidgetEntryView : View {
                     Text("The selected metric is disabled in settings. Please enable it or choose another metric.")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .lineLimit(3)
                 }
             } else if entry.preferences != nil && entry.healthData == nil {
                 // Preferences loaded but no health data
@@ -245,7 +272,8 @@ struct FitnessTrackerWidgetEntryView : View {
                 }
             }
         }
-        .padding()
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -256,7 +284,7 @@ struct FitnessTrackerWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             FitnessTrackerWidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(.fill, for: .widget)
         }
     }
 }
