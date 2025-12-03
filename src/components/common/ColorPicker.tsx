@@ -46,7 +46,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   const [hexInput, setHexInput] = useState(currentColor);
   const [isValidColor, setIsValidColor] = useState(true);
 
-  const suggestedColors = GetSuggestedColorsForThreshold(thresholdIndex, isDarkMode ? 'dark' : 'light');
+  const suggestedColors = GetSuggestedColorsForThreshold(
+    thresholdIndex,
+    isDarkMode ? 'dark' : 'light'
+  );
 
   const backgroundColor = isDarkMode ? '#1C1C1E' : '#FFFFFF';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
@@ -58,15 +61,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
   const HandleHexInputChange = (value: string) => {
     setHexInput(value);
-    
+
     // Normalize input (add # if missing)
     const normalized = value.startsWith('#') ? value : `#${value}`;
-    
+
     if (normalized.length <= 7) {
       // Check if valid hex color
       const isValid = IsValidHexColor(normalized);
       setIsValidColor(isValid);
-      
+
       if (isValid && normalized.length === 7) {
         onColorChange(NormalizeHexColor(normalized));
       }
@@ -100,8 +103,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={HandleClose}
-    >
+      onRequestClose={HandleClose}>
       <View style={styles.modalOverlay}>
         <View
           style={[
@@ -110,8 +112,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               backgroundColor,
               borderColor,
             },
-          ]}
-        >
+          ]}>
           <Text style={[styles.title, { color: textColor }]}>
             {t('configuration.color_picker_title')}
           </Text>
@@ -162,8 +163,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             <View style={styles.suggestedColorsGrid}>
               {suggestedColors.map((color, index) => {
                 const normalizedColor = NormalizeHexColor(color);
-                const isSelected = normalizedColor === NormalizeHexColor(currentColor);
-                
+                const isSelected =
+                  normalizedColor === NormalizeHexColor(currentColor);
+
                 return (
                   <TouchableOpacity
                     key={`${color}-${index}`}
@@ -175,8 +177,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         borderWidth: isSelected ? 2 : 1,
                       },
                     ]}
-                    onPress={() => HandleSuggestedColorPress(color)}
-                  >
+                    onPress={() => HandleSuggestedColorPress(color)}>
                     {isSelected && (
                       <View style={styles.selectedIndicator}>
                         <Text style={styles.checkmark}>✓</Text>
@@ -190,8 +191,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: borderColor }]}
-            onPress={HandleClose}
-          >
+            onPress={HandleClose}>
             <Text style={[styles.closeButtonText, { color: textColor }]}>
               {t('common.close')}
             </Text>
@@ -293,4 +293,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

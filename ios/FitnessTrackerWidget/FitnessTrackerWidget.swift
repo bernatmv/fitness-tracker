@@ -8,6 +8,7 @@
 import WidgetKit
 import SwiftUI
 
+@available(iOS 16.0, *)
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), configuration: ConfigurationAppIntent(), healthData: nil, preferences: nil)
@@ -23,8 +24,26 @@ struct Provider: AppIntentTimelineProvider {
         var entries: [SimpleEntry] = []
 
         // Load data from App Group storage
+        print("FitnessTrackerWidget.Provider: Loading data for timeline...")
         let healthData = WidgetDataManager.loadHealthData()
         let preferences = WidgetDataManager.loadUserPreferences()
+        
+        print("FitnessTrackerWidget.Provider: Health data loaded: \(healthData != nil ? "✅" : "❌")")
+        print("FitnessTrackerWidget.Provider: Preferences loaded: \(preferences != nil ? "✅" : "❌")")
+        
+        if let healthData = healthData {
+            print("FitnessTrackerWidget.Provider: Health data has \(healthData.metrics.count) metrics")
+            print("FitnessTrackerWidget.Provider: Metric types: \(Array(healthData.metrics.keys).sorted())")
+        }
+        
+        if let preferences = preferences {
+            print("FitnessTrackerWidget.Provider: Preferences has \(preferences.metricConfigs.count) metric configs")
+            let enabled = preferences.metricConfigs.values.filter { $0.enabled }
+            print("FitnessTrackerWidget.Provider: Enabled metrics: \(enabled.map { $0.metricType }.sorted())")
+        }
+        
+        let selectedMetric = configuration.metricType.rawValue
+        print("FitnessTrackerWidget.Provider: Selected metric type: \(selectedMetric)")
 
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
@@ -34,6 +53,7 @@ struct Provider: AppIntentTimelineProvider {
             entries.append(entry)
         }
 
+        print("FitnessTrackerWidget.Provider: Generated \(entries.count) timeline entries")
         return Timeline(entries: entries, policy: .atEnd)
     }
 
@@ -42,6 +62,7 @@ struct Provider: AppIntentTimelineProvider {
 //    }
 }
 
+@available(iOS 16.0, *)
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let configuration: ConfigurationAppIntent
@@ -49,39 +70,97 @@ struct SimpleEntry: TimelineEntry {
     let preferences: UserPreferences?
 }
 
+@available(iOS 16.0, *)
 struct FitnessTrackerWidgetEntryView : View {
     var entry: Provider.Entry
+    @Environment(\.widgetFamily) var family
     
     private var enabledMetrics: [MetricConfig] {
         guard let preferences = entry.preferences else { return [] }
         return Array(preferences.metricConfigs.values.filter { $0.enabled })
     }
     
-    private var firstMetricData: (config: MetricConfig, data: HealthMetricData)? {
-        guard let healthData = entry.healthData,
-              let firstMetric = enabledMetrics.first,
-              let metricData = healthData.metrics[firstMetric.metricType] else {
+    private var selectedMetricType: String {
+        // Get selected metric from configuration (now required, not optional)
+        return entry.configuration.metricType.rawValue
+    }
+    
+    private var selectedMetricData: (config: MetricConfig, data: HealthMetricData)? {
+        guard let healthData = entry.healthData else {
             return nil
         }
-        return (firstMetric, metricData)
+        
+        let metricType = selectedMetricType
+        
+        // Check if the selected metric is enabled
+        guard let metricConfig = enabledMetrics.first(where: { $0.metricType == metricType }) else {
+            // Selected metric is not enabled, show message
+            return nil
+        }
+        
+        guard let metricData = healthData.metrics[metricType] else {
+            return nil
+        }
+        
+        return (metricConfig, metricData)
     }
     
     private var mostRecentDataPoint: (point: HealthDataPoint, date: Date)? {
-        guard let (_, data) = firstMetricData else { return nil }
+        guard let (_, data) = selectedMetricData else { return nil }
         return data.dataPoints.compactMap { point -> (point: HealthDataPoint, date: Date)? in
             guard let date = point.dateValue else { return nil }
             return (point, date)
         }.sorted(by: { $0.date > $1.date }).first
     }
+    
+    private var numDays: Int {
+        switch family {
+        case .systemSmall:
+            return 7 // Last week
+        case .systemMedium:
+            return 14 // Last 2 weeks
+        case .systemLarge:
+            return 30 // Last month
+        default:
+            return 7
+        }
+    }
+    
+    private var isDarkMode: Bool {
+        // Check user preferences for theme, default to system appearance
+        guard let preferences = entry.preferences else {
+            // Default to light mode if no preferences
+            return false
+        }
+        
+        // Check theme preference
+        switch preferences.theme {
+        case "dark":
+            return true
+        case "light":
+            return false
+        case "system":
+            // For widgets, we can't easily detect system appearance
+            // Default to light mode for widgets
+            return false
+        default:
+            return false
+        }
+    }
+    
+    private func getColors(for paletteId: String) -> [String] {
+        return WidgetDataManager.getColorsForPalette(paletteId: paletteId, isDarkMode: isDarkMode)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let (config, _) = firstMetricData {
+            if let (config, data) = selectedMetricData {
                 // Display metric name
                 Text(config.displayName)
                     .font(.headline)
                     .foregroundColor(.primary)
                 
+                // Display current value
                 if let mostRecent = mostRecentDataPoint {
                     HStack {
                         Text("\(Int(mostRecent.point.value))")
@@ -92,16 +171,62 @@ struct FitnessTrackerWidgetEntryView : View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                }
+                
+                // Activity Wall
+                if !data.dataPoints.isEmpty {
+                    let colors = getColors(for: config.colorRange.paletteId)
+                    ActivityWallView(
+                        dataPoints: data.dataPoints,
+                        thresholds: config.colorRange.thresholds,
+                        colors: colors,
+                        numDays: numDays
+                    )
                 } else {
-                    Text("No data")
+                    Text("No data available")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 4)
+                }
+                
+                // Last sync time (only for larger widgets)
+                if family == .systemLarge || family == .systemMedium {
+                    if let lastSync = entry.healthData?.lastFullSyncDate {
+                        Text("Updated: \(lastSync, style: .relative)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } else if let preferences = entry.preferences,
+                      let metricConfig = preferences.metricConfigs[selectedMetricType],
+                      !metricConfig.enabled {
+                // Selected metric is disabled
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Metric Disabled")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("The selected metric is disabled in settings. Please enable it or choose another metric.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
-                // Last sync time
-                if let lastSync = entry.healthData?.lastFullSyncDate {
-                    Text("Updated: \(lastSync, style: .relative)")
-                        .font(.caption2)
+            } else if entry.preferences != nil && entry.healthData == nil {
+                // Preferences loaded but no health data
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("No Health Data")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("Sync your health data in the app first.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else if entry.healthData != nil && entry.preferences == nil {
+                // Health data loaded but no preferences
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("No Preferences")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("Open the app to configure settings.")
+                        .font(.caption)
                         .foregroundColor(.secondary)
                 }
             } else if entry.healthData != nil || entry.preferences != nil {
@@ -109,15 +234,22 @@ struct FitnessTrackerWidgetEntryView : View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                Text("Loading...")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // No data at all - check App Group access
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("No Data Available")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("Open the app to sync data and configure settings.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .padding()
     }
 }
 
+@available(iOS 17.0, *)
 struct FitnessTrackerWidget: Widget {
     let kind: String = "FitnessTrackerWidget"
 
@@ -129,23 +261,25 @@ struct FitnessTrackerWidget: Widget {
     }
 }
 
+@available(iOS 16.0, *)
 extension ConfigurationAppIntent {
-    fileprivate static var smiley: ConfigurationAppIntent {
+    fileprivate static var steps: ConfigurationAppIntent {
         let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "😀"
+        intent.metricType = .steps
         return intent
     }
     
-    fileprivate static var starEyes: ConfigurationAppIntent {
+    fileprivate static var calories: ConfigurationAppIntent {
         let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "🤩"
+        intent.metricType = .caloriesBurned
         return intent
     }
 }
 
+@available(iOS 17.0, *)
 #Preview(as: .systemSmall) {
     FitnessTrackerWidget()
 } timeline: {
-    SimpleEntry(date: .now, configuration: .smiley, healthData: nil, preferences: nil)
-    SimpleEntry(date: .now, configuration: .starEyes, healthData: nil, preferences: nil)
+    SimpleEntry(date: .now, configuration: .steps, healthData: nil, preferences: nil)
+    SimpleEntry(date: .now, configuration: .calories, healthData: nil, preferences: nil)
 }

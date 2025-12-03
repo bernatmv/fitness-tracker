@@ -64,4 +64,3 @@ export interface HealthDataStore {
   exercises: ExerciseDetail[];
   lastFullSync: Date;
 }
-

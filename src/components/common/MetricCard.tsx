@@ -74,7 +74,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const value = CalculateCurrentValue();
   const unit = GetUnit();
   const isDarkMode = theme.mode === 'dark';
-  const colors = GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode);
+  const colors = GetColorsForMetricConfig(
+    config.colorRange.paletteId,
+    isDarkMode
+  );
 
   return (
     <Card containerStyle={[styles.card, { backgroundColor, borderColor }]}>

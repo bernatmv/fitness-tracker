@@ -4,10 +4,7 @@
  * @param decimals - Number of decimal places (default: 0)
  * @returns Formatted string with thousands separators
  */
-export const FormatNumber = (
-  value: number,
-  decimals: number = 0
-): string => {
+export const FormatNumber = (value: number, decimals: number = 0): string => {
   return value.toLocaleString(undefined, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -34,4 +31,3 @@ export const FormatCompactNumber = (
   }
   return value.toFixed(0);
 };
-

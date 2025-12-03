@@ -270,7 +270,10 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
               key={`activity-wall-${effectiveNumDays}`}
               dataPoints={metricData.dataPoints}
               thresholds={config.colorRange.thresholds}
-              colors={GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode)}
+              colors={GetColorsForMetricConfig(
+                config.colorRange.paletteId,
+                isDarkMode
+              )}
               numDays={effectiveNumDays}
               enableMultiRowLayout={false}
               interactive={false}
@@ -287,8 +290,11 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
         <View style={styles.paletteGrid}>
           {GetAllPalettes().map(palette => {
             const isSelected = config.colorRange.paletteId === palette.id;
-            const paletteColors = GetColorsForMetricConfig(palette.id, isDarkMode);
-            
+            const paletteColors = GetColorsForMetricConfig(
+              palette.id,
+              isDarkMode
+            );
+
             return (
               <TouchableOpacity
                 key={palette.id}
@@ -296,10 +302,14 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
                 style={[
                   styles.paletteItem,
                   {
-                    borderColor: isSelected ? theme.colors.primary : borderColor,
+                    borderColor: isSelected
+                      ? theme.colors.primary
+                      : borderColor,
                     borderWidth: isSelected ? 2 : 1,
-                    backgroundColor: isSelected 
-                      ? (isDarkMode ? '#1a1f2e' : '#e8f4fd')
+                    backgroundColor: isSelected
+                      ? isDarkMode
+                        ? '#1a1f2e'
+                        : '#e8f4fd'
                       : 'transparent',
                   },
                 ]}>
@@ -349,11 +359,12 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
           const isEditable = !isFirstThreshold && !isLastThreshold;
 
           // Get the corresponding color for this threshold rank from the palette
-          const colors = GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode);
+          const colors = GetColorsForMetricConfig(
+            config.colorRange.paletteId,
+            isDarkMode
+          );
           let thresholdColor =
-            index < colors.length
-              ? colors[index]
-              : colors[colors.length - 1];
+            index < colors.length ? colors[index] : colors[colors.length - 1];
 
           return (
             <View key={index} style={styles.thresholdRow}>

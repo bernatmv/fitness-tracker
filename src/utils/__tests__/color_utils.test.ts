@@ -97,4 +97,3 @@ describe('color_utils', () => {
     });
   });
 });
-

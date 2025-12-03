@@ -1,5 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SaveHealthData, LoadHealthData, SaveUserPreferences, LoadUserPreferences } from '../storage_service';
+import {
+  SaveHealthData,
+  LoadHealthData,
+  SaveUserPreferences,
+  LoadUserPreferences,
+} from '../storage_service';
 import { appGroupStorage } from '../app_group_storage';
 import { HealthDataStore, UserPreferences, MetricType } from '@types';
 
@@ -151,4 +156,3 @@ describe('Storage Service with App Group', () => {
     });
   });
 });
-

@@ -20,12 +20,12 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
   static func requiresMainQueueSetup() -> Bool {
     return false
   }
-  
+
   @objc
   static func moduleName() -> String! {
     return "AppGroupStorage"
   }
-  
+
   /**
    * Set a string value in App Group UserDefaults
    */

@@ -22,7 +22,9 @@ import { GetDateRange } from '@utils';
 /**
  * Sync all health metrics
  */
-export const SyncAllMetrics = async (days: number = 365): Promise<HealthDataStore> => {
+export const SyncAllMetrics = async (
+  days: number = 365
+): Promise<HealthDataStore> => {
   const hasPermission = await CheckHealthPermissions();
   if (!hasPermission) {
     throw new Error('Health data permissions not granted');
@@ -30,7 +32,7 @@ export const SyncAllMetrics = async (days: number = 365): Promise<HealthDataStor
 
   const { start, end } = GetDateRange(days);
   const metricTypes = Object.values(MetricType);
-  
+
   // Load existing data or create new store
   let healthDataStore = await LoadHealthData();
   if (!healthDataStore) {
@@ -41,14 +43,14 @@ export const SyncAllMetrics = async (days: number = 365): Promise<HealthDataStor
   for (const metricType of metricTypes) {
     try {
       const dataPoints = await FetchMetricData(metricType, start, end);
-      
+
       const metricData: HealthMetricData = {
         metricType,
         unit: METRIC_UNITS[metricType],
         dataPoints,
         lastSync: new Date(),
       };
-      
+
       healthDataStore.metrics[metricType] = metricData;
     } catch (error) {
       console.error(`Error syncing ${metricType}:`, error);
@@ -66,7 +68,7 @@ export const SyncAllMetrics = async (days: number = 365): Promise<HealthDataStor
 
   // Update timestamps
   healthDataStore.lastFullSync = new Date();
-  
+
   // Save to storage
   await SaveHealthData(healthDataStore);
   await UpdateLastSyncTime();
@@ -90,7 +92,7 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
   startDate.setFullYear(startDate.getFullYear() - 10);
 
   const metricTypes = Object.values(MetricType);
-  
+
   // Load existing data or create new store
   let healthDataStore = await LoadHealthData();
   if (!healthDataStore) {
@@ -100,8 +102,12 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
   // Fetch data for each metric and merge/overwrite by date
   for (const metricType of metricTypes) {
     try {
-      const newDataPoints = await FetchMetricData(metricType, startDate, endDate);
-      
+      const newDataPoints = await FetchMetricData(
+        metricType,
+        startDate,
+        endDate
+      );
+
       // Create a map of existing data points by date string
       const existingDataMap = new Map<string, HealthDataPoint>();
       if (healthDataStore.metrics[metricType]) {
@@ -121,14 +127,14 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
       const mergedDataPoints = Array.from(existingDataMap.values()).sort(
         (a, b) => a.date.getTime() - b.date.getTime()
       );
-      
+
       const metricData: HealthMetricData = {
         metricType,
         unit: METRIC_UNITS[metricType],
         dataPoints: mergedDataPoints,
         lastSync: new Date(),
       };
-      
+
       healthDataStore.metrics[metricType] = metricData;
     } catch (error) {
       console.error(`Error syncing ${metricType}:`, error);
@@ -154,7 +160,7 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
 
   // Update timestamps
   healthDataStore.lastFullSync = new Date();
-  
+
   // Save to storage
   await SaveHealthData(healthDataStore);
   await UpdateLastSyncTime();
@@ -189,7 +195,7 @@ export const SyncMetric = async (
   if (!healthDataStore) {
     healthDataStore = InitializeHealthDataStore();
   }
-  
+
   healthDataStore.metrics[metricType] = metricData;
   await SaveHealthData(healthDataStore);
   await UpdateLastSyncTime();
@@ -207,7 +213,7 @@ export const GetSyncStatus = async (): Promise<{
 }> => {
   const lastSync = await GetLastSyncTime();
   const syncIntervalMinutes = 120; // Default 2 hours
-  
+
   let needsSync = true;
   if (lastSync) {
     const minutesSinceSync = (Date.now() - lastSync.getTime()) / (1000 * 60);
@@ -230,16 +236,16 @@ export const ShouldSync = async (syncConfig: SyncConfig): Promise<boolean> => {
   switch (syncConfig.strategy) {
     case SyncStrategy.ON_APP_OPEN:
       return lastSync === null; // Only sync on first open
-    
+
     case SyncStrategy.PERIODIC:
       return needsSync;
-    
+
     case SyncStrategy.HYBRID:
       return needsSync;
-    
+
     case SyncStrategy.HEALTH_OBSERVER:
       return false; // Handled by observers
-    
+
     default:
       return needsSync;
   }
@@ -254,7 +260,7 @@ const InitializeHealthDataStore = (): HealthDataStore => {
     HealthMetricData
   >;
 
-  Object.values(MetricType).forEach((metricType) => {
+  Object.values(MetricType).forEach(metricType => {
     metrics[metricType] = {
       metricType,
       unit: METRIC_UNITS[metricType],
@@ -290,4 +296,3 @@ export const CancelBackgroundSync = async (): Promise<void> => {
   // TODO: Implement cancellation of background tasks
   console.warn('Cancel background sync not yet implemented');
 };
-

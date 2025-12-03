@@ -9,11 +9,7 @@ import {
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { HealthDataPoint, MetricUnit } from '@types';
-import {
-  GetColorForValue,
-  FormatNumber,
-  useAppTheme,
-} from '@utils';
+import { GetColorForValue, FormatNumber, useAppTheme } from '@utils';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import { METRIC_UNITS } from '@constants';
 

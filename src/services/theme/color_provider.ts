@@ -21,4 +21,3 @@ export const GetColorsForMetricConfig = (
   const mode = isDarkMode ? 'dark' : 'light';
   return GetMetricColors(paletteId, mode);
 };
-

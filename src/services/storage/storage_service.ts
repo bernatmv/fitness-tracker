@@ -9,11 +9,13 @@ import {
 } from '@types';
 import { GetAllPalettes, GetPaletteColorsById } from '@constants';
 import { appGroupStorage } from './app_group_storage';
+import { widgetUpdater } from '../widget';
+import { MigrateToAppGroup } from './migrate_to_app_group';
 
 /**
  * Storage keys
  */
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   HEALTH_DATA: '@fitness_tracker:health_data',
   APP_CONFIG: '@fitness_tracker:app_config',
   USER_PREFERENCES: '@fitness_tracker:user_preferences',
@@ -46,6 +48,13 @@ class StorageAdapter {
     const useAppGroup = await this.ShouldUseAppGroup();
     if (useAppGroup) {
       await appGroupStorage.SetItem(key, value);
+      // Also write to AsyncStorage as backup (for migration purposes)
+      try {
+        await AsyncStorage.setItem(key, value);
+      } catch (error) {
+        // Non-critical, continue
+        console.warn('Failed to write to AsyncStorage backup:', error);
+      }
     } else {
       await AsyncStorage.setItem(key, value);
     }
@@ -88,7 +97,7 @@ const storageAdapter = new StorageAdapter();
  */
 const FindMatchingPalette = (colors: string[]): string => {
   const palettes = GetAllPalettes();
-  
+
   // Normalize colors for comparison (lowercase, remove spaces)
   const normalizeColor = (color: string) => color.toLowerCase().trim();
   const normalizedOldColors = colors.map(normalizeColor);
@@ -97,10 +106,12 @@ const FindMatchingPalette = (colors: string[]): string => {
   for (const palette of palettes) {
     const paletteColors = GetPaletteColorsById(palette.id, 'light');
     const normalizedPaletteColors = paletteColors.map(normalizeColor);
-    
+
     if (
       normalizedOldColors.length === normalizedPaletteColors.length &&
-      normalizedOldColors.every((color, index) => color === normalizedPaletteColors[index])
+      normalizedOldColors.every(
+        (color, index) => color === normalizedPaletteColors[index]
+      )
     ) {
       return palette.id;
     }
@@ -111,12 +122,74 @@ const FindMatchingPalette = (colors: string[]): string => {
 };
 
 /**
+ * Serialize health data to JSON with proper date formatting
+ */
+const SerializeHealthData = (data: HealthDataStore): string => {
+  const serialized = {
+    ...data,
+    lastFullSync: data.lastFullSync.toISOString(),
+    metrics: Object.entries(data.metrics).reduce(
+      (acc, [key, metric]) => {
+        acc[key] = {
+          ...metric,
+          lastSync: metric.lastSync.toISOString(),
+          dataPoints: metric.dataPoints.map(dp => ({
+            ...dp,
+            date: dp.date.toISOString(),
+            metricType: dp.metricType,
+            unit: dp.unit,
+          })),
+        };
+        return acc;
+      },
+      {} as Record<string, unknown>
+    ),
+    exercises: data.exercises.map(ex => ({
+      ...ex,
+      date: ex.date.toISOString(),
+    })),
+  };
+  return JSON.stringify(serialized);
+};
+
+/**
  * Save health data to storage
  */
 export const SaveHealthData = async (data: HealthDataStore): Promise<void> => {
   try {
-    const jsonData = JSON.stringify(data);
+    const jsonData = SerializeHealthData(data);
+    const metricsCount = Object.keys(data.metrics).length;
+    const totalDataPoints = Object.values(data.metrics).reduce(
+      (sum, metric) => sum + metric.dataPoints.length,
+      0
+    );
+    console.log(
+      `Saving health data to storage: ${metricsCount} metrics, ${totalDataPoints} data points`
+    );
     await storageAdapter.SetItem(STORAGE_KEYS.HEALTH_DATA, jsonData);
+
+    // Verify data was saved (especially important for App Group storage)
+    const saved = await storageAdapter.GetItem(STORAGE_KEYS.HEALTH_DATA);
+    if (saved) {
+      console.log('Health data saved and verified successfully');
+      // Debug: List all keys in App Group storage
+      if (await appGroupStorage.IsAvailable()) {
+        const allKeys = await appGroupStorage.GetAllKeys();
+        console.log(
+          `App Group storage keys (${allKeys.length} total):`,
+          allKeys.sort()
+        );
+      }
+    } else {
+      console.warn(
+        'Health data save verification failed - data may not be accessible to widget'
+      );
+    }
+
+    // Update widgets with new data
+    console.log('Reloading widgets...');
+    await widgetUpdater.ReloadAllTimelines();
+    console.log('Widget reload complete');
   } catch (error) {
     console.error('Error saving health data:', error);
     throw new Error('Failed to save health data');
@@ -190,6 +263,8 @@ export const SaveUserPreferences = async (
   try {
     const jsonData = JSON.stringify(preferences);
     await storageAdapter.SetItem(STORAGE_KEYS.USER_PREFERENCES, jsonData);
+    // Update widgets when preferences change (affects which metrics are shown)
+    await widgetUpdater.ReloadAllTimelines();
   } catch (error) {
     console.error('Error saving user preferences:', error);
     throw new Error('Failed to save user preferences');
@@ -225,28 +300,32 @@ export const LoadUserPreferences =
           ...preferences.metricConfigs,
         };
 
-        Object.entries(preferences.metricConfigs).forEach(([metricType, config]) => {
-          const metricConfig = config as MetricConfig;
-          // Check if this is old format (has colors array instead of paletteId)
-          if (
-            metricConfig.colorRange &&
-            'colors' in metricConfig.colorRange &&
-            !('paletteId' in metricConfig.colorRange)
-          ) {
-            needsMigration = true;
-            // Try to find matching palette by comparing colors
-            const oldColors = (metricConfig.colorRange as { colors: string[] }).colors;
-            const matchingPalette = FindMatchingPalette(oldColors);
-            
-            migratedConfigs[metricType as MetricType] = {
-              ...metricConfig,
-              colorRange: {
-                thresholds: metricConfig.colorRange.thresholds,
-                paletteId: matchingPalette,
-              },
-            };
+        Object.entries(preferences.metricConfigs).forEach(
+          ([metricType, config]) => {
+            const metricConfig = config as MetricConfig;
+            // Check if this is old format (has colors array instead of paletteId)
+            if (
+              metricConfig.colorRange &&
+              'colors' in metricConfig.colorRange &&
+              !('paletteId' in metricConfig.colorRange)
+            ) {
+              needsMigration = true;
+              // Try to find matching palette by comparing colors
+              const oldColors = (
+                metricConfig.colorRange as { colors: string[] }
+              ).colors;
+              const matchingPalette = FindMatchingPalette(oldColors);
+
+              migratedConfigs[metricType as MetricType] = {
+                ...metricConfig,
+                colorRange: {
+                  thresholds: metricConfig.colorRange.thresholds,
+                  paletteId: matchingPalette,
+                },
+              };
+            }
           }
-        });
+        );
 
         if (needsMigration) {
           preferences.metricConfigs = migratedConfigs;
@@ -276,6 +355,7 @@ export const SaveMetricData = async (
 
     healthData.metrics[metricType] = data;
     await SaveHealthData(healthData);
+    // Widgets are updated by SaveHealthData
   } catch (error) {
     console.error(`Error saving metric data for ${metricType}:`, error);
     throw new Error('Failed to save metric data');
@@ -342,6 +422,8 @@ export const UpdateLastSyncTime = async (): Promise<void> => {
   try {
     const timestamp = new Date().toISOString();
     await storageAdapter.SetItem(STORAGE_KEYS.LAST_SYNC, timestamp);
+    // Update widgets to show new sync time
+    await widgetUpdater.ReloadAllTimelines();
   } catch (error) {
     console.error('Error updating last sync time:', error);
   }

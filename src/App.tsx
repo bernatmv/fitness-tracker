@@ -12,6 +12,7 @@ import {
   SaveUserPreferences,
   LoadHealthData,
 } from './services/storage';
+import { MigrateToAppGroup } from './services/storage/migrate_to_app_group';
 import { GetTheme, DEFAULT_THEME_PREFERENCE } from './utils';
 import { SyncAllDataFromAllTime } from './services/sync';
 import type { ThemePreference } from './types';
@@ -26,6 +27,11 @@ const App = () => {
     DEFAULT_THEME_PREFERENCE
   );
   useEffect(() => {
+    // Migrate data to App Group storage on app start (for widget access)
+    MigrateToAppGroup().catch(error => {
+      console.warn('Migration to App Group failed:', error);
+    });
+
     CheckOnboardingStatus();
     LoadThemePreference();
   }, []);

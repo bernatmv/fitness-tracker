@@ -33,20 +33,20 @@ const CalculateNumDaysFromWidth = (containerWidth: number): number => {
 
   // Available width for the grid (container width minus padding)
   const availableWidth = containerWidth - CONTAINER_PADDING;
-  
+
   // Width of one week column (7 cells + gaps)
   const columnWidth = CELL_SIZE + CELL_GAP;
-  
+
   if (columnWidth <= 0) {
     return MIN_DAYS;
   }
 
   // Calculate maximum number of week columns that fit
   const maxWeekColumns = Math.floor((availableWidth + CELL_GAP) / columnWidth);
-  
+
   // Convert weeks to days (ensure minimum of 7 days)
   const numDays = Math.max(MIN_DAYS, maxWeekColumns * 7);
-  
+
   // Cap at maximum
   return Math.min(numDays, MAX_DAYS);
 };
@@ -84,8 +84,7 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
   }, [containerWidth]);
 
   const primaryTextColor = textColor || theme.colors.text.primary;
-  const widgetBackgroundColor =
-    backgroundColor || theme.colors.background;
+  const widgetBackgroundColor = backgroundColor || theme.colors.background;
 
   const CalculateCurrentValue = (): number => {
     if (dataPoints.length === 0) return 0;
@@ -121,10 +120,7 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
 
   return (
     <View
-      style={[
-        styles.container,
-        { backgroundColor: widgetBackgroundColor },
-      ]}
+      style={[styles.container, { backgroundColor: widgetBackgroundColor }]}
       onLayout={handleLayout}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: primaryTextColor }]}>
@@ -200,4 +196,3 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
-

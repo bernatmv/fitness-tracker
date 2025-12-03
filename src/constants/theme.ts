@@ -116,4 +116,3 @@ export const DARK_THEME: Theme = {
   typography: LIGHT_THEME.typography,
   borderRadius: LIGHT_THEME.borderRadius,
 };
-

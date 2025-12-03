@@ -1,4 +1,11 @@
-import { format, parseISO, startOfDay, endOfDay, subDays, differenceInDays } from 'date-fns';
+import {
+  format,
+  parseISO,
+  startOfDay,
+  endOfDay,
+  subDays,
+  differenceInDays,
+} from 'date-fns';
 import { getLocales } from 'react-native-localize';
 
 /**
@@ -76,11 +83,11 @@ export const GetDateRange = (days: number): { start: Date; end: Date } => {
 export const GetDateArray = (startDate: Date, endDate: Date): Date[] => {
   const dates: Date[] = [];
   const daysDiff = differenceInDays(endDate, startDate);
-  
+
   for (let i = 0; i <= daysDiff; i++) {
     dates.push(subDays(endDate, daysDiff - i));
   }
-  
+
   return dates;
 };
 
@@ -90,26 +97,26 @@ export const GetDateArray = (startDate: Date, endDate: Date): Date[] => {
 export const FormatRelativeTime = (date: Date): string => {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return 'just now';
   }
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   }
-  
+
   return FormatDate(date);
 };
 
@@ -117,4 +124,3 @@ type Locale = {
   code: string;
   [key: string]: unknown;
 };
-

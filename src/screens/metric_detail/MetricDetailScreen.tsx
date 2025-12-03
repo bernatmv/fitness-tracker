@@ -264,7 +264,10 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
               // Split by year when "All" is selected
               const shouldEnableMultiRow = numDays !== -1;
               const shouldSplitByYear = numDays === null;
-              const colors = GetColorsForMetricConfig(config.colorRange.paletteId, isDarkMode);
+              const colors = GetColorsForMetricConfig(
+                config.colorRange.paletteId,
+                isDarkMode
+              );
               return (
                 <ActivityWall
                   key={`activity-wall-${effectiveNumDays}`}

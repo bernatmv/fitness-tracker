@@ -1,12 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { MetricWidget } from '../MetricWidget';
-import {
-  HealthDataPoint,
-  MetricType,
-  MetricUnit,
-  MetricConfig,
-} from '@types';
+import { HealthDataPoint, MetricType, MetricUnit, MetricConfig } from '@types';
 
 describe('MetricWidget', () => {
   const mockConfig: MetricConfig = {
@@ -159,4 +154,3 @@ describe('MetricWidget', () => {
     expect(getByTestId('activity-wall')).toBeTruthy();
   });
 });
-

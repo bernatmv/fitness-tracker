@@ -95,4 +95,3 @@ export interface Theme {
     large: number;
   };
 }
-

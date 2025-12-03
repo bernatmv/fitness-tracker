@@ -40,4 +40,3 @@ export const useAppTheme = (): Theme => {
   // RNEUI stores our custom theme in the theme prop
   return rneuiTheme as unknown as Theme;
 };
-

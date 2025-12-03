@@ -174,12 +174,15 @@ export const GetPaletteIds = (): string[] => {
   return Object.keys(COLOR_PALETTES);
 };
 
-export const GetPaletteColorsById = (id: string, mode: 'light' | 'dark'): string[] => {
+export const GetPaletteColorsById = (
+  id: string,
+  mode: 'light' | 'dark'
+): string[] => {
   const palette = COLOR_PALETTES[id];
 
   if (!palette) {
     return [];
   }
-  
+
   return palette.colors[mode] || [];
 };

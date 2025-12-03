@@ -34,17 +34,33 @@ class AppGroupStorageService {
     }
 
     try {
-      if (AppGroupStorage) {
-        this.storage = AppGroupStorage as AppGroupStorageInterface;
-        this.available = await this.storage.isAvailable();
-        return this.available;
+      if (!AppGroupStorage) {
+        console.warn(
+          'AppGroupStorage native module not found. ' +
+          'Make sure AppGroupStorage.swift and AppGroupStorage.m are included in the Xcode project ' +
+          'and the app has been rebuilt.'
+        );
+        this.available = false;
+        return false;
       }
-    } catch (error) {
-      console.warn('App Group storage not available:', error);
-    }
 
-    this.available = false;
-    return false;
+      this.storage = AppGroupStorage as AppGroupStorageInterface;
+      this.available = await this.storage.isAvailable();
+      
+      if (!this.available) {
+        console.warn(
+          'App Group storage is not available. ' +
+          'Check that the App Group "group.com.fitnesstracker.widgets" is configured in both ' +
+          'the main app and widget extension entitlements.'
+        );
+      }
+      
+      return this.available;
+    } catch (error) {
+      console.warn('Error checking App Group storage availability:', error);
+      this.available = false;
+      return false;
+    }
   }
 
   /**
@@ -116,4 +132,3 @@ class AppGroupStorageService {
 }
 
 export const appGroupStorage = new AppGroupStorageService();
-

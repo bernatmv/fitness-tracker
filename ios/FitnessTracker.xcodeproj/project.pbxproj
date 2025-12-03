@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,6 +15,10 @@
 		14456B112EDFB954007969CA /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14456B102EDFB953007969CA /* WidgetKit.framework */; };
 		14456B132EDFB954007969CA /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14456B122EDFB954007969CA /* SwiftUI.framework */; };
 		14456B242EDFB955007969CA /* FitnessTrackerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 14456B0F2EDFB953007969CA /* FitnessTrackerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		14456BC62EE0C839007969CA /* WidgetUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC42EE0C839007969CA /* WidgetUpdater.m */; };
+		14456BC72EE0C839007969CA /* AppGroupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC32EE0C839007969CA /* AppGroupStorage.swift */; };
+		14456BC82EE0C839007969CA /* WidgetUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC52EE0C839007969CA /* WidgetUpdater.swift */; };
+		14456BC92EE0C839007969CA /* AppGroupStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC22EE0C839007969CA /* AppGroupStorage.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		B87C0123ABA75DFF39692ED5 /* libPods-FitnessTracker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 99EE1EF41342768510868017 /* libPods-FitnessTracker.a */; };
 /* End PBXBuildFile section */
@@ -64,6 +68,11 @@
 		14456B102EDFB953007969CA /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		14456B122EDFB954007969CA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		14456B2A2EDFB9C2007969CA /* FitnessTrackerWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FitnessTrackerWidgetExtension.entitlements; sourceTree = "<group>"; };
+		14456BB12EE0C18B007969CA /* FitnessTracker-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FitnessTracker-Bridging-Header.h"; sourceTree = "<group>"; };
+		14456BC22EE0C839007969CA /* AppGroupStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppGroupStorage.m; path = FitnessTracker/AppGroupStorage.m; sourceTree = "<group>"; };
+		14456BC32EE0C839007969CA /* AppGroupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppGroupStorage.swift; path = FitnessTracker/AppGroupStorage.swift; sourceTree = "<group>"; };
+		14456BC42EE0C839007969CA /* WidgetUpdater.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WidgetUpdater.m; path = FitnessTracker/WidgetUpdater.m; sourceTree = "<group>"; };
+		14456BC52EE0C839007969CA /* WidgetUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WidgetUpdater.swift; path = FitnessTracker/WidgetUpdater.swift; sourceTree = "<group>"; };
 		37DEADB20E8DB0C619C1A1BA /* Pods-FitnessTracker.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FitnessTracker.release.xcconfig"; path = "Target Support Files/Pods-FitnessTracker/Pods-FitnessTracker.release.xcconfig"; sourceTree = "<group>"; };
 		7552D8F64C2E1EDA1022148B /* Pods-FitnessTracker.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FitnessTracker.debug.xcconfig"; path = "Target Support Files/Pods-FitnessTracker/Pods-FitnessTracker.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = FitnessTracker/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -156,6 +165,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				14456BB12EE0C18B007969CA /* FitnessTracker-Bridging-Header.h */,
 			);
 			name = FitnessTracker;
 			sourceTree = "<group>";
@@ -190,6 +200,10 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				14456BC22EE0C839007969CA /* AppGroupStorage.m */,
+				14456BC32EE0C839007969CA /* AppGroupStorage.swift */,
+				14456BC42EE0C839007969CA /* WidgetUpdater.m */,
+				14456BC52EE0C839007969CA /* WidgetUpdater.swift */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -298,7 +312,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 2610;
 					};
 					14456B0E2EDFB953007969CA = {
 						CreatedOnToolsVersion = 26.1.1;
@@ -496,6 +510,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
+				14456BC62EE0C839007969CA /* WidgetUpdater.m in Sources */,
+				14456BC72EE0C839007969CA /* AppGroupStorage.swift in Sources */,
+				14456BC82EE0C839007969CA /* WidgetUpdater.swift in Sources */,
+				14456BC92EE0C839007969CA /* AppGroupStorage.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -602,6 +620,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "FitnessTracker-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -636,6 +655,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "FitnessTracker-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";

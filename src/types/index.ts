@@ -41,4 +41,3 @@ export interface AsyncState<T> {
   data?: T;
   error?: string;
 }
-

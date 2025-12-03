@@ -87,4 +87,3 @@ export interface AppConfig {
   preferences: UserPreferences;
   lastModified: Date;
 }
-
