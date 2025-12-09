@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, StatusBar, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  StatusBar,
+  StyleSheet,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
@@ -14,7 +20,7 @@ import {
 } from './services/storage';
 import { MigrateToAppGroup } from './services/storage/migrate_to_app_group';
 import { GetTheme, DEFAULT_THEME_PREFERENCE } from './utils';
-import { SyncAllDataFromAllTime } from './services/sync';
+import { SyncAllDataFromAllTime, SyncOnAppActive } from './services/sync';
 import type { ThemePreference } from './types';
 
 /**
@@ -26,6 +32,25 @@ const App = () => {
   const [themePreference, setThemePreference] = useState<ThemePreference>(
     DEFAULT_THEME_PREFERENCE
   );
+  const appState = useRef(AppState.currentState);
+
+  const HandleAppStateChange = async (nextAppState: AppStateStatus) => {
+    if (
+      appState.current.match(/inactive|background/) &&
+      nextAppState === 'active'
+    ) {
+      // App has come to the foreground
+      try {
+        await SyncOnAppActive();
+      } catch (error) {
+        // Silently fail - don't block app from loading
+        console.error('Error syncing on app active:', error as Error);
+      }
+    }
+
+    appState.current = nextAppState;
+  };
+
   useEffect(() => {
     // Migrate data to App Group storage on app start (for widget access)
     MigrateToAppGroup().catch(error => {
@@ -34,6 +59,22 @@ const App = () => {
 
     CheckOnboardingStatus();
     LoadThemePreference();
+
+    // Sync health data on initial app open
+    SyncOnAppActive().catch((error: unknown) => {
+      // Silently fail - don't block app from loading
+      console.error('Error syncing on initial app open:', error);
+    });
+
+    // Listen for app state changes
+    const subscription = AppState.addEventListener(
+      'change',
+      HandleAppStateChange
+    );
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const LoadThemePreference = async () => {

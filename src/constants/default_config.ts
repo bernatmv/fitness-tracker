@@ -17,7 +17,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     enabled: true,
     displayName: 'Calories Burned',
     colorRange: {
-      thresholds: [0, 500, 800, 950, 1200],
+      thresholds: [0, 700, 850, 1000, 1200],
       paletteId: 'ios_health_red',
     },
   },
@@ -26,7 +26,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     enabled: true,
     displayName: 'Steps',
     colorRange: {
-      thresholds: [0, 2000, 5000, 10000, 15000],
+      thresholds: [0, 3000, 6000, 10000, 15000],
       paletteId: 'github_green',
     },
   },
@@ -35,7 +35,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     enabled: true,
     displayName: 'Exercise Time',
     colorRange: {
-      thresholds: [0, 15, 30, 60, 120],
+      thresholds: [0, 30, 60, 100, 150],
       paletteId: 'github_green',
     },
   },
@@ -62,7 +62,7 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     enabled: true,
     displayName: 'Hours of Sleep',
     colorRange: {
-      thresholds: [0, 6, 7, 8, 9],
+      thresholds: [0, 5, 6, 7, 8],
       paletteId: 'ios_health_purple',
     },
   },

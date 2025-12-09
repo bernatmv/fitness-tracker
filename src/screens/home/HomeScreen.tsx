@@ -61,7 +61,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   const HandleSync = async () => {
     try {
       setRefreshing(true);
-      const data = await SyncAllMetrics(90); // Sync last 90 days on pull-to-refresh
+      const data = await SyncAllMetrics(30); // Sync last 30 days on pull-to-refresh
       setHealthData(data);
       setLastSyncText(FormatRelativeTime(data.lastFullSync));
     } catch (error) {
