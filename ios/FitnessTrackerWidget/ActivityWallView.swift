@@ -19,15 +19,23 @@ struct ActivityWallView: View {
     private let cellGap: CGFloat = 3
     
     // Calculate how many days can fit in the available width
+    // This maximizes the number of days shown based on available space
     private var numDays: Int {
+        guard availableWidth > 0 else {
+            return minDays
+        }
+        
         let columnWidth = cellSize + cellGap
-        // Calculate how many week columns can fit
+        // Calculate how many week columns can fit in the available width
+        // We use the full available width, accounting for spacing between columns
+        // Formula: (availableWidth + cellGap) / (cellSize + cellGap)
+        // The +cellGap in numerator accounts for the gap after the last column
+        // This ensures we maximize the number of columns that fit
         let maxColumns = max(1, Int(floor((availableWidth + cellGap) / columnWidth)))
         // Each column represents a week (7 days)
-        // We want to show enough days to fill all available columns
-        // Start from today and go back enough weeks to fill the width
+        // Calculate total days that can fit
         let calculatedDays = maxColumns * 7
-        // Ensure we show at least the minimum days requested
+        // Ensure we show at least the minimum days requested, but maximize to fill width
         return max(calculatedDays, minDays)
     }
     
@@ -37,6 +45,8 @@ struct ActivityWallView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: cellGap) {
+            // Spacer to push content to the right (GitHub-style activity wall)
+            // The Spacer will only take up leftover space after columns are laid out
             Spacer(minLength: 0)
             ForEach(0..<weeks.count, id: \.self) { weekIndex in
                 VStack(spacing: cellGap) {
@@ -59,6 +69,7 @@ struct ActivityWallView: View {
                         }
                     }
                 }
+                .frame(width: cellSize) // Fixed width for each week column
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -77,9 +88,10 @@ struct ActivityWallView: View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         
-        // Calculate how many week columns we need to fill the width
-        let columnWidth = cellSize + cellGap
-        let maxColumns = max(1, Int(floor((availableWidth + cellGap) / columnWidth)))
+        // Use the calculated numDays to determine how many week columns we need
+        // numDays already accounts for available width and ensures we fill the space
+        let totalWeeks = Int(ceil(Double(numDays) / 7.0))
+        let maxColumns = max(1, totalWeeks)
         
         // Find Monday of the week containing today
         let todayWeekday = calendar.component(.weekday, from: today)

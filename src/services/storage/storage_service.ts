@@ -6,11 +6,13 @@ import {
   MetricType,
   HealthMetricData,
   MetricConfig,
+  ExerciseDetail,
 } from '@types';
-import { GetAllPalettes, GetPaletteColorsById } from '@constants';
+import { GetAllPalettes, GetPaletteColorsById, METRIC_UNITS } from '@constants';
 import { appGroupStorage } from './app_group_storage';
 import { widgetUpdater } from '../widget';
 import { MigrateToAppGroup } from './migrate_to_app_group';
+import { GetStartOfDay, GetDateArray } from '@utils';
 
 /**
  * Storage keys
@@ -144,10 +146,23 @@ const SerializeHealthData = (data: HealthDataStore): string => {
       },
       {} as Record<string, unknown>
     ),
-    exercises: data.exercises.map(ex => ({
-      ...ex,
-      date: ex.date.toISOString(),
-    })),
+    exercises: data.exercises.map(ex => {
+      // Handle cases where date might already be a string or undefined
+      let dateValue: string;
+      if (ex.date instanceof Date) {
+        dateValue = ex.date.toISOString();
+      } else if (typeof ex.date === 'string') {
+        dateValue = ex.date;
+      } else {
+        // Fallback to current date if date is invalid
+        console.warn('Exercise has invalid date, using current date:', ex);
+        dateValue = new Date().toISOString();
+      }
+      return {
+        ...ex,
+        date: dateValue,
+      };
+    }),
   };
   return JSON.stringify(serialized);
 };
@@ -216,7 +231,21 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
       }));
     });
 
-    return data;
+    // Convert exercise dates back to Date objects
+    if (data.exercises && Array.isArray(data.exercises)) {
+      data.exercises = data.exercises.map((ex: unknown) => {
+        const exercise = ex as ExerciseDetail;
+        return {
+          ...exercise,
+          date: exercise.date ? new Date(exercise.date) : new Date(),
+        };
+      });
+    }
+
+    // Ensure each metric has at least 365 days of data (pad with zeros if needed)
+    // This ensures widgets and cards always have enough data to fill the space
+    const paddedData = EnsureMinimumDays(data);
+    return paddedData;
   } catch (error) {
     console.error('Error loading health data:', error);
     return null;
@@ -389,6 +418,103 @@ export const LoadMetricData = async (
     console.error(`Error loading metric data for ${metricType}:`, error);
     return null;
   }
+};
+
+/**
+ * Ensure each metric has at least 365 days of data
+ * Pads missing days with zero-value data points
+ *
+ * IMPORTANT: This function NEVER overwrites existing data.
+ * It only adds zero-value data points for dates that don't have any data.
+ * All existing data points are preserved exactly as they are.
+ */
+const EnsureMinimumDays = (
+  healthDataStore: HealthDataStore
+): HealthDataStore => {
+  const today = GetStartOfDay(new Date());
+  const minDays = 365;
+  const startDate = GetStartOfDay(
+    new Date(today.getTime() - (minDays - 1) * 24 * 60 * 60 * 1000)
+  );
+
+  // Generate array of all dates for the last 365 days
+  const allDates = GetDateArray(startDate, today);
+
+  // Process each metric
+  const updatedMetrics: Record<MetricType, HealthMetricData> = {
+    ...healthDataStore.metrics,
+  };
+
+  Object.values(MetricType).forEach(metricType => {
+    const metricData = healthDataStore.metrics[metricType];
+
+    // Initialize if missing
+    if (!metricData) {
+      // Create zero-value data points for all 365 days
+      const emptyDataPoints = allDates.map(date => ({
+        date,
+        value: 0,
+        metricType,
+        unit: METRIC_UNITS[metricType],
+      }));
+
+      updatedMetrics[metricType] = {
+        metricType,
+        unit: METRIC_UNITS[metricType],
+        dataPoints: emptyDataPoints,
+        lastSync: new Date(),
+      };
+      return;
+    }
+
+    // Create a map of existing data points by date
+    // IMPORTANT: This preserves all existing data - we never overwrite it
+    const existingDataMap = new Map<
+      string,
+      (typeof metricData.dataPoints)[0]
+    >();
+    metricData.dataPoints.forEach(dp => {
+      const dateKey = GetStartOfDay(dp.date).toISOString().split('T')[0];
+      // If multiple data points exist for the same date, keep the first one
+      // (shouldn't happen, but this ensures we preserve existing data)
+      if (!existingDataMap.has(dateKey)) {
+        existingDataMap.set(dateKey, dp);
+      }
+    });
+
+    // Create data points for all dates, using existing data or zero values
+    // CRITICAL: We only create zero-value points for dates that don't have existing data
+    const paddedDataPoints = allDates.map(date => {
+      const dateKey = date.toISOString().split('T')[0];
+      const existing = existingDataMap.get(dateKey);
+
+      // Always prefer existing data - never overwrite with zero values
+      if (existing) {
+        return existing;
+      }
+
+      // Only create zero-value data point if no existing data exists for this date
+      return {
+        date,
+        value: 0,
+        metricType,
+        unit: METRIC_UNITS[metricType],
+      };
+    });
+
+    // Sort by date to ensure chronological order
+    paddedDataPoints.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    updatedMetrics[metricType] = {
+      ...metricData,
+      dataPoints: paddedDataPoints,
+    };
+  });
+
+  return {
+    ...healthDataStore,
+    metrics: updatedMetrics,
+  };
 };
 
 /**

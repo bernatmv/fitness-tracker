@@ -114,14 +114,16 @@ struct FitnessTrackerWidgetEntryView : View {
         }.sorted(by: { $0.date > $1.date }).first
     }
     
-    private var numDays: Int {
+    // Minimum days to show based on widget size
+    // ActivityWallView will calculate the actual number of days based on available width
+    private var minDays: Int {
         switch family {
         case .systemSmall:
-            return 7 // Last week
+            return 7 // Minimum: Last week
         case .systemMedium:
-            return 14 // Last 2 weeks
+            return 14 // Minimum: Last 2 weeks
         case .systemLarge:
-            return 30 // Last month
+            return 30 // Minimum: Last month
         default:
             return 7
         }
@@ -148,6 +150,35 @@ struct FitnessTrackerWidgetEntryView : View {
         return colorScheme == .dark
     }
     
+    // MARK: - Theme Colors
+    // Matches src/constants/theme.ts - cardBackground color
+    
+    private var backgroundColor: Color {
+        if isDarkMode {
+            // Dark mode: #0d1117 - solid color matching app's cardBackground
+            return Color(red: 13/255.0, green: 17/255.0, blue: 23/255.0)
+        } else {
+            // Light mode: #FFFFFF - solid white matching app's cardBackground
+            return Color(red: 1.0, green: 1.0, blue: 1.0)
+        }
+    }
+    
+    private var primaryTextColor: Color {
+        if isDarkMode {
+            return Color(red: 1.0, green: 1.0, blue: 1.0) // #FFFFFF
+        } else {
+            return Color(red: 0.0, green: 0.0, blue: 0.0) // #000000
+        }
+    }
+    
+    private var secondaryTextColor: Color {
+        if isDarkMode {
+            return Color(red: 235/255.0, green: 235/255.0, blue: 245/255.0) // #EBEBF5
+        } else {
+            return Color(red: 60/255.0, green: 60/255.0, blue: 67/255.0) // #3C3C43
+        }
+    }
+    
     private func getColors(for paletteId: String) -> [String] {
         return WidgetDataManager.getColorsForPalette(paletteId: paletteId, isDarkMode: isDarkMode)
     }
@@ -168,7 +199,7 @@ struct FitnessTrackerWidgetEntryView : View {
                         // Metric name on left
                         Text(config.displayName)
                             .font(.headline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(primaryTextColor)
                             .lineLimit(1)
                         
                         Spacer()
@@ -178,18 +209,18 @@ struct FitnessTrackerWidgetEntryView : View {
                             Text("\(Int(mostRecent.point.value))")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                                .foregroundColor(.primary)
+                                .foregroundColor(primaryTextColor)
                             
                             Text(mostRecent.point.unit)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(secondaryTextColor)
                         }
                     }
                 } else {
                     // Fallback if no recent data point
                     Text(config.displayName)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(primaryTextColor)
                         .lineLimit(1)
                 }
                 
@@ -197,12 +228,13 @@ struct FitnessTrackerWidgetEntryView : View {
                 if !data.dataPoints.isEmpty {
                     let colors = getColors(for: config.colorRange.paletteId)
                     GeometryReader { geometry in
+                        // Use full available width (geometry already accounts for padding)
                         ActivityWallView(
                             dataPoints: data.dataPoints,
                             thresholds: config.colorRange.thresholds,
                             colors: colors,
                             availableWidth: geometry.size.width,
-                            minDays: numDays
+                            minDays: minDays
                         )
                     }
                     .frame(height: calculateActivityWallHeight())
@@ -210,7 +242,7 @@ struct FitnessTrackerWidgetEntryView : View {
                 } else {
                     Text("No data available")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(secondaryTextColor)
                         .padding(.top, 2)
                 }
                 
@@ -219,7 +251,7 @@ struct FitnessTrackerWidgetEntryView : View {
                     if let lastSync = entry.healthData?.lastFullSyncDate {
                         Text("Updated: \(lastSync, style: .relative)")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(secondaryTextColor)
                             .padding(.top, 2)
                     }
                 }
@@ -230,10 +262,10 @@ struct FitnessTrackerWidgetEntryView : View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Metric Disabled")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(primaryTextColor)
                     Text("The selected metric is disabled in settings. Please enable it or choose another metric.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(secondaryTextColor)
                         .lineLimit(3)
                 }
             } else if entry.preferences != nil && entry.healthData == nil {
@@ -241,39 +273,41 @@ struct FitnessTrackerWidgetEntryView : View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No Health Data")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(primaryTextColor)
                     Text("Sync your health data in the app first.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(secondaryTextColor)
                 }
             } else if entry.healthData != nil && entry.preferences == nil {
                 // Health data loaded but no preferences
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No Preferences")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(primaryTextColor)
                     Text("Open the app to configure settings.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(secondaryTextColor)
                 }
             } else if entry.healthData != nil || entry.preferences != nil {
                 Text("No metrics configured")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(secondaryTextColor)
             } else {
                 // No data at all - check App Group access
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No Data Available")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(primaryTextColor)
                     Text("Open the app to sync data and configure settings.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(secondaryTextColor)
                 }
             }
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(backgroundColor) // Use solid background color directly
+        .containerBackground(backgroundColor, for: .widget) // Also set container background to ensure solid color
     }
 }
 
@@ -284,7 +318,6 @@ struct FitnessTrackerWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             FitnessTrackerWidgetEntryView(entry: entry)
-                .containerBackground(.fill, for: .widget)
         }
     }
 }

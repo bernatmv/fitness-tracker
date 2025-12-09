@@ -134,6 +134,9 @@ const FetchIOSMetricData = async (
       }
 
       const dailyTotals = new Map<string, number>();
+      // For standing time, we need to sum minutes first, then convert to hours
+      const dailyTotalsMinutes = new Map<string, number>();
+
       safeResults.forEach(result => {
         const normalized = result as HealthValue & {
           startDate?: string;
@@ -158,14 +161,29 @@ const FetchIOSMetricData = async (
             (new Date(endIso).getTime() - new Date(startIso).getTime()) /
             (1000 * 60 * 60);
           value = isNaN(durationHours) ? 0 : Math.max(durationHours, 0);
+          dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
         } else if (metricType === MetricType.STANDING_TIME) {
-          // Convert minutes to hours and round to nearest hour
-          const hours = value / 60;
-          value = Math.round(hours);
+          // Sum minutes first (don't convert yet)
+          dailyTotalsMinutes.set(
+            startDay,
+            (dailyTotalsMinutes.get(startDay) || 0) + value
+          );
+        } else {
+          // For other metrics (exercise time, steps, etc.), sum directly
+          // Note: If HealthKit returns multiple samples per day, they should be
+          // incremental (each adds more time), so summing is correct.
+          // If period parameter works correctly, we should get one sample per day.
+          dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
         }
-
-        dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
       });
+
+      // Convert standing time from minutes to hours after summing
+      if (metricType === MetricType.STANDING_TIME) {
+        dailyTotalsMinutes.forEach((totalMinutes, day) => {
+          const hours = totalMinutes / 60;
+          dailyTotals.set(day, Math.round(hours));
+        });
+      }
 
       const allDates = GetDateArray(
         GetStartOfDay(startDate),
