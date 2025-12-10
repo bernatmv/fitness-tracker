@@ -8,6 +8,9 @@ dependencies:
   '@react-native-async-storage/async-storage':
     specifier: ^1.21.0
     version: 1.24.0(react-native@0.73.2)
+  '@react-native-community/blur':
+    specifier: ^4.4.1
+    version: 4.4.1(react-native@0.73.2)(react@18.2.0)
   '@react-navigation/bottom-tabs':
     specifier: ^6.5.11
     version: 6.6.1(@react-navigation/native@6.1.18)(react-native-safe-area-context@4.14.1)(react-native-screens@3.37.0)(react-native@0.73.2)(react@18.2.0)
@@ -2037,6 +2040,16 @@ packages:
       react-native: ^0.0.0-0 || >=0.60 <1.0
     dependencies:
       merge-options: 3.0.4
+      react-native: 0.73.2(@babel/core@7.28.5)(@babel/preset-env@7.28.5)(react@18.2.0)
+    dev: false
+
+  /@react-native-community/blur@4.4.1(react-native@0.73.2)(react@18.2.0):
+    resolution: {integrity: sha512-XBSsRiYxE/MOEln2ayunShfJtWztHwUxLFcSL20o+HNNRnuUDv+GXkF6FmM2zE8ZUfrnhQ/zeTqvnuDPGw6O8A==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+    dependencies:
+      react: 18.2.0
       react-native: 0.73.2(@babel/core@7.28.5)(@babel/preset-env@7.28.5)(react@18.2.0)
     dev: false
 

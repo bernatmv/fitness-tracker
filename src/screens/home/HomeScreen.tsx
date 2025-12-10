@@ -130,7 +130,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 50 + insets.bottom + 16 },
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

@@ -1,6 +1,8 @@
 import React from 'react';
+import { StyleSheet, Platform, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BlurView } from '@react-native-community/blur';
 import { Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +40,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   const { t } = useTranslation();
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
+  const isDarkMode = theme.mode === 'dark';
 
   return (
     <Tab.Navigator
@@ -45,12 +48,38 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         headerShown: false,
         tabBarActiveTintColor: theme.colors.link,
         tabBarInactiveTintColor: theme.colors.text.secondary,
-        tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
-          paddingBottom: insets.bottom,
-          height: 50 + insets.bottom,
+        tabBarItemStyle: {
+          paddingVertical: 5,
         },
+        tabBarStyle: {
+          backgroundColor: 'transparent',
+          position: 'absolute',
+          borderTopWidth: 0,
+          elevation: 0,
+          height: 55,
+          bottom: 25,
+          left: 100,
+          right: 100,
+          borderRadius: 30,
+          paddingBottom: 0, // Ensure no extra padding at bottom
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: 4,
+          },
+          shadowOpacity: 0.2,
+          shadowRadius: 5,
+        },
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <View style={{ borderRadius: 30, overflow: 'hidden', height: 55 }}>
+              <BlurView
+                style={StyleSheet.absoluteFill}
+                blurType={isDarkMode ? 'dark' : 'light'}
+                blurAmount={20}
+              />
+            </View>
+          ) : undefined,
       }}>
       <Tab.Screen
         name="Home"

@@ -219,7 +219,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={{ paddingBottom: 50 + insets.bottom + 16 }}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text
           h3
