@@ -304,10 +304,13 @@ struct FitnessTrackerWidgetEntryView : View {
                 }
             }
         }
-        .padding(12)
+        .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(backgroundColor) // Use solid background color directly
-        .containerBackground(backgroundColor, for: .widget) // Also set container background to ensure solid color
+        .background(backgroundColor)
+        .containerBackground(for: .widget) {
+            Rectangle()
+                .fill(backgroundColor)
+        }
     }
 }
 
@@ -319,6 +322,7 @@ struct FitnessTrackerWidget: Widget {
         AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
             FitnessTrackerWidgetEntryView(entry: entry)
         }
+        .contentMarginsDisabled()
     }
 }
 
