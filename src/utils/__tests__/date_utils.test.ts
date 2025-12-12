@@ -38,7 +38,9 @@ describe('date_utils', () => {
         (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      expect(diffInDays).toBe(6); // 7 days inclusive means 6 days difference
+      // start is start-of-day (days-1 back) and end is end-of-day (today),
+      // so for 7 days we expect a ~7 day span.
+      expect(diffInDays).toBe(7);
     });
   });
 

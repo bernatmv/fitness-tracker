@@ -295,10 +295,14 @@ struct FitnessTrackerWidgetEntryView : View {
             } else {
                 // No data at all - check App Group access
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("No Data Available")
+                    Text(WidgetDataManager.isAppGroupAvailable() ? "No Data Available" : "Widget Access Error")
                         .font(.headline)
                         .foregroundColor(primaryTextColor)
-                    Text("Open the app to sync data and configure settings.")
+                    Text(
+                        WidgetDataManager.isAppGroupAvailable()
+                            ? "Open the app to sync data and configure settings."
+                            : "The widget can't access shared app data. This is usually an App Group entitlement/signing issue in the installed build."
+                    )
                         .font(.caption)
                         .foregroundColor(secondaryTextColor)
                 }

@@ -12,9 +12,10 @@ import React
 class AppGroupStorage: NSObject, RCTBridgeModule {
   
   private static let appGroupIdentifier = "group.com.fitnesstracker.widgets"
-  private static let userDefaults: UserDefaults? = {
+  
+  private static func getUserDefaults() -> UserDefaults? {
     return UserDefaults(suiteName: appGroupIdentifier)
-  }()
+  }
   
   @objc
   static func requiresMainQueueSetup() -> Bool {
@@ -31,8 +32,13 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
    */
   @objc
   func setItem(_ key: String, value: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    guard let userDefaults = AppGroupStorage.userDefaults else {
-      rejecter("STORAGE_ERROR", "App Group UserDefaults not available", nil)
+    guard let userDefaults = AppGroupStorage.getUserDefaults() else {
+      rejecter(
+        "STORAGE_ERROR",
+        "App Group UserDefaults not available (suite: \(AppGroupStorage.appGroupIdentifier)). " +
+          "This usually means the App Group entitlement is missing from the build/provisioning profile.",
+        nil
+      )
       return
     }
     
@@ -46,8 +52,13 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
    */
   @objc
   func getItem(_ key: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    guard let userDefaults = AppGroupStorage.userDefaults else {
-      rejecter("STORAGE_ERROR", "App Group UserDefaults not available", nil)
+    guard let userDefaults = AppGroupStorage.getUserDefaults() else {
+      rejecter(
+        "STORAGE_ERROR",
+        "App Group UserDefaults not available (suite: \(AppGroupStorage.appGroupIdentifier)). " +
+          "This usually means the App Group entitlement is missing from the build/provisioning profile.",
+        nil
+      )
       return
     }
     
@@ -63,8 +74,13 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
    */
   @objc
   func removeItem(_ key: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    guard let userDefaults = AppGroupStorage.userDefaults else {
-      rejecter("STORAGE_ERROR", "App Group UserDefaults not available", nil)
+    guard let userDefaults = AppGroupStorage.getUserDefaults() else {
+      rejecter(
+        "STORAGE_ERROR",
+        "App Group UserDefaults not available (suite: \(AppGroupStorage.appGroupIdentifier)). " +
+          "This usually means the App Group entitlement is missing from the build/provisioning profile.",
+        nil
+      )
       return
     }
     
@@ -78,8 +94,13 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
    */
   @objc
   func getAllKeys(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    guard let userDefaults = AppGroupStorage.userDefaults else {
-      rejecter("STORAGE_ERROR", "App Group UserDefaults not available", nil)
+    guard let userDefaults = AppGroupStorage.getUserDefaults() else {
+      rejecter(
+        "STORAGE_ERROR",
+        "App Group UserDefaults not available (suite: \(AppGroupStorage.appGroupIdentifier)). " +
+          "This usually means the App Group entitlement is missing from the build/provisioning profile.",
+        nil
+      )
       return
     }
     
@@ -92,8 +113,13 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
    */
   @objc
   func clear(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    guard let userDefaults = AppGroupStorage.userDefaults else {
-      rejecter("STORAGE_ERROR", "App Group UserDefaults not available", nil)
+    guard let userDefaults = AppGroupStorage.getUserDefaults() else {
+      rejecter(
+        "STORAGE_ERROR",
+        "App Group UserDefaults not available (suite: \(AppGroupStorage.appGroupIdentifier)). " +
+          "This usually means the App Group entitlement is missing from the build/provisioning profile.",
+        nil
+      )
       return
     }
     
@@ -110,7 +136,17 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
    */
   @objc
   func isAvailable(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    resolver(AppGroupStorage.userDefaults != nil)
+    // UserDefaults(suiteName:) can return nil on-device if entitlements/provisioning are missing,
+    // even if things appear to work on the simulator.
+    let userDefaultsAvailable = AppGroupStorage.getUserDefaults() != nil
+    
+    // Extra signal: container URL also depends on the App Group entitlement.
+    let containerAvailable =
+      FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: AppGroupStorage.appGroupIdentifier
+      ) != nil
+    
+    resolver(userDefaultsAvailable && containerAvailable)
   }
 }
 

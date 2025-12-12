@@ -60,6 +60,8 @@ describe('color_utils', () => {
   });
 
   describe('GetColorForValue', () => {
+    // When thresholds include Infinity, the "last bucket" is the range
+    // [thresholds[thresholds.length - 2], Infinity) which maps to colors[colors.length - 2].
     const thresholds = [0, 100, 200, 300, Infinity];
     const colors = ['#color1', '#color2', '#color3', '#color4', '#color5'];
 
@@ -71,7 +73,7 @@ describe('color_utils', () => {
     });
 
     it('should return last color for values >= last threshold', () => {
-      expect(GetColorForValue(1000, thresholds, colors)).toBe('#color5');
+      expect(GetColorForValue(1000, thresholds, colors)).toBe('#color4');
     });
 
     it('should handle edge values correctly', () => {

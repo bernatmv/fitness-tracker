@@ -3,9 +3,7 @@ import { NativeModules, Platform } from 'react-native';
 
 // Mock NativeModules
 jest.mock('react-native', () => {
-  const actualRN = jest.requireActual('react-native');
   return {
-    ...actualRN,
     NativeModules: {
       AppGroupStorage: {
         setItem: jest.fn(),

@@ -16,6 +16,16 @@ struct WidgetDataManager {
     static var sharedUserDefaults: UserDefaults? {
         return UserDefaults(suiteName: appGroupIdentifier)
     }
+
+    static func isAppGroupAvailable() -> Bool {
+        // UserDefaults(suiteName:) and containerURL both depend on App Group entitlements.
+        let userDefaultsAvailable = sharedUserDefaults != nil
+        let containerAvailable =
+            FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: appGroupIdentifier
+            ) != nil
+        return userDefaultsAvailable && containerAvailable
+    }
     
     /**
      * Load health data from App Group storage

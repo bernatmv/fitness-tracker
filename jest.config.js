@@ -1,9 +1,13 @@
 module.exports = {
   preset: 'react-native',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  setupFiles: ['react-native/jest/setup.js', '<rootDir>/jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@rneui|react-native-.*)/)',
+    // Support pnpm's nested `.pnpm/.../node_modules/<pkg>` layout.
+    // We still want to transform RN-related packages that ship untranspiled JS/Flow.
+    'node_modules/(?!(\\.pnpm|react-native|@react-native|@react-navigation|@rneui|react-native-.*)/)',
+    'node_modules/\\.pnpm/(?!(react-native[^/]*|@react-native\\+[^/]*|@react-navigation\\+[^/]*|@rneui\\+[^/]*|react-native-[^/]*)/)',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

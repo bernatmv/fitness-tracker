@@ -1,18 +1,27 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  SaveHealthData,
-  LoadHealthData,
-  SaveUserPreferences,
-  LoadUserPreferences,
-} from '../storage_service';
-import { appGroupStorage } from '../app_group_storage';
 import { HealthDataStore, UserPreferences, MetricType } from '@types';
 
-// Mock dependencies
-jest.mock('@react-native-async-storage/async-storage');
-jest.mock('../app_group_storage');
+// Mock app group storage with stable API across module reloads
+jest.mock('../app_group_storage', () => ({
+  appGroupStorage: {
+    IsAvailable: jest.fn(),
+    SetItem: jest.fn(),
+    GetItem: jest.fn(),
+    RemoveItem: jest.fn(),
+    GetAllKeys: jest.fn(),
+    Clear: jest.fn(),
+  },
+}));
 
 describe('Storage Service with App Group', () => {
+  const LoadModules = () => {
+    // storage_service caches an internal adapter; reset between tests so availability changes apply
+    jest.resetModules();
+    const AsyncStorage = require('@react-native-async-storage/async-storage') as typeof import('@react-native-async-storage/async-storage');
+    const storageService = require('../storage_service') as typeof import('../storage_service');
+    const { appGroupStorage } = require('../app_group_storage') as typeof import('../app_group_storage');
+    return { AsyncStorage, storageService, appGroupStorage };
+  };
+
   const mockHealthData: HealthDataStore = {
     metrics: {},
     exercises: [],
@@ -35,27 +44,33 @@ describe('Storage Service with App Group', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
   });
 
   describe('SaveHealthData', () => {
     it('should use App Group storage when available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
       (appGroupStorage.SetItem as jest.Mock).mockResolvedValue(undefined);
 
-      await SaveHealthData(mockHealthData);
+      await storageService.SaveHealthData(mockHealthData);
 
       expect(appGroupStorage.SetItem).toHaveBeenCalledWith(
         '@fitness_tracker:health_data',
         expect.stringContaining('"lastFullSync"')
       );
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+      // When App Group is used, we also write to AsyncStorage as a non-critical backup.
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        '@fitness_tracker:health_data',
+        expect.stringContaining('"lastFullSync"')
+      );
     });
 
     it('should fall back to AsyncStorage when App Group is not available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
       (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(false);
       (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
 
-      await SaveHealthData(mockHealthData);
+      await storageService.SaveHealthData(mockHealthData);
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         '@fitness_tracker:health_data',
@@ -66,10 +81,12 @@ describe('Storage Service with App Group', () => {
 
   describe('LoadHealthData', () => {
     it('should load from App Group storage when available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
       const jsonData = JSON.stringify(mockHealthData);
       (appGroupStorage.GetItem as jest.Mock).mockResolvedValue(jsonData);
 
-      const result = await LoadHealthData();
+      const result = await storageService.LoadHealthData();
 
       expect(result).toBeDefined();
       expect(result?.lastFullSync).toBeInstanceOf(Date);
@@ -80,11 +97,12 @@ describe('Storage Service with App Group', () => {
     });
 
     it('should fall back to AsyncStorage when App Group is not available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
       (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(false);
       const jsonData = JSON.stringify(mockHealthData);
       (AsyncStorage.getItem as jest.Mock).mockResolvedValue(jsonData);
 
-      const result = await LoadHealthData();
+      const result = await storageService.LoadHealthData();
 
       expect(result).toBeDefined();
       expect(AsyncStorage.getItem).toHaveBeenCalledWith(
@@ -93,9 +111,11 @@ describe('Storage Service with App Group', () => {
     });
 
     it('should return null when data does not exist', async () => {
+      const { storageService, appGroupStorage } = LoadModules();
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
       (appGroupStorage.GetItem as jest.Mock).mockResolvedValue(null);
 
-      const result = await LoadHealthData();
+      const result = await storageService.LoadHealthData();
 
       expect(result).toBeNull();
     });
@@ -103,22 +123,29 @@ describe('Storage Service with App Group', () => {
 
   describe('SaveUserPreferences', () => {
     it('should use App Group storage when available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
       (appGroupStorage.SetItem as jest.Mock).mockResolvedValue(undefined);
 
-      await SaveUserPreferences(mockPreferences);
+      await storageService.SaveUserPreferences(mockPreferences);
 
       expect(appGroupStorage.SetItem).toHaveBeenCalledWith(
         '@fitness_tracker:user_preferences',
         expect.stringContaining('"language"')
       );
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+      // When App Group is used, we also write to AsyncStorage as a non-critical backup.
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        '@fitness_tracker:user_preferences',
+        expect.stringContaining('"language"')
+      );
     });
 
     it('should fall back to AsyncStorage when App Group is not available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
       (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(false);
       (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
 
-      await SaveUserPreferences(mockPreferences);
+      await storageService.SaveUserPreferences(mockPreferences);
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         '@fitness_tracker:user_preferences',
@@ -129,10 +156,12 @@ describe('Storage Service with App Group', () => {
 
   describe('LoadUserPreferences', () => {
     it('should load from App Group storage when available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
       const jsonData = JSON.stringify(mockPreferences);
       (appGroupStorage.GetItem as jest.Mock).mockResolvedValue(jsonData);
 
-      const result = await LoadUserPreferences();
+      const result = await storageService.LoadUserPreferences();
 
       expect(result).toBeDefined();
       expect(result?.language).toBe('en');
@@ -143,11 +172,12 @@ describe('Storage Service with App Group', () => {
     });
 
     it('should fall back to AsyncStorage when App Group is not available', async () => {
+      const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
       (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(false);
       const jsonData = JSON.stringify(mockPreferences);
       (AsyncStorage.getItem as jest.Mock).mockResolvedValue(jsonData);
 
-      const result = await LoadUserPreferences();
+      const result = await storageService.LoadUserPreferences();
 
       expect(result).toBeDefined();
       expect(AsyncStorage.getItem).toHaveBeenCalledWith(

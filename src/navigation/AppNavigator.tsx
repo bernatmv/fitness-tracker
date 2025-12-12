@@ -39,7 +39,6 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
-  const insets = useSafeAreaInsets();
   const isDarkMode = theme.mode === 'dark';
 
   return (
