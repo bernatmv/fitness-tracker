@@ -40,6 +40,21 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   const { t } = useTranslation();
   const theme = useAppTheme();
   const isDarkMode = theme.mode === 'dark';
+  const insets = useSafeAreaInsets();
+  const iosMajorVersion =
+    Platform.OS === 'ios'
+      ? typeof Platform.Version === 'string'
+        ? parseInt(Platform.Version, 10)
+        : Platform.Version
+      : 0;
+  const useModernIOSGlass = Platform.OS === 'ios' && iosMajorVersion >= 15;
+  const blurType = useModernIOSGlass
+    ? isDarkMode
+      ? 'ultraThinMaterialDark'
+      : 'ultraThinMaterialLight'
+    : isDarkMode
+      ? 'dark'
+      : 'light';
 
   return (
     <Tab.Navigator
@@ -50,32 +65,53 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         tabBarItemStyle: {
           paddingVertical: 5,
         },
-        tabBarStyle: {
-          backgroundColor: 'transparent',
-          position: 'absolute',
-          borderTopWidth: 0,
-          elevation: 0,
-          height: 55,
-          bottom: 25,
-          left: 100,
-          right: 100,
-          borderRadius: 30,
-          paddingBottom: 0, // Ensure no extra padding at bottom
-          shadowColor: '#000',
-          shadowOffset: {
-            width: 0,
-            height: 4,
-          },
-          shadowOpacity: 0.2,
-          shadowRadius: 5,
-        },
+        tabBarStyle: useModernIOSGlass
+          ? {
+              // iOS 15+: match modern "glass/material" tab bar look without breaking older iOS.
+              backgroundColor: 'transparent',
+              position: 'absolute',
+              borderTopWidth: 0,
+              elevation: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 56 + insets.bottom,
+              paddingBottom: insets.bottom,
+              paddingTop: 6,
+            }
+          : {
+              // Legacy floating pill (kept for older iOS versions)
+              backgroundColor: 'transparent',
+              position: 'absolute',
+              borderTopWidth: 0,
+              elevation: 0,
+              height: 55,
+              bottom: 25,
+              left: 100,
+              right: 100,
+              borderRadius: 30,
+              paddingBottom: 0, // Ensure no extra padding at bottom
+              shadowColor: theme.colors.text.primary,
+              shadowOffset: {
+                width: 0,
+                height: 4,
+              },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+            },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
-            <View style={{ borderRadius: 30, overflow: 'hidden', height: 55 }}>
+            <View
+              style={{
+                borderRadius: useModernIOSGlass ? 0 : 30,
+                overflow: 'hidden',
+                height: useModernIOSGlass ? 56 + insets.bottom : 55,
+              }}>
               <BlurView
                 style={StyleSheet.absoluteFill}
-                blurType={isDarkMode ? 'dark' : 'light'}
-                blurAmount={20}
+                blurType={blurType}
+                blurAmount={useModernIOSGlass ? 24 : 20}
+                reducedTransparencyFallbackColor={theme.colors.cardBackground}
               />
             </View>
           ) : undefined,
@@ -122,12 +158,10 @@ const HomeScreenWrapper = ({ navigation }: { navigation: any }) => {
 };
 
 interface SettingsScreenWrapperProps {
-  navigation: any;
   onThemePreferenceChange?: (preference: ThemePreference) => void;
 }
 
 const SettingsScreenWrapper: React.FC<SettingsScreenWrapperProps> = ({
-  navigation,
   onThemePreferenceChange,
 }) => {
   return <SettingsScreen onThemePreferenceChange={onThemePreferenceChange} />;
@@ -146,17 +180,15 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
   const { t } = useTranslation();
   const theme = useAppTheme();
 
-  const isDarkMode = theme.mode === 'dark';
-
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
           backgroundColor: theme.colors.background,
         },
-        headerTintColor: isDarkMode ? '#FFFFFF' : theme.colors.text.primary,
+        headerTintColor: theme.colors.text.primary,
         headerTitleStyle: {
-          color: isDarkMode ? '#FFFFFF' : theme.colors.text.primary,
+          color: theme.colors.text.primary,
         },
       }}>
       <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
