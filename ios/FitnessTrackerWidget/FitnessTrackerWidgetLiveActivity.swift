@@ -9,6 +9,7 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
+@available(iOS 16.1, *)
 struct FitnessTrackerWidgetAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         // Dynamic stateful properties about your activity go here!
@@ -19,6 +20,7 @@ struct FitnessTrackerWidgetAttributes: ActivityAttributes {
     var name: String
 }
 
+@available(iOS 16.1, *)
 struct FitnessTrackerWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: FitnessTrackerWidgetAttributes.self) { context in

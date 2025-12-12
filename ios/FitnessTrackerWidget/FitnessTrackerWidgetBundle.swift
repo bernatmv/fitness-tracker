@@ -11,8 +11,11 @@ import SwiftUI
 @main
 struct FitnessTrackerWidgetBundle: WidgetBundle {
     var body: some Widget {
-        FitnessTrackerWidget()
-        FitnessTrackerWidgetControl()
-        FitnessTrackerWidgetLiveActivity()
+        if #available(iOS 17.0, *) {
+            FitnessTrackerWidget()
+        }
+        if #available(iOS 16.1, *) {
+            FitnessTrackerWidgetLiveActivity()
+        }
     }
 }
