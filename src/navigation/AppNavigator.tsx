@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Platform, View } from 'react-native';
+import { StyleSheet, Platform, View, useWindowDimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { BlurView } from '@react-native-community/blur';
@@ -41,6 +41,17 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   const theme = useAppTheme();
   const isDarkMode = theme.mode === 'dark';
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const toRgba = (hex: string, alpha: number): string => {
+    const normalized = hex.startsWith('#') ? hex.slice(1) : hex;
+    if (normalized.length !== 6) return hex;
+    const r = parseInt(normalized.slice(0, 2), 16);
+    const g = parseInt(normalized.slice(2, 4), 16);
+    const b = parseInt(normalized.slice(4, 6), 16);
+    if ([r, g, b].some(n => Number.isNaN(n))) return hex;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   const iosMajorVersion =
     Platform.OS === 'ios'
       ? typeof Platform.Version === 'string'
@@ -50,11 +61,24 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   const useModernIOSGlass = Platform.OS === 'ios' && iosMajorVersion >= 15;
   const blurType = useModernIOSGlass
     ? isDarkMode
-      ? 'ultraThinMaterialDark'
-      : 'ultraThinMaterialLight'
+      ? 'chromeMaterialDark'
+      : 'chromeMaterialLight'
     : isDarkMode
       ? 'dark'
       : 'light';
+  const glassFallbackColor = toRgba(
+    useModernIOSGlass ? theme.colors.cardBackground : theme.colors.background,
+    useModernIOSGlass ? 0.72 : 0.9
+  );
+  const pillMaxWidth = 420;
+  const pillHorizontalMargin = 24;
+  const pillWidth = Math.min(
+    pillMaxWidth,
+    Math.max(0, screenWidth - pillHorizontalMargin * 2)
+  );
+  const pillInset = Math.max(0, (screenWidth - pillWidth) / 2);
+  const pillHeight = 58;
+  const pillBottom = (Platform.OS === 'ios' ? insets.bottom : 0) + 10;
 
   return (
     <Tab.Navigator
@@ -63,55 +87,56 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         tabBarActiveTintColor: theme.colors.link,
         tabBarInactiveTintColor: theme.colors.text.secondary,
         tabBarItemStyle: {
-          paddingVertical: 5,
+          paddingVertical: 6,
+          borderRadius: 20,
+          marginHorizontal: 6,
+          marginVertical: 6,
         },
-        tabBarStyle: useModernIOSGlass
-          ? {
-              // iOS 15+: match modern "glass/material" tab bar look without breaking older iOS.
-              backgroundColor: 'transparent',
-              position: 'absolute',
-              borderTopWidth: 0,
-              elevation: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 56 + insets.bottom,
-              paddingBottom: insets.bottom,
-              paddingTop: 6,
-            }
-          : {
-              // Legacy floating pill (kept for older iOS versions)
-              backgroundColor: 'transparent',
-              position: 'absolute',
-              borderTopWidth: 0,
-              elevation: 0,
-              height: 55,
-              bottom: 25,
-              left: 100,
-              right: 100,
-              borderRadius: 30,
-              paddingBottom: 0, // Ensure no extra padding at bottom
-              shadowColor: theme.colors.text.primary,
-              shadowOffset: {
-                width: 0,
-                height: 4,
-              },
-              shadowOpacity: 0.12,
-              shadowRadius: 10,
-            },
+        // Floating pill style (Slack-style). iOS gets "liquid glass" materials; other platforms keep transparent.
+        tabBarStyle: {
+          backgroundColor: 'transparent',
+          position: 'absolute',
+          borderTopWidth: 0,
+          elevation: 0,
+          height: pillHeight,
+          bottom: Platform.OS === 'ios' ? pillBottom : 16,
+          left: pillInset,
+          right: pillInset,
+          borderRadius: pillHeight / 2,
+          paddingBottom: 0,
+          shadowColor: theme.colors.text.primary,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: isDarkMode ? 0.28 : 0.14,
+          shadowRadius: 18,
+        },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
             <View
               style={{
-                borderRadius: useModernIOSGlass ? 0 : 30,
+                borderRadius: pillHeight / 2,
                 overflow: 'hidden',
-                height: useModernIOSGlass ? 56 + insets.bottom : 55,
+                height: pillHeight,
               }}>
               <BlurView
                 style={StyleSheet.absoluteFill}
                 blurType={blurType}
                 blurAmount={useModernIOSGlass ? 24 : 20}
-                reducedTransparencyFallbackColor={theme.colors.cardBackground}
+                reducedTransparencyFallbackColor={glassFallbackColor}
+              />
+              {/* Tint/border overlay so it still looks "glassy" even if blur is disabled */}
+              <View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    backgroundColor: glassFallbackColor,
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: toRgba(
+                      theme.colors.divider,
+                      isDarkMode ? 0.35 : 0.5
+                    ),
+                  },
+                ]}
               />
             </View>
           ) : undefined,
