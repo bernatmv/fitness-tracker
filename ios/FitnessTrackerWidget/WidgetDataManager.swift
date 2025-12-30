@@ -35,21 +35,25 @@ struct WidgetDataManager {
             print("WidgetDataManager: ❌ App Group UserDefaults not available for suite: \(appGroupIdentifier)")
             return nil
         }
-        
+
+#if DEBUG
         print("WidgetDataManager: ✅ App Group UserDefaults available")
         print("WidgetDataManager: Looking for key: \(healthDataKey)")
-        
-        // Check if key exists
+
+        // Check if key exists (can be relatively expensive on device).
         let allKeys = userDefaults.dictionaryRepresentation().keys
         print("WidgetDataManager: Available keys in App Group: \(Array(allKeys).sorted())")
+#endif
         
         guard let jsonString = userDefaults.string(forKey: healthDataKey) else {
             print("WidgetDataManager: ❌ No health data found in App Group storage for key: \(healthDataKey)")
             return nil
         }
-        
+
+#if DEBUG
         print("WidgetDataManager: ✅ Found JSON string, length: \(jsonString.count) characters")
         print("WidgetDataManager: JSON preview (first 200 chars): \(String(jsonString.prefix(200)))")
+#endif
         
         guard let jsonData = jsonString.data(using: .utf8) else {
             print("WidgetDataManager: ❌ Failed to convert JSON string to data")
@@ -59,10 +63,12 @@ struct WidgetDataManager {
         do {
             let decoder = JSONDecoder()
             let healthData = try decoder.decode(HealthDataStore.self, from: jsonData)
+#if DEBUG
             let metricsCount = healthData.metrics.count
             let totalDataPoints = healthData.metrics.values.reduce(0) { $0 + $1.dataPoints.count }
             print("WidgetDataManager: ✅ Successfully loaded health data with \(metricsCount) metrics, \(totalDataPoints) total data points")
             print("WidgetDataManager: Metric types: \(Array(healthData.metrics.keys).sorted())")
+#endif
             return healthData
         } catch {
             print("WidgetDataManager: ❌ Error decoding health data: \(error)")
@@ -85,12 +91,14 @@ struct WidgetDataManager {
                 }
             }
             // Print a sample of the JSON to help debug
+#if DEBUG
             if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
                 print("WidgetDataManager: JSON structure - top level keys: \(Array(jsonObject.keys).sorted())")
                 if let metrics = jsonObject["metrics"] as? [String: Any] {
                     print("WidgetDataManager: Metrics keys: \(Array(metrics.keys).sorted())")
                 }
             }
+#endif
             return nil
         }
     }

@@ -43,6 +43,10 @@ struct ActivityWallView: View {
         calculateWeeks()
     }
     
+    private var dataPointValuesByDay: [String: Double] {
+        buildDataPointValuesByDay()
+    }
+    
     var body: some View {
         HStack(alignment: .top, spacing: cellGap) {
             // Spacer to push content to the right (GitHub-style activity wall)
@@ -55,7 +59,7 @@ struct ActivityWallView: View {
                             let date = weeks[weekIndex][dayIndex]
                             ActivityCell(
                                 date: date,
-                                dataPoints: dataPoints,
+                                dataPointValuesByDay: dataPointValuesByDay,
                                 thresholds: thresholds,
                                 colors: colors,
                                 displayStart: displayStart,
@@ -136,11 +140,26 @@ struct ActivityWallView: View {
         
         return weeks
     }
+    
+    private func buildDataPointValuesByDay() -> [String: Double] {
+        let calendar = Calendar.current
+        var map: [String: Double] = [:]
+        for point in dataPoints {
+            guard let pointDate = point.dateValue else { continue }
+            let day = calendar.startOfDay(for: pointDate)
+            let key = ActivityCell.DayKeyString(from: day)
+            // Keep the first value for a given day (dataPoints should already be unique per day).
+            if map[key] == nil {
+                map[key] = point.value
+            }
+        }
+        return map
+    }
 }
 
 struct ActivityCell: View {
     let date: Date
-    let dataPoints: [HealthDataPoint]
+    let dataPointValuesByDay: [String: Double]
     let thresholds: [Double]
     let colors: [String]
     let displayStart: Date
@@ -163,14 +182,9 @@ struct ActivityCell: View {
             return Color.clear
         }
         
-        // Find data point for this date
-        let dateKey = dateKeyString(from: dateStart)
-        let dataPoint = dataPoints.first { point in
-            guard let pointDate = point.dateValue else { return false }
-            return dateKeyString(from: calendar.startOfDay(for: pointDate)) == dateKey
-        }
-        
-        guard let value = dataPoint?.value else {
+        // Fast lookup: avoid scanning the entire dataPoints array for every cell.
+        let dateKey = ActivityCell.DayKeyString(from: dateStart)
+        guard let value = dataPointValuesByDay[dateKey] else {
             // No data point for this date - use transparent/clear
             return Color.clear
         }
@@ -184,7 +198,11 @@ struct ActivityCell: View {
         }
         
         let colorIndex = getColorIndex(for: value, thresholds: thresholds)
-        let colorHex = colors[min(max(colorIndex, 0), colors.count - 1)]
+        let maxIndex = max(colors.count - 1, 0)
+        let safeIndex = min(max(colorIndex, 0), maxIndex)
+        let colorHex = colors.indices.contains(safeIndex)
+            ? colors[safeIndex]
+            : (colors.first ?? "#eff2f5")
         return hexToColor(colorHex)
     }
     
@@ -194,10 +212,17 @@ struct ActivityCell: View {
             .frame(width: size, height: size)
     }
     
-    private func dateKeyString(from date: Date) -> String {
+    private static let dayKeyFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
+        return formatter
+    }()
+    
+    static func DayKeyString(from date: Date) -> String {
+        // This is used as a stable day key, not as a user-facing date format.
+        return dayKeyFormatter.string(from: date)
     }
     
     private func getColorIndex(for value: Double, thresholds: [Double]) -> Int {

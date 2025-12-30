@@ -24,26 +24,36 @@ struct Provider: AppIntentTimelineProvider {
         var entries: [SimpleEntry] = []
 
         // Load data from App Group storage
+        #if DEBUG
         print("FitnessTrackerWidget.Provider: Loading data for timeline...")
+        #endif
         let healthData = WidgetDataManager.loadHealthData()
         let preferences = WidgetDataManager.loadUserPreferences()
         
+        #if DEBUG
         print("FitnessTrackerWidget.Provider: Health data loaded: \(healthData != nil ? "✅" : "❌")")
         print("FitnessTrackerWidget.Provider: Preferences loaded: \(preferences != nil ? "✅" : "❌")")
+        #endif
         
         if let healthData = healthData {
+            #if DEBUG
             print("FitnessTrackerWidget.Provider: Health data has \(healthData.metrics.count) metrics")
             print("FitnessTrackerWidget.Provider: Metric types: \(Array(healthData.metrics.keys).sorted())")
+            #endif
         }
         
         if let preferences = preferences {
+            #if DEBUG
             print("FitnessTrackerWidget.Provider: Preferences has \(preferences.metricConfigs.count) metric configs")
             let enabled = preferences.metricConfigs.values.filter { $0.enabled }
             print("FitnessTrackerWidget.Provider: Enabled metrics: \(enabled.map { $0.metricType }.sorted())")
+            #endif
         }
         
         let selectedMetric = configuration.metricType.rawValue
+        #if DEBUG
         print("FitnessTrackerWidget.Provider: Selected metric type: \(selectedMetric)")
+        #endif
 
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
@@ -53,7 +63,9 @@ struct Provider: AppIntentTimelineProvider {
             entries.append(entry)
         }
 
+        #if DEBUG
         print("FitnessTrackerWidget.Provider: Generated \(entries.count) timeline entries")
+        #endif
         return Timeline(entries: entries, policy: .atEnd)
     }
 
