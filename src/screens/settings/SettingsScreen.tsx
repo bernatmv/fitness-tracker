@@ -14,6 +14,7 @@ import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION } from '@constants';
 import { LoadingSpinner } from '@components/common';
 import { useAppTheme } from '@utils';
+import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
 
 interface SettingsScreenProps {
   onThemePreferenceChange?: (preference: ThemePreference) => void;
@@ -217,6 +218,59 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     );
   };
 
+  const HandleWidgetDiagnostics = async () => {
+    try {
+      const diagnostics = await GetWidgetDiagnostics();
+      const title = t('settings.widgets_diagnostics_title') || 'Widget Diagnostics';
+      const messageLines = [
+        `${t('settings.widgets_app_group_available') || 'App Group available'}: ${
+          diagnostics.appGroupAvailable ? '✅' : '❌'
+        }`,
+        `${t('settings.widgets_updater_available') || 'Widget updater available'}: ${
+          diagnostics.widgetUpdaterAvailable ? '✅' : '❌'
+        }`,
+        `${t('settings.widgets_has_health_data') || 'Has health data'}: ${
+          diagnostics.hasHealthData ? '✅' : '❌'
+        }`,
+        `${t('settings.widgets_has_preferences') || 'Has preferences'}: ${
+          diagnostics.hasUserPreferences ? '✅' : '❌'
+        }`,
+        '',
+        `${t('settings.widgets_app_group_keys') || 'App Group keys'} (${
+          diagnostics.appGroupKeys.length
+        }):`,
+        diagnostics.appGroupKeys.length > 0
+          ? diagnostics.appGroupKeys.join('\n')
+          : t('settings.widgets_none') || 'None',
+      ];
+
+      Alert.alert(title, messageLines.join('\n'));
+    } catch (error) {
+      console.error('Error getting widget diagnostics:', error);
+      Alert.alert(
+        t('common.error') || 'Error',
+        t('settings.widgets_diagnostics_error') ||
+          'Failed to load widget diagnostics'
+      );
+    }
+  };
+
+  const HandleWidgetRefresh = async () => {
+    try {
+      await widgetUpdater.ReloadAllTimelines();
+      Alert.alert(
+        t('common.success') || 'Success',
+        t('settings.widgets_refresh_success') || 'Requested widget refresh'
+      );
+    } catch (error) {
+      console.error('Error refreshing widgets:', error);
+      Alert.alert(
+        t('common.error') || 'Error',
+        t('settings.widgets_refresh_error') || 'Failed to refresh widgets'
+      );
+    }
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -408,6 +462,47 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.version', { version: APP_VERSION })}
             </ListItem.Title>
           </ListItem.Content>
+        </ListItem>
+      </View>
+
+      <View style={styles.section}>
+        <Text
+          style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
+          {t('settings.widgets') || 'Widgets'}
+        </Text>
+        <ListItem onPress={HandleWidgetDiagnostics} bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.widgets_diagnostics') || 'Widget Diagnostics'}
+            </ListItem.Title>
+            <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
+              {t('settings.widgets_diagnostics_description') ||
+                'Check shared storage access and widget data keys'}
+            </ListItem.Subtitle>
+          </ListItem.Content>
+          <Icon
+            name="info-outline"
+            type="material"
+            color={theme.colors.link}
+            size={24}
+          />
+        </ListItem>
+        <ListItem onPress={HandleWidgetRefresh} bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.widgets_refresh') || 'Refresh Widgets'}
+            </ListItem.Title>
+            <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
+              {t('settings.widgets_refresh_description') ||
+                'Request WidgetKit to reload timelines'}
+            </ListItem.Subtitle>
+          </ListItem.Content>
+          <Icon
+            name="refresh"
+            type="material"
+            color={theme.colors.link}
+            size={24}
+          />
         </ListItem>
       </View>
 

@@ -71,12 +71,23 @@ When App Group access fails on device, the widget previously degraded into “no
 - The widget has a helper:
   - `WidgetDataManager.isAppGroupAvailable()`
 - Widget UI shows a more explicit message when the App Group is not available.
+- The app Settings screen includes a widget diagnostics panel to quickly validate a TestFlight build.
+
+### How to use the in-app widget diagnostics (TestFlight-friendly)
+
+1. Open the app → **Settings**
+2. Scroll to **Widgets**
+3. Tap **Widget Diagnostics**
+   - If **App Group available = ❌**, this is almost certainly a signing/provisioning/App Group capability problem for the distribution build.
+   - If **App Group available = ✅** but **Has health data / Has preferences = ❌**, the widget is running but the expected keys are missing from the shared container.
+4. Optionally tap **Refresh Widgets** to request `WidgetKit` to reload timelines immediately.
 
 **Relevant files**
 
 - Native module: `ios/AppGroupStorage.swift` and `ios/FitnessTracker/AppGroupStorage.swift`
 - Widget reader: `ios/FitnessTrackerWidget/WidgetDataManager.swift`
 - Widget UI: `ios/FitnessTrackerWidget/FitnessTrackerWidget.swift`
+- App diagnostics: `src/services/widget/widget_diagnostics.ts` + `src/screens/settings/SettingsScreen.tsx`
 
 ---
 
