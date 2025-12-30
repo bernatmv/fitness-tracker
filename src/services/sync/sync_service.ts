@@ -20,6 +20,7 @@ import {
   GetLastSyncTime,
 } from '../storage';
 import { GetDateRange, GetStartOfDay, GetDateArray } from '@utils';
+import { MergeDataPointsByDay, MergeExercisesById } from './merge_health_data';
 
 /**
  * Sync all health metrics
@@ -42,14 +43,23 @@ export const SyncAllMetrics = async (
   }
 
   // Fetch data for each metric
+  // NOTE: This is commonly used for incremental refresh (e.g. last 30 days).
+  // We MUST merge by day to avoid wiping previously synced history.
   for (const metricType of metricTypes) {
     try {
       const dataPoints = await FetchMetricData(metricType, start, end);
 
+      const existingDataPoints =
+        healthDataStore.metrics[metricType]?.dataPoints ?? [];
+      const mergedDataPoints = MergeDataPointsByDay(
+        existingDataPoints,
+        dataPoints
+      );
+
       const metricData: HealthMetricData = {
         metricType,
         unit: METRIC_UNITS[metricType],
-        dataPoints,
+        dataPoints: mergedDataPoints,
         lastSync: new Date(),
       };
 
@@ -63,7 +73,10 @@ export const SyncAllMetrics = async (
   // Fetch exercises
   try {
     const exercises = await FetchExercises(start, end);
-    healthDataStore.exercises = exercises;
+    healthDataStore.exercises = MergeExercisesById(
+      healthDataStore.exercises,
+      exercises
+    );
   } catch (error) {
     console.error('Error syncing exercises:', error);
   }
@@ -204,7 +217,11 @@ export const SyncMetric = async (
     healthDataStore = InitializeHealthDataStore();
   }
 
-  healthDataStore.metrics[metricType] = metricData;
+  const existingDataPoints = healthDataStore.metrics[metricType]?.dataPoints ?? [];
+  healthDataStore.metrics[metricType] = {
+    ...metricData,
+    dataPoints: MergeDataPointsByDay(existingDataPoints, metricData.dataPoints),
+  };
 
   // Ensure each metric has at least 365 days of data
   healthDataStore = EnsureMinimumDays(healthDataStore);
