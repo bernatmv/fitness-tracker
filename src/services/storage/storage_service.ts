@@ -251,6 +251,36 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
       }));
     }
 
+    // Migration: exercise time may have been stored as seconds (but labeled minutes).
+    const exercise = data.metrics?.[MetricType.EXERCISE_TIME] as
+      | HealthMetricData
+      | undefined;
+    if (exercise && exercise.unit === MetricUnit.MINUTES) {
+      const maxValue = Math.max(0, ...exercise.dataPoints.map(dp => dp.value));
+      // More than 24h worth of "minutes" strongly indicates seconds.
+      if (Number.isFinite(maxValue) && maxValue > 24 * 60) {
+        exercise.dataPoints = exercise.dataPoints.map(dp => ({
+          ...dp,
+          value: dp.value / 60,
+        }));
+      }
+    }
+
+    // Migration: standing time is stored as hours. If we previously treated seconds as minutes,
+    // we may have stored absurd "hours" values (> 24). Recover by dividing by 60.
+    const standing = data.metrics?.[MetricType.STANDING_TIME] as
+      | HealthMetricData
+      | undefined;
+    if (standing && standing.unit === MetricUnit.HOURS) {
+      const maxValue = Math.max(0, ...standing.dataPoints.map(dp => dp.value));
+      if (Number.isFinite(maxValue) && maxValue > 24) {
+        standing.dataPoints = standing.dataPoints.map(dp => ({
+          ...dp,
+          value: dp.value / 60,
+        }));
+      }
+    }
+
     // Convert exercise dates back to Date objects
     if (data.exercises && Array.isArray(data.exercises)) {
       data.exercises = data.exercises.map((ex: unknown) => {

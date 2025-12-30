@@ -1,6 +1,6 @@
 import {
   DurationMinutesFromIsoRange,
-  NormalizeWorkoutDurationToMinutes,
+  NormalizeDurationToMinutes,
 } from '../health_normalization';
 
 describe('health_normalization', () => {
@@ -24,18 +24,23 @@ describe('health_normalization', () => {
 
   describe('NormalizeWorkoutDurationToMinutes', () => {
     it('returns 0 for NaN/Infinity/negative', () => {
-      expect(NormalizeWorkoutDurationToMinutes(NaN)).toBe(0);
-      expect(NormalizeWorkoutDurationToMinutes(Infinity)).toBe(0);
-      expect(NormalizeWorkoutDurationToMinutes(-1)).toBe(0);
+      expect(NormalizeDurationToMinutes(NaN)).toBe(0);
+      expect(NormalizeDurationToMinutes(Infinity)).toBe(0);
+      expect(NormalizeDurationToMinutes(-1)).toBe(0);
     });
 
     it('treats small values as already-minutes', () => {
-      expect(NormalizeWorkoutDurationToMinutes(45)).toBe(45);
+      expect(NormalizeDurationToMinutes(45)).toBe(45);
     });
 
     it('treats large values as seconds and converts to minutes', () => {
       // 30 minutes expressed in seconds
-      expect(NormalizeWorkoutDurationToMinutes(1800)).toBe(30);
+      expect(NormalizeDurationToMinutes(1800)).toBe(30);
+    });
+
+    it('does not misclassify large-but-plausible minute values when max is higher', () => {
+      // 12 hours in minutes
+      expect(NormalizeDurationToMinutes(720, 24 * 60)).toBe(720);
     });
   });
 });

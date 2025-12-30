@@ -8,7 +8,7 @@ import { METRIC_UNITS } from '@constants';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import {
   DurationMinutesFromIsoRange,
-  NormalizeWorkoutDurationToMinutes,
+  NormalizeDurationToMinutes,
 } from './health_normalization';
 
 export type MetricFetchResult = {
@@ -188,10 +188,17 @@ const FetchIOSMetricData = async (
           daysWithSamples.add(startDay);
         } else if (metricType === MetricType.STANDING_TIME) {
           // Sum minutes first (don't convert yet)
+          // HealthKit may return stand time in seconds in some mappings; normalize to minutes.
+          value = NormalizeDurationToMinutes(value, 24 * 60);
           dailyTotalsMinutes.set(
             startDay,
             (dailyTotalsMinutes.get(startDay) || 0) + value
           );
+          daysWithSamples.add(startDay);
+        } else if (metricType === MetricType.EXERCISE_TIME) {
+          // HealthKit may return exercise time in seconds; normalize to minutes.
+          value = NormalizeDurationToMinutes(value, 24 * 60);
+          dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
           daysWithSamples.add(startDay);
         } else {
           // For other metrics (exercise time, steps, etc.), sum directly
@@ -315,7 +322,7 @@ const FetchIOSExercises = async (
         id: workout.id || `${workout.activityName}-${workout.start}`,
         date: new Date(workout.start),
         type: workout.activityName,
-        duration: NormalizeWorkoutDurationToMinutes(workout.duration),
+        duration: NormalizeDurationToMinutes(workout.duration, 24 * 60),
         caloriesBurned: workout.calories || 0,
         distance: workout.distance,
         metadata: workout.metadata,

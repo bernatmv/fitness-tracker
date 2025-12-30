@@ -20,20 +20,21 @@ export const DurationMinutesFromIsoRange = (
 };
 
 /**
- * HealthKit workout samples may return duration in either seconds or minutes,
- * depending on the underlying native mapping/version.
+ * Some HealthKit APIs return duration-like quantities in either seconds or minutes
+ * (depending on the underlying native mapping/version).
  *
  * We normalize to minutes using a conservative heuristic:
- * - If value is "large enough" to be seconds for a typical workout, treat as seconds.
+ * - If the value is larger than the maximum plausible minutes for the metric, treat it as seconds.
  * - Otherwise, assume it's already minutes.
  */
-export const NormalizeWorkoutDurationToMinutes = (duration: number): number => {
+export const NormalizeDurationToMinutes = (
+  duration: number,
+  maxPlausibleMinutes: number = 24 * 60
+): number => {
   if (Number.isNaN(duration) || !Number.isFinite(duration)) return 0;
   if (duration <= 0) return 0;
 
-  // If duration is > 10 hours in minutes, it's almost certainly seconds (e.g., 3600 for 60 min).
-  // 10 hours = 600 minutes.
-  const treatAsSeconds = duration > 600;
+  const treatAsSeconds = duration > maxPlausibleMinutes;
   const minutes = treatAsSeconds ? duration / MINUTES_PER_HOUR : duration;
   return Math.max(minutes, 0);
 };
