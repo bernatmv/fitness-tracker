@@ -26,7 +26,7 @@ enum MetricTypeAppEnum: String, AppEnum {
             .standingTime: DisplayRepresentation(title: "Standing Time", subtitle: "Hours standing"),
             .steps: DisplayRepresentation(title: "Steps", subtitle: "Daily step count"),
             .floorsClimbed: DisplayRepresentation(title: "Floors Climbed", subtitle: "Floors ascended"),
-            .sleepHours: DisplayRepresentation(title: "Hours of Sleep", subtitle: "Sleep duration")
+            .sleepHours: DisplayRepresentation(title: "Sleep", subtitle: "Minutes of sleep")
         ]
     }
 }

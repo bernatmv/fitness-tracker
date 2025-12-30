@@ -6,6 +6,10 @@ import AppleHealthKit, {
 import { HealthDataPoint, MetricType, ExerciseDetail } from '@types';
 import { METRIC_UNITS } from '@constants';
 import { GetDateArray, GetStartOfDay } from '@utils';
+import {
+  DurationMinutesFromIsoRange,
+  NormalizeWorkoutDurationToMinutes,
+} from './health_normalization';
 
 export type MetricFetchResult = {
   dataPoints: HealthDataPoint[];
@@ -179,10 +183,7 @@ const FetchIOSMetricData = async (
 
         if (metricType === MetricType.SLEEP_HOURS) {
           const endIso = normalized.endDate ?? startIso;
-          const durationHours =
-            (new Date(endIso).getTime() - new Date(startIso).getTime()) /
-            (1000 * 60 * 60);
-          value = isNaN(durationHours) ? 0 : Math.max(durationHours, 0);
+          value = DurationMinutesFromIsoRange(startIso, endIso);
           dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
           daysWithSamples.add(startDay);
         } else if (metricType === MetricType.STANDING_TIME) {
@@ -314,7 +315,7 @@ const FetchIOSExercises = async (
         id: workout.id || `${workout.activityName}-${workout.start}`,
         date: new Date(workout.start),
         type: workout.activityName,
-        duration: workout.duration / 60, // Convert seconds to minutes
+        duration: NormalizeWorkoutDurationToMinutes(workout.duration),
         caloriesBurned: workout.calories || 0,
         distance: workout.distance,
         metadata: workout.metadata,

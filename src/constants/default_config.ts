@@ -60,9 +60,10 @@ export const DEFAULT_METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
   [MetricType.SLEEP_HOURS]: {
     metricType: MetricType.SLEEP_HOURS,
     enabled: true,
-    displayName: 'Hours of Sleep',
+    displayName: 'Sleep',
     colorRange: {
-      thresholds: [0, 5, 6, 7, 8],
+      // Stored in minutes
+      thresholds: [0, 300, 360, 420, 480],
       paletteId: 'ios_health_purple',
     },
   },
@@ -77,7 +78,7 @@ export const METRIC_UNITS: Record<MetricType, MetricUnit> = {
   [MetricType.STANDING_TIME]: MetricUnit.HOURS,
   [MetricType.STEPS]: MetricUnit.STEPS,
   [MetricType.FLOORS_CLIMBED]: MetricUnit.FLOORS,
-  [MetricType.SLEEP_HOURS]: MetricUnit.HOURS,
+  [MetricType.SLEEP_HOURS]: MetricUnit.MINUTES,
 };
 
 /**

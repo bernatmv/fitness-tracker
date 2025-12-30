@@ -7,6 +7,7 @@ import {
   HealthMetricData,
   MetricConfig,
   ExerciseDetail,
+  MetricUnit,
 } from '@types';
 import { GetAllPalettes, GetPaletteColorsById, METRIC_UNITS } from '@constants';
 import { appGroupStorage } from './app_group_storage';
@@ -237,6 +238,19 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
       }));
     });
 
+    // Migration: sleep metric was previously stored in hours. We now store minutes.
+    const sleep = data.metrics?.[MetricType.SLEEP_HOURS] as
+      | HealthMetricData
+      | undefined;
+    if (sleep && sleep.unit === MetricUnit.HOURS) {
+      sleep.unit = MetricUnit.MINUTES;
+      sleep.dataPoints = sleep.dataPoints.map(dp => ({
+        ...dp,
+        unit: MetricUnit.MINUTES,
+        value: dp.value * 60,
+      }));
+    }
+
     // Convert exercise dates back to Date objects
     if (data.exercises && Array.isArray(data.exercises)) {
       data.exercises = data.exercises.map((ex: unknown) => {
@@ -361,6 +375,26 @@ export const LoadUserPreferences =
             }
           }
         );
+
+        // Migration: sleep thresholds were previously expressed in hours.
+        // Now sleep is stored in minutes, so thresholds must be minutes as well.
+        const sleepConfig = migratedConfigs[MetricType.SLEEP_HOURS];
+        if (sleepConfig?.colorRange?.thresholds) {
+          const thresholds = sleepConfig.colorRange.thresholds;
+          const max = Math.max(...thresholds);
+          // Heuristic: hour-based thresholds are small (e.g. <= 24). Minute-based are much larger.
+          if (Number.isFinite(max) && max > 0 && max <= 24) {
+            needsMigration = true;
+            migratedConfigs[MetricType.SLEEP_HOURS] = {
+              ...sleepConfig,
+              displayName: sleepConfig.displayName === 'Hours of Sleep' ? 'Sleep' : sleepConfig.displayName,
+              colorRange: {
+                ...sleepConfig.colorRange,
+                thresholds: thresholds.map(x => x * 60),
+              },
+            };
+          }
+        }
 
         if (needsMigration) {
           preferences.metricConfigs = migratedConfigs;
