@@ -64,7 +64,7 @@ export const SyncAllMetrics = async (
           ? existingLastDataDate > result.lastDataDate
             ? existingLastDataDate
             : result.lastDataDate
-          : existingLastDataDate ?? result.lastDataDate ?? undefined;
+          : (existingLastDataDate ?? result.lastDataDate ?? undefined);
 
       const metricData: HealthMetricData = {
         metricType,
@@ -131,7 +131,7 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
   // Fetch data for each metric and merge/overwrite by date
   for (const metricType of metricTypes) {
     try {
-      const newDataPoints = await FetchMetricData(
+      const { dataPoints: newDataPoints } = await FetchMetricDataWithMeta(
         metricType,
         startDate,
         endDate
@@ -230,7 +230,8 @@ export const SyncMetric = async (
     healthDataStore = InitializeHealthDataStore();
   }
 
-  const existingDataPoints = healthDataStore.metrics[metricType]?.dataPoints ?? [];
+  const existingDataPoints =
+    healthDataStore.metrics[metricType]?.dataPoints ?? [];
   healthDataStore.metrics[metricType] = {
     ...metricData,
     dataPoints: MergeDataPointsByDay(existingDataPoints, metricData.dataPoints),
@@ -266,10 +267,7 @@ export const SyncFromLastDataDate = async (
       ? lastDates.reduce((max, d) => (d > max ? d : max), lastDates[0])
       : null;
 
-  const daysToSync = CalculateDaysToSyncFromLastDataDate(
-    lastDataDate,
-    maxDays
-  );
+  const daysToSync = CalculateDaysToSyncFromLastDataDate(lastDataDate, maxDays);
 
   return await SyncAllMetrics(daysToSync);
 };
@@ -521,7 +519,11 @@ export const SyncOnAppActive = async (): Promise<HealthDataStore | null> => {
   // Fetch and merge data for each metric
   for (const metricType of metricTypes) {
     try {
-      const newDataPoints = await FetchMetricData(metricType, start, end);
+      const { dataPoints: newDataPoints } = await FetchMetricDataWithMeta(
+        metricType,
+        start,
+        end
+      );
 
       // Create a map of existing data points by date string
       const existingDataMap = new Map<string, HealthDataPoint>();
