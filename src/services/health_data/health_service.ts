@@ -7,6 +7,11 @@ import { HealthDataPoint, MetricType, ExerciseDetail } from '@types';
 import { METRIC_UNITS } from '@constants';
 import { GetDateArray, GetStartOfDay } from '@utils';
 
+export type MetricFetchResult = {
+  dataPoints: HealthDataPoint[];
+  lastDataDate: Date | null;
+};
+
 /**
  * Health data permissions required
  */
@@ -88,10 +93,26 @@ export const FetchMetricData = async (
   startDate: Date,
   endDate: Date
 ): Promise<HealthDataPoint[]> => {
+  const result = await FetchMetricDataWithMeta(metricType, startDate, endDate);
+  return result.dataPoints;
+};
+
+/**
+ * Fetch metric data and include metadata about the last day with samples.
+ * This is used for incremental refresh without being misled by padded 0-value points.
+ */
+export const FetchMetricDataWithMeta = async (
+  metricType: MetricType,
+  startDate: Date,
+  endDate: Date
+): Promise<MetricFetchResult> => {
   if (Platform.OS === 'ios') {
     return FetchIOSMetricData(metricType, startDate, endDate);
   } else {
-    return FetchAndroidMetricData(metricType, startDate, endDate);
+    return {
+      dataPoints: await FetchAndroidMetricData(metricType, startDate, endDate),
+      lastDataDate: null,
+    };
   }
 };
 
@@ -102,7 +123,7 @@ const FetchIOSMetricData = async (
   metricType: MetricType,
   startDate: Date,
   endDate: Date
-): Promise<HealthDataPoint[]> => {
+): Promise<MetricFetchResult> => {
   return new Promise((resolve, reject) => {
     const options: HealthFetchOptions = {
       startDate: startDate.toISOString(),
@@ -136,6 +157,7 @@ const FetchIOSMetricData = async (
       const dailyTotals = new Map<string, number>();
       // For standing time, we need to sum minutes first, then convert to hours
       const dailyTotalsMinutes = new Map<string, number>();
+      const daysWithSamples = new Set<string>();
 
       safeResults.forEach(result => {
         const normalized = result as HealthValue & {
@@ -162,18 +184,21 @@ const FetchIOSMetricData = async (
             (1000 * 60 * 60);
           value = isNaN(durationHours) ? 0 : Math.max(durationHours, 0);
           dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
+          daysWithSamples.add(startDay);
         } else if (metricType === MetricType.STANDING_TIME) {
           // Sum minutes first (don't convert yet)
           dailyTotalsMinutes.set(
             startDay,
             (dailyTotalsMinutes.get(startDay) || 0) + value
           );
+          daysWithSamples.add(startDay);
         } else {
           // For other metrics (exercise time, steps, etc.), sum directly
           // Note: If HealthKit returns multiple samples per day, they should be
           // incremental (each adds more time), so summing is correct.
           // If period parameter works correctly, we should get one sample per day.
           dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
+          daysWithSamples.add(startDay);
         }
       });
 
@@ -200,7 +225,14 @@ const FetchIOSMetricData = async (
         };
       });
 
-      resolve(dataPoints);
+      const lastDataDate =
+        daysWithSamples.size > 0
+          ? new Date(
+              `${Array.from(daysWithSamples).sort().slice(-1)[0]}T00:00:00.000Z`
+            )
+          : null;
+
+      resolve({ dataPoints, lastDataDate });
     });
   });
 };

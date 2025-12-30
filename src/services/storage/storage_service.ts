@@ -135,6 +135,9 @@ const SerializeHealthData = (data: HealthDataStore): string => {
         acc[key] = {
           ...metric,
           lastSync: metric.lastSync.toISOString(),
+          ...(metric.lastDataDate
+            ? { lastDataDate: metric.lastDataDate.toISOString() }
+            : {}),
           dataPoints: metric.dataPoints.map(dp => ({
             ...dp,
             date: dp.date.toISOString(),
@@ -225,6 +228,9 @@ export const LoadHealthData = async (): Promise<HealthDataStore | null> => {
     Object.values(data.metrics).forEach((metric: unknown) => {
       const m = metric as HealthMetricData;
       m.lastSync = new Date(m.lastSync);
+      if ((m as any).lastDataDate) {
+        (m as any).lastDataDate = new Date((m as any).lastDataDate);
+      }
       m.dataPoints = m.dataPoints.map(dp => ({
         ...dp,
         date: new Date(dp.date),

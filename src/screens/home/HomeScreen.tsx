@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@utils';
 import { MetricCard, LoadingSpinner, ErrorMessage } from '@components/common';
 import { LoadHealthData, LoadUserPreferences } from '@services/storage';
-import { SyncAllMetrics } from '@services/sync';
+import { SyncFromLastDataDate } from '@services/sync';
 import {
   MetricType,
   HealthDataStore,
@@ -61,7 +61,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   const HandleSync = async () => {
     try {
       setRefreshing(true);
-      const data = await SyncAllMetrics(30); // Sync last 30 days on pull-to-refresh
+      const data = await SyncFromLastDataDate(30); // Sync from last day with data (inclusive), capped at 30 days
       setHealthData(data);
       setLastSyncText(FormatRelativeTime(data.lastFullSync));
     } catch (error) {

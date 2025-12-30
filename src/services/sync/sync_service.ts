@@ -9,7 +9,7 @@ import {
 } from '@types';
 import { METRIC_UNITS } from '@constants';
 import {
-  FetchMetricData,
+  FetchMetricDataWithMeta,
   FetchExercises,
   CheckHealthPermissions,
 } from '../health_data';
@@ -21,6 +21,7 @@ import {
 } from '../storage';
 import { GetDateRange, GetStartOfDay, GetDateArray } from '@utils';
 import { MergeDataPointsByDay, MergeExercisesById } from './merge_health_data';
+import { CalculateDaysToSyncFromLastDataDate } from './recent_sync';
 
 /**
  * Sync all health metrics
@@ -47,7 +48,8 @@ export const SyncAllMetrics = async (
   // We MUST merge by day to avoid wiping previously synced history.
   for (const metricType of metricTypes) {
     try {
-      const dataPoints = await FetchMetricData(metricType, start, end);
+      const result = await FetchMetricDataWithMeta(metricType, start, end);
+      const dataPoints = result.dataPoints;
 
       const existingDataPoints =
         healthDataStore.metrics[metricType]?.dataPoints ?? [];
@@ -55,12 +57,21 @@ export const SyncAllMetrics = async (
         existingDataPoints,
         dataPoints
       );
+      const existingLastDataDate =
+        healthDataStore.metrics[metricType]?.lastDataDate ?? null;
+      const lastDataDate =
+        existingLastDataDate && result.lastDataDate
+          ? existingLastDataDate > result.lastDataDate
+            ? existingLastDataDate
+            : result.lastDataDate
+          : existingLastDataDate ?? result.lastDataDate ?? undefined;
 
       const metricData: HealthMetricData = {
         metricType,
         unit: METRIC_UNITS[metricType],
         dataPoints: mergedDataPoints,
         lastSync: new Date(),
+        lastDataDate,
       };
 
       healthDataStore.metrics[metricType] = metricData;
@@ -202,13 +213,15 @@ export const SyncMetric = async (
   }
 
   const { start, end } = GetDateRange(days);
-  const dataPoints = await FetchMetricData(metricType, start, end);
+  const result = await FetchMetricDataWithMeta(metricType, start, end);
+  const dataPoints = result.dataPoints;
 
   const metricData: HealthMetricData = {
     metricType,
     unit: METRIC_UNITS[metricType],
     dataPoints,
     lastSync: new Date(),
+    lastDataDate: result.lastDataDate ?? undefined,
   };
 
   // Update in storage
@@ -230,6 +243,35 @@ export const SyncMetric = async (
   await UpdateLastSyncTime();
 
   return metricData;
+};
+
+/**
+ * Sync a recent range starting from the last day we actually had HealthKit samples,
+ * capped to maxDays. Includes the last data day again to handle partial-day data.
+ */
+export const SyncFromLastDataDate = async (
+  maxDays: number = 30
+): Promise<HealthDataStore> => {
+  const existing = await LoadHealthData();
+  if (!existing) {
+    return await SyncAllMetrics(maxDays);
+  }
+
+  const metricTypes = Object.values(MetricType);
+  const lastDates = metricTypes
+    .map(m => existing.metrics[m]?.lastDataDate ?? null)
+    .filter((d): d is Date => d instanceof Date);
+  const lastDataDate =
+    lastDates.length > 0
+      ? lastDates.reduce((max, d) => (d > max ? d : max), lastDates[0])
+      : null;
+
+  const daysToSync = CalculateDaysToSyncFromLastDataDate(
+    lastDataDate,
+    maxDays
+  );
+
+  return await SyncAllMetrics(daysToSync);
 };
 
 /**

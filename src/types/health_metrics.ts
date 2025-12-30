@@ -54,6 +54,11 @@ export interface HealthMetricData {
   unit: MetricUnit;
   dataPoints: HealthDataPoint[];
   lastSync: Date;
+  /**
+   * Last day where HealthKit returned at least one sample for this metric.
+   * Used to compute incremental refresh ranges without being fooled by padded 0-value points.
+   */
+  lastDataDate?: Date;
 }
 
 /**
