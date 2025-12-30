@@ -5,6 +5,23 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+# Temporary workaround for newer Xcode project formats:
+# CocoaPods uses the `xcodeproj` gem to parse and generate Xcode projects.
+# Some Xcode releases bump `objectVersion` (e.g. 71) before `xcodeproj` adds a mapping.
+begin
+  require 'xcodeproj'
+  map = Xcodeproj::Constants::COMPATIBILITY_VERSION_BY_OBJECT_VERSION
+  unless map.key?(71)
+    patched = map.dup
+    patched[71] = map[77] || 'Xcode 16.0'
+    Xcodeproj::Constants.send(:remove_const, :COMPATIBILITY_VERSION_BY_OBJECT_VERSION)
+    Xcodeproj::Constants.const_set(:COMPATIBILITY_VERSION_BY_OBJECT_VERSION, patched.freeze)
+  end
+rescue LoadError
+  # If xcodeproj isn't available for some reason, CocoaPods will fail anyway,
+  # but don't hard-crash while evaluating the Podfile.
+end
+
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
