@@ -84,7 +84,7 @@ When App Group access fails on device, the widget previously degraded into “no
 
 **Relevant files**
 
-- Native module: `ios/AppGroupStorage.swift` and `ios/FitnessTracker/AppGroupStorage.swift`
+- Native module: `ios/FitnessTracker/AppGroupStorage.swift` and `ios/FitnessTracker/WidgetUpdater.swift`
 - Widget reader: `ios/FitnessTrackerWidget/WidgetDataManager.swift`
 - Widget UI: `ios/FitnessTrackerWidget/FitnessTrackerWidget.swift`
 - App diagnostics: `src/services/widget/widget_diagnostics.ts` + `src/screens/settings/SettingsScreen.tsx`
