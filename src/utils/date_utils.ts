@@ -6,7 +6,14 @@ import {
   subDays,
   differenceInDays,
 } from 'date-fns';
+import type { Locale as DateFnsLocale } from 'date-fns';
+import { enUS, es } from 'date-fns/locale';
 import { getLocales } from 'react-native-localize';
+
+const DATE_FNS_LOCALES: Record<string, DateFnsLocale> = {
+  en: enUS,
+  es,
+};
 
 /**
  * Get locale from device settings
@@ -24,24 +31,33 @@ export const GetLocale = (): Locale => {
 };
 
 /**
+ * Get the date-fns locale matching a language code (device locale by default)
+ */
+export const GetDateFnsLocale = (
+  languageCode: string = GetLocale().code
+): DateFnsLocale => {
+  return DATE_FNS_LOCALES[languageCode] ?? enUS;
+};
+
+/**
  * Format date based on user locale
  */
 export const FormatDate = (date: Date, formatString: string = 'PP'): string => {
-  return format(date, formatString);
+  return format(date, formatString, { locale: GetDateFnsLocale() });
 };
 
 /**
  * Format time based on user locale
  */
 export const FormatTime = (date: Date): string => {
-  return format(date, 'p');
+  return format(date, 'p', { locale: GetDateFnsLocale() });
 };
 
 /**
  * Format date and time
  */
 export const FormatDateTime = (date: Date): string => {
-  return format(date, 'PPp');
+  return format(date, 'PPp', { locale: GetDateFnsLocale() });
 };
 
 /**

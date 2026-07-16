@@ -11,13 +11,19 @@ describe('health_normalization', () => {
 
     it('returns 0 for negative durations', () => {
       expect(
-        DurationMinutesFromIsoRange('2025-01-01T01:00:00Z', '2025-01-01T00:00:00Z')
+        DurationMinutesFromIsoRange(
+          '2025-01-01T01:00:00Z',
+          '2025-01-01T00:00:00Z'
+        )
       ).toBe(0);
     });
 
     it('computes minutes for a normal range', () => {
       expect(
-        DurationMinutesFromIsoRange('2025-01-01T00:00:00Z', '2025-01-01T01:30:00Z')
+        DurationMinutesFromIsoRange(
+          '2025-01-01T00:00:00Z',
+          '2025-01-01T01:30:00Z'
+        )
       ).toBe(90);
     });
   });
@@ -44,5 +50,3 @@ describe('health_normalization', () => {
     });
   });
 });
-
-

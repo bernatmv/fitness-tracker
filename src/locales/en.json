@@ -1,10 +1,7 @@
 {
   "common": {
-    "app_name": "Fitness Tracker",
     "save": "Save",
     "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
     "done": "Done",
     "error": "Error",
     "success": "Success",
@@ -13,7 +10,6 @@
     "close": "Close",
     "continue": "Continue",
     "skip": "Skip",
-    "next": "Next",
     "back": "Back"
   },
   "metrics": {
@@ -46,8 +42,7 @@
     "title": "Wall of Truth",
     "last_sync": "Last sync: {{time}}",
     "sync_now": "Sync Now",
-    "no_data": "No data available",
-    "tap_to_configure": "Tap to configure"
+    "no_data": "No data available"
   },
   "settings": {
     "title": "Settings",
@@ -66,7 +61,6 @@
     "multi_row_layout_description": "Show 1 year in multiple rows",
     "sync_strategy": "Sync Strategy",
     "sync_interval": "Sync Interval",
-    "manual_sync": "Manual Sync Only",
     "periodic_sync": "Every {{interval}} hours",
     "sync_all_data": "Sync All Health Data",
     "sync_all_data_title": "Sync All Health Data",
@@ -102,36 +96,27 @@
     "average": "Average",
     "total": "Total",
     "best_day": "Best Day",
-    "current_streak": "Current Streak",
-    "days": "{{count}} days",
     "view_range": "View Range",
-    "days_7": "7 days",
-    "days_30": "30 days",
-    "days_90": "90 days",
-    "months_12": "12 months",
+    "range_fit": "Fit",
+    "range_30d": "30D",
+    "range_90d": "90D",
+    "range_12m": "12M",
     "all": "All",
-    "select_cell_hint": "Select a cell to see that day's data"
+    "select_cell_hint": "Select a cell to see that day's data",
+    "value_on_date": "{{value}} on {{date}}"
   },
   "configuration": {
     "title": "Configuration",
-    "color_settings": "Color Settings",
-    "base_color": "Base Color",
     "threshold_settings": "Threshold Settings",
     "range": "Threshold {{number}}",
     "threshold_from": "From",
     "threshold_to": "To",
     "preview": "Preview",
-    "reset_defaults": "Reset to Defaults",
-    "color_picker_title": "Select Color",
-    "hex_color": "Hex Color",
-    "suggested_colors": "Suggested Colors",
-    "invalid_color": "Invalid color format"
+    "reset_defaults": "Reset to Defaults"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "no_permission": "Health data permission not granted",
-    "sync_failed": "Failed to sync health data",
-    "save_failed": "Failed to save configuration",
     "load_failed": "Failed to load data"
   }
 }

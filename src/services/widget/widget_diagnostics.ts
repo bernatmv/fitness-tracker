@@ -38,5 +38,3 @@ export const GetWidgetDiagnostics = async (): Promise<WidgetDiagnostics> => {
     hasUserPreferences: HasValue(userPreferences),
   };
 };
-
-

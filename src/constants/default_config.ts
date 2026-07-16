@@ -5,7 +5,6 @@ import {
   SyncStrategy,
   ThemePreference,
 } from '@types';
-import { GetPaletteColorsById } from './color_palettes';
 
 /**
  * Default color ranges for each metric type
@@ -99,26 +98,3 @@ export const APP_VERSION = '1.0.0';
  * Default theme preference
  */
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
-
-/**
- * Get all default colors for a specific threshold level across all metrics
- * This is used to provide suggested colors in the color picker
- * @param thresholdIndex - The index of the threshold (0-4)
- * @param mode - The theme mode ('light' or 'dark')
- */
-export const GetSuggestedColorsForThreshold = (
-  thresholdIndex: number,
-  mode: 'light' | 'dark' = 'light'
-): string[] => {
-  const suggestedColors = new Set<string>();
-
-  Object.values(DEFAULT_METRIC_CONFIGS).forEach(config => {
-    const colors = GetPaletteColorsById(config.colorRange.paletteId, mode);
-    if (thresholdIndex < colors.length) {
-      suggestedColors.add(colors[thresholdIndex]);
-    }
-  });
-
-  // Convert to array and remove duplicates
-  return Array.from(suggestedColors);
-};

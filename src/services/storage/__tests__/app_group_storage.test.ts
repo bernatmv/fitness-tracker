@@ -1,5 +1,5 @@
 import { appGroupStorage } from '../app_group_storage';
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
 
 // Mock NativeModules
 jest.mock('react-native', () => {
@@ -10,7 +10,6 @@ jest.mock('react-native', () => {
         getItem: jest.fn(),
         removeItem: jest.fn(),
         getAllKeys: jest.fn(),
-        clear: jest.fn(),
         isAvailable: jest.fn(),
       },
     },
@@ -177,30 +176,6 @@ describe('AppGroupStorageService', () => {
 
       const result = await appGroupStorage.GetAllKeys();
       expect(result).toEqual([]);
-    });
-  });
-
-  describe('Clear', () => {
-    it('should clear all items when storage is available', async () => {
-      (
-        NativeModules.AppGroupStorage.isAvailable as jest.Mock
-      ).mockResolvedValue(true);
-      (NativeModules.AppGroupStorage.clear as jest.Mock).mockResolvedValue(
-        true
-      );
-
-      await appGroupStorage.Clear();
-      expect(NativeModules.AppGroupStorage.clear).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw error when storage is not available', async () => {
-      (
-        NativeModules.AppGroupStorage.isAvailable as jest.Mock
-      ).mockResolvedValue(false);
-
-      await expect(appGroupStorage.Clear()).rejects.toThrow(
-        'App Group storage is not available'
-      );
     });
   });
 });

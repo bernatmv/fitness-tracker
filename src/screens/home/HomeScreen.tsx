@@ -108,14 +108,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
 
   const isDarkMode = theme.mode === 'dark';
   const backgroundColor = theme.colors.background;
-  const titleColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
+  const titleColor = theme.colors.text.primary;
   const secondaryTextColor = isDarkMode
-    ? '#8E8E93'
+    ? theme.colors.activityLabel
     : theme.colors.text.secondary;
   // Card background should match home background
   const cardBackground = backgroundColor;
-  const cardTextColor = isDarkMode ? '#FFFFFF' : undefined;
-  const cardSecondaryTextColor = isDarkMode ? '#8E8E93' : undefined;
+  const cardTextColor = isDarkMode ? theme.colors.text.primary : undefined;
+  const cardSecondaryTextColor = isDarkMode
+    ? theme.colors.activityLabel
+    : undefined;
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
@@ -138,7 +140,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={HandleSync}
-            tintColor={isDarkMode ? '#FFFFFF' : undefined}
+            tintColor={isDarkMode ? theme.colors.text.primary : undefined}
             colors={isDarkMode ? undefined : [theme.colors.primary]}
           />
         }>

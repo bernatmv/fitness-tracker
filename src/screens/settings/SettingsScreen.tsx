@@ -13,7 +13,7 @@ import { SyncAllDataFromAllTime } from '@services/sync';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION } from '@constants';
 import { LoadingSpinner } from '@components/common';
-import { useAppTheme } from '@utils';
+import { GetMetricDisplayName, useAppTheme } from '@utils';
 import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
 
 interface SettingsScreenProps {
@@ -221,7 +221,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const HandleWidgetDiagnostics = async () => {
     try {
       const diagnostics = await GetWidgetDiagnostics();
-      const title = t('settings.widgets_diagnostics_title') || 'Widget Diagnostics';
+      const title =
+        t('settings.widgets_diagnostics_title') || 'Widget Diagnostics';
       const messageLines = [
         `${t('settings.widgets_app_group_available') || 'App Group available'}: ${
           diagnostics.appGroupAvailable ? '✅' : '❌'
@@ -326,7 +327,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <ListItem key={config.metricType} bottomDivider>
               <ListItem.Content>
                 <ListItem.Title style={{ color: theme.colors.text.primary }}>
-                  {config.displayName}
+                  {GetMetricDisplayName(config, t)}
                 </ListItem.Title>
               </ListItem.Content>
               <Switch
@@ -512,10 +513,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           onPress={HandleClearAllData}
           loading={isClearingData}
           disabled={isClearingData}
-          buttonStyle={[
-            styles.clearButton,
-            { backgroundColor: theme.colors.error },
-          ]}
+          buttonStyle={{ backgroundColor: theme.colors.error }}
           titleStyle={styles.clearButtonTitle}
         />
       </View>
@@ -525,7 +523,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <Button
             title="Clear User Preferences (Dev Only)"
             onPress={HandleClearPreferences}
-            buttonStyle={styles.clearButton}
+            buttonStyle={{ backgroundColor: theme.colors.error }}
             titleStyle={styles.clearButtonTitle}
           />
         </View>
@@ -559,10 +557,9 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
   },
-  clearButton: {
-    backgroundColor: '#FF3B30',
-  },
   clearButtonTitle: {
+    // Intentionally white in both modes (light text on the error-red button);
+    // the theme has no "text on error" token.
     color: '#FFFFFF',
   },
 });

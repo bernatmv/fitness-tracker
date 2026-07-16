@@ -14,8 +14,5 @@ struct FitnessTrackerWidgetBundle: WidgetBundle {
         if #available(iOS 17.0, *) {
             FitnessTrackerWidget()
         }
-        if #available(iOS 16.1, *) {
-            FitnessTrackerWidgetLiveActivity()
-        }
     }
 }

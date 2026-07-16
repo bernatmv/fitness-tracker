@@ -12,7 +12,6 @@ import {
 import { GetAllPalettes, GetPaletteColorsById, METRIC_UNITS } from '@constants';
 import { appGroupStorage } from './app_group_storage';
 import { widgetUpdater } from '../widget';
-import { MigrateToAppGroup } from './migrate_to_app_group';
 import { GetStartOfDay, GetDateArray } from '@utils';
 
 /**
@@ -389,16 +388,20 @@ export const LoadUserPreferences =
               !('paletteId' in metricConfig.colorRange)
             ) {
               needsMigration = true;
+              // Old format: colors array instead of paletteId
+              const legacyColorRange = metricConfig.colorRange as unknown as {
+                colors: string[];
+                thresholds: number[];
+              };
               // Try to find matching palette by comparing colors
-              const oldColors = (
-                metricConfig.colorRange as { colors: string[] }
-              ).colors;
-              const matchingPalette = FindMatchingPalette(oldColors);
+              const matchingPalette = FindMatchingPalette(
+                legacyColorRange.colors
+              );
 
               migratedConfigs[metricType as MetricType] = {
                 ...metricConfig,
                 colorRange: {
-                  thresholds: metricConfig.colorRange.thresholds,
+                  thresholds: legacyColorRange.thresholds,
                   paletteId: matchingPalette,
                 },
               };
@@ -417,7 +420,10 @@ export const LoadUserPreferences =
             needsMigration = true;
             migratedConfigs[MetricType.SLEEP_HOURS] = {
               ...sleepConfig,
-              displayName: sleepConfig.displayName === 'Hours of Sleep' ? 'Sleep' : sleepConfig.displayName,
+              displayName:
+                sleepConfig.displayName === 'Hours of Sleep'
+                  ? 'Sleep'
+                  : sleepConfig.displayName,
               colorRange: {
                 ...sleepConfig.colorRange,
                 thresholds: thresholds.map(x => x * 60),

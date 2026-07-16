@@ -109,29 +109,6 @@ class AppGroupStorage: NSObject, RCTBridgeModule {
   }
   
   /**
-   * Clear all items from App Group UserDefaults
-   */
-  @objc
-  func clear(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    guard let userDefaults = AppGroupStorage.getUserDefaults() else {
-      rejecter(
-        "STORAGE_ERROR",
-        "App Group UserDefaults not available (suite: \(AppGroupStorage.appGroupIdentifier)). " +
-          "This usually means the App Group entitlement is missing from the build/provisioning profile.",
-        nil
-      )
-      return
-    }
-    
-    let dictionary = userDefaults.dictionaryRepresentation()
-    dictionary.keys.forEach { key in
-      userDefaults.removeObject(forKey: key)
-    }
-    userDefaults.synchronize()
-    resolver(true)
-  }
-  
-  /**
    * Check if App Group storage is available
    */
   @objc

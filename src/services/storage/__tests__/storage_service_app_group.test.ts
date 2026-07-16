@@ -1,4 +1,4 @@
-import { HealthDataStore, UserPreferences, MetricType } from '@types';
+import { HealthDataStore, UserPreferences } from '@types';
 
 // Mock app group storage with stable API across module reloads
 jest.mock('../app_group_storage', () => ({
@@ -16,14 +16,17 @@ describe('Storage Service with App Group', () => {
   const LoadModules = () => {
     // storage_service caches an internal adapter; reset between tests so availability changes apply
     jest.resetModules();
-    const AsyncStorage = require('@react-native-async-storage/async-storage') as typeof import('@react-native-async-storage/async-storage');
-    const storageService = require('../storage_service') as typeof import('../storage_service');
-    const { appGroupStorage } = require('../app_group_storage') as typeof import('../app_group_storage');
+    const AsyncStorage =
+      require('@react-native-async-storage/async-storage') as typeof import('@react-native-async-storage/async-storage').default;
+    const storageService =
+      require('../storage_service') as typeof import('../storage_service');
+    const { appGroupStorage } =
+      require('../app_group_storage') as typeof import('../app_group_storage');
     return { AsyncStorage, storageService, appGroupStorage };
   };
 
   const mockHealthData: HealthDataStore = {
-    metrics: {},
+    metrics: {} as HealthDataStore['metrics'],
     exercises: [],
     lastFullSync: new Date('2024-01-01T00:00:00Z'),
   };

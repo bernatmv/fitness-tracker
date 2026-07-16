@@ -32,7 +32,9 @@ struct WidgetDataManager {
      */
     static func loadHealthData() -> HealthDataStore? {
         guard let userDefaults = sharedUserDefaults else {
+#if DEBUG
             print("WidgetDataManager: ❌ App Group UserDefaults not available for suite: \(appGroupIdentifier)")
+#endif
             return nil
         }
 
@@ -46,7 +48,9 @@ struct WidgetDataManager {
 #endif
         
         guard let jsonString = userDefaults.string(forKey: healthDataKey) else {
+#if DEBUG
             print("WidgetDataManager: ❌ No health data found in App Group storage for key: \(healthDataKey)")
+#endif
             return nil
         }
 
@@ -56,10 +60,12 @@ struct WidgetDataManager {
 #endif
         
         guard let jsonData = jsonString.data(using: .utf8) else {
+#if DEBUG
             print("WidgetDataManager: ❌ Failed to convert JSON string to data")
+#endif
             return nil
         }
-        
+
         do {
             let decoder = JSONDecoder()
             let healthData = try decoder.decode(HealthDataStore.self, from: jsonData)
@@ -71,6 +77,7 @@ struct WidgetDataManager {
 #endif
             return healthData
         } catch {
+#if DEBUG
             print("WidgetDataManager: ❌ Error decoding health data: \(error)")
             if let decodingError = error as? DecodingError {
                 switch decodingError {
@@ -91,7 +98,6 @@ struct WidgetDataManager {
                 }
             }
             // Print a sample of the JSON to help debug
-#if DEBUG
             if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
                 print("WidgetDataManager: JSON structure - top level keys: \(Array(jsonObject.keys).sorted())")
                 if let metrics = jsonObject["metrics"] as? [String: Any] {
@@ -108,26 +114,35 @@ struct WidgetDataManager {
      */
     static func loadUserPreferences() -> UserPreferences? {
         guard let userDefaults = sharedUserDefaults else {
+#if DEBUG
             print("WidgetDataManager: App Group UserDefaults not available")
+#endif
             return nil
         }
-        
+
         guard let jsonString = userDefaults.string(forKey: userPreferencesKey) else {
+#if DEBUG
             print("WidgetDataManager: No user preferences found in App Group storage")
+#endif
             return nil
         }
-        
+
         guard let jsonData = jsonString.data(using: .utf8) else {
+#if DEBUG
             print("WidgetDataManager: Failed to convert preferences JSON string to data")
+#endif
             return nil
         }
-        
+
         do {
             let decoder = JSONDecoder()
             let preferences = try decoder.decode(UserPreferences.self, from: jsonData)
+#if DEBUG
             print("WidgetDataManager: Successfully loaded preferences with \(preferences.metricConfigs.count) metric configs")
+#endif
             return preferences
         } catch {
+#if DEBUG
             print("WidgetDataManager: Error decoding user preferences: \(error)")
             if let decodingError = error as? DecodingError {
                 switch decodingError {
@@ -143,6 +158,7 @@ struct WidgetDataManager {
                     print("WidgetDataManager: Unknown decoding error")
                 }
             }
+#endif
             return nil
         }
     }
@@ -171,8 +187,10 @@ struct HealthDataStore: Codable {
         do {
             exercises = try container.decode([ExerciseDetail].self, forKey: .exercises)
         } catch {
+#if DEBUG
             print("WidgetDataManager: Warning - Failed to decode exercises array: \(error)")
             print("WidgetDataManager: Using empty exercises array (not critical for widget)")
+#endif
             exercises = []
         }
     }

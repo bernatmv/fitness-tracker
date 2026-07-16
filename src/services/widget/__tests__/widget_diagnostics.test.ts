@@ -30,8 +30,10 @@ const LoadDiagnostics = async (overrides?: {
       IsAvailable: jest.fn().mockResolvedValue(appGroupAvailable),
       GetAllKeys: jest.fn().mockResolvedValue(appGroupKeys),
       GetItem: jest.fn((key: string) => {
-        if (key === '@fitness_tracker:health_data') return Promise.resolve(healthData);
-        if (key === '@fitness_tracker:user_preferences') return Promise.resolve(userPreferences);
+        if (key === '@fitness_tracker:health_data')
+          return Promise.resolve(healthData);
+        if (key === '@fitness_tracker:user_preferences')
+          return Promise.resolve(userPreferences);
         return Promise.resolve(null);
       }),
     },
@@ -44,9 +46,12 @@ const LoadDiagnostics = async (overrides?: {
   }));
 
   // Use require() (CommonJS) to match the current Jest setup (no ESM/vm-modules).
-  const { GetWidgetDiagnostics } = require('../widget_diagnostics') as typeof import('../widget_diagnostics');
-  const { appGroupStorage } = require('@services/storage/app_group_storage') as typeof import('@services/storage/app_group_storage');
-  const { widgetUpdater } = require('../widget_updater') as typeof import('../widget_updater');
+  const { GetWidgetDiagnostics } =
+    require('../widget_diagnostics') as typeof import('../widget_diagnostics');
+  const { appGroupStorage } =
+    require('@services/storage/app_group_storage') as typeof import('@services/storage/app_group_storage');
+  const { widgetUpdater } =
+    require('../widget_updater') as typeof import('../widget_updater');
 
   return { GetWidgetDiagnostics, appGroupStorage, widgetUpdater };
 };
@@ -89,5 +94,3 @@ describe('GetWidgetDiagnostics', () => {
     expect(result.appGroupKeys).toEqual([]);
   });
 });
-
-

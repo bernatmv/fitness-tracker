@@ -7,13 +7,13 @@ import { useAppTheme } from '@utils';
 import { ActivityWall } from '@components/activity_wall';
 import { LoadingSpinner } from '@components/common';
 import { LoadMetricData, LoadUserPreferences } from '@services/storage';
+import { MetricType, HealthMetricData, MetricConfig } from '@types';
 import {
-  MetricType,
-  HealthMetricData,
-  MetricConfig,
-  UserPreferences,
-} from '@types';
-import { GetDateRange, FormatCompactNumber, GetStartOfDay } from '@utils';
+  GetDateRange,
+  FormatCompactNumber,
+  GetMetricDisplayName,
+  GetStartOfDay,
+} from '@utils';
 import { GetColorsForMetricConfig } from '@services/theme';
 
 interface MetricDetailScreenProps {
@@ -33,8 +33,6 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const theme = useAppTheme();
   const [metricData, setMetricData] = useState<HealthMetricData | null>(null);
   const [config, setConfig] = useState<MetricConfig | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0); // Default to Fit
   const [numDays, setNumDays] = useState<number | null>(-1);
@@ -42,7 +40,13 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
   // Use -1 as special value for "Fit"
   const dateRangeOptions: (number | null)[] = [-1, 30, 90, 365, null];
-  const dateRangeLabels = ['Fit', '30D', '90D', '12M', 'All'];
+  const dateRangeLabels = [
+    t('metric_detail.range_fit'),
+    t('metric_detail.range_30d'),
+    t('metric_detail.range_90d'),
+    t('metric_detail.range_12m'),
+    t('metric_detail.all'),
+  ];
 
   useEffect(() => {
     LoadData();
@@ -56,7 +60,6 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
         try {
           const prefs = await LoadUserPreferences();
           if (prefs) {
-            setPreferences(prefs);
             // Update config to reflect any changes made in MetricConfigScreen
             setConfig(prefs.metricConfigs[metricType] || null);
           }
@@ -78,7 +81,6 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
       setMetricData(data);
       setConfig(prefs?.metricConfigs[metricType] || null);
-      setPreferences(prefs);
     } catch (error) {
       console.error('Error loading metric data:', error);
     } finally {
@@ -117,32 +119,34 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
 
   const isDarkMode = theme.mode === 'dark';
   const backgroundColor = theme.colors.background;
-  const titleColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
+  const titleColor = theme.colors.text.primary;
   const secondaryTextColor = isDarkMode
-    ? '#8E8E93'
+    ? theme.colors.activityLabel
     : theme.colors.text.secondary;
   const statCardBackground = isDarkMode
-    ? '#1C1C1E'
+    ? theme.colors.surface
     : theme.colors.statCardBackground;
 
   const buttonGroupStyles = useMemo(
     () => ({
       container: {
-        backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7',
+        backgroundColor: theme.colors.surface,
         borderRadius: 8,
         borderWidth: 0,
       },
       selectedButton: {
-        backgroundColor: isDarkMode ? '#2C2C2E' : '#E5E5EA',
+        backgroundColor: theme.colors.divider,
       },
       buttonText: {
-        color: isDarkMode ? '#8E8E93' : '#3C3C43',
+        color: isDarkMode
+          ? theme.colors.activityLabel
+          : theme.colors.text.secondary,
       },
       selectedButtonText: {
-        color: isDarkMode ? '#FFFFFF' : '#000000',
+        color: theme.colors.text.primary,
       },
     }),
-    [isDarkMode]
+    [theme, isDarkMode]
   );
 
   if (isLoading) {
@@ -156,7 +160,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
     <ScrollView style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
         <Text h3 style={{ color: titleColor }}>
-          {config?.displayName || metricType}
+          {config ? GetMetricDisplayName(config, t) : metricType}
         </Text>
         <Button
           title={t('metric_detail.configure')}
