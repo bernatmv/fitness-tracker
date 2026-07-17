@@ -321,16 +321,51 @@ struct ExerciseDetail: Codable {
     }
 }
 
+/// Decodes an element or yields nil instead of failing the parent collection
+struct FailableDecodable<T: Codable>: Codable {
+    let value: T?
+
+    init(from decoder: Decoder) throws {
+        value = try? T(from: decoder)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try value?.encode(to: encoder)
+    }
+}
+
+/// Tolerant by design: the widget only USES `theme` and `metricConfigs`.
+/// The app's preferences schema evolves across versions, so decoding must
+/// never fail because an unrelated or missing field changed — that would
+/// nil the whole preferences object and the widget would show
+/// "No Preferences" even though the file exists.
 struct UserPreferences: Codable {
-    let language: String
-    let dateFormat: String
     let theme: String
     let metricConfigs: [String: MetricConfig]
-    let widgets: [WidgetConfig]
-    let syncConfig: SyncConfig
-    let onboardingCompleted: Bool
-    let permissionsGranted: Bool
-    let enableMultiRowLayout: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case theme
+        case metricConfigs
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        theme = (try? container.decode(String.self, forKey: .theme)) ?? "system"
+        // Per-entry fault isolation: one malformed metric config must not
+        // discard the rest.
+        let failable =
+            (try? container.decode(
+                [String: FailableDecodable<MetricConfig>].self,
+                forKey: .metricConfigs
+            )) ?? [:]
+        metricConfigs = failable.compactMapValues { $0.value }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(theme, forKey: .theme)
+        try container.encode(metricConfigs, forKey: .metricConfigs)
+    }
 }
 
 struct MetricConfig: Codable {
@@ -339,23 +374,51 @@ struct MetricConfig: Codable {
     let colorRange: ColorRange
     let displayName: String
     let iconName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case metricType
+        case enabled
+        case colorRange
+        case displayName
+        case iconName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        metricType = try container.decode(String.self, forKey: .metricType)
+        enabled = (try? container.decode(Bool.self, forKey: .enabled)) ?? true
+        displayName =
+            (try? container.decode(String.self, forKey: .displayName)) ?? metricType
+        colorRange =
+            (try? container.decode(ColorRange.self, forKey: .colorRange))
+            ?? ColorRange(thresholds: [0, 0, 0, 0, 0], paletteId: "github_green")
+        iconName = try? container.decode(String.self, forKey: .iconName)
+    }
 }
 
 struct ColorRange: Codable {
     let thresholds: [Double]
     let paletteId: String
-}
 
-struct WidgetConfig: Codable {
-    let id: String
-    let metricType: String
-    let size: String
-    let enabled: Bool
-}
+    init(thresholds: [Double], paletteId: String) {
+        self.thresholds = thresholds
+        self.paletteId = paletteId
+    }
 
-struct SyncConfig: Codable {
-    let strategy: String
-    let periodicIntervalMinutes: Int?
-    let enableHealthObserver: Bool?
+    enum CodingKeys: String, CodingKey {
+        case thresholds
+        case paletteId
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        thresholds =
+            (try? container.decode([Double].self, forKey: .thresholds))
+            ?? [0, 0, 0, 0, 0]
+        // Legacy configs stored a `colors` array instead of `paletteId`
+        paletteId =
+            (try? container.decode(String.self, forKey: .paletteId))
+            ?? "github_green"
+    }
 }
 
