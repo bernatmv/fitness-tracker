@@ -7,6 +7,7 @@
 
 import WidgetKit
 import SwiftUI
+import os
 
 @available(iOS 16.0, *)
 struct Provider: AppIntentTimelineProvider {
