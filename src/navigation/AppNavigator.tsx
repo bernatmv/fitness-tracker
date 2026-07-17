@@ -168,6 +168,9 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
   return (
     <Stack.Navigator
       screenOptions={{
+        // Native screen container behind each screen; without this it
+        // defaults to white and flashes during dark-mode transitions.
+        contentStyle: { backgroundColor: theme.colors.background },
         headerTintColor: theme.colors.text.primary,
         headerTitleStyle: {
           color: theme.colors.text.primary,
