@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Button, Text } from '@rneui/themed';
+import { Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useAppTheme } from '@utils';
+import { AppButton } from './AppButton';
 
 interface ErrorMessageProps {
   message: string;
@@ -26,7 +27,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
         {message}
       </Text>
       {onRetry && (
-        <Button
+        <AppButton
           title={t('common.retry')}
           onPress={onRetry}
           containerStyle={styles.buttonContainer}

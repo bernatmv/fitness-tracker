@@ -81,7 +81,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <Card containerStyle={[styles.card, { backgroundColor, borderColor }]}>
-      <View style={styles.header}>
+      {/* The whole header row (title, value, background) is the tap target */}
+      <TouchableOpacity
+        style={styles.header}
+        onPress={onPress}
+        disabled={!onPress}
+        activeOpacity={0.6}
+        accessibilityRole="button">
         <Text style={[styles.title, { color: primaryTextColor }]}>
           {GetMetricDisplayName(config, t)}
         </Text>
@@ -90,20 +96,16 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             {FormatNumber(value, 0)} {unit}
           </Text>
           {onPress && (
-            <TouchableOpacity
-              onPress={onPress}
-              style={styles.arrowButton}
-              activeOpacity={0.7}>
-              <Icon
-                name="chevron-right"
-                type="material"
-                size={22}
-                color={theme.colors.link}
-              />
-            </TouchableOpacity>
+            <Icon
+              name="chevron-right"
+              type="material"
+              size={22}
+              color={theme.colors.link}
+              containerStyle={styles.arrowButton}
+            />
           )}
         </View>
-      </View>
+      </TouchableOpacity>
 
       {showMiniWall && dataPoints.length > 0 && (
         <View style={styles.miniWall}>

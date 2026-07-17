@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, LayoutChangeEvent } from 'react-native';
-import { Button, Text, ButtonGroup } from '@rneui/themed';
+import { Text, ButtonGroup } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '@utils';
 import { ActivityWall } from '@components/activity_wall';
-import { LoadingSpinner } from '@components/common';
+import { AppButton, LoadingSpinner } from '@components/common';
 import { LoadMetricData, LoadUserPreferences } from '@services/storage';
 import { MetricType, HealthMetricData, MetricConfig } from '@types';
 import {
@@ -157,15 +157,17 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
   const dataPoints = metricData?.dataPoints || [];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor }]}
+      contentInsetAdjustmentBehavior="automatic">
       <View style={styles.header}>
         <Text h3 style={{ color: titleColor }}>
           {config ? GetMetricDisplayName(config, t) : metricType}
         </Text>
-        <Button
+        <AppButton
           title={t('metric_detail.configure')}
           onPress={onConfigurePress}
-          type="outline"
+          variant="outline"
           containerStyle={styles.configButton}
         />
       </View>
@@ -279,7 +281,7 @@ export const MetricDetailScreen: React.FC<MetricDetailScreenProps> = ({
                   thresholds={config.colorRange.thresholds}
                   colors={colors}
                   numDays={effectiveNumDays}
-                  showMonthLabels={true}
+                  showMonthLabels={numDays === -1}
                   showDayLabels={true}
                   showDescription={true}
                   enableMultiRowLayout={shouldEnableMultiRow}
@@ -397,12 +399,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     gap: 12,
   },
   statCard: {
-    flex: 1,
+    width: '100%',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',

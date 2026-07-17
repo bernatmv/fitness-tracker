@@ -7,10 +7,10 @@ import {
   LayoutChangeEvent,
   TouchableOpacity,
 } from 'react-native';
-import { Button, Text } from '@rneui/themed';
+import { Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { ActivityWall } from '@components/activity_wall';
-import { LoadingSpinner } from '@components/common';
+import { AppButton, LoadingSpinner } from '@components/common';
 import { useAppTheme } from '@utils';
 import {
   LoadUserPreferences,
@@ -265,7 +265,9 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
     : theme.colors.surface;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor }]}
+      contentInsetAdjustmentBehavior="automatic">
       <View style={[styles.section, { borderBottomColor: borderColor }]}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>
           {t('configuration.preview')}
@@ -424,22 +426,19 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
       </View>
 
       <View style={styles.actions}>
-        <Button
+        <AppButton
           title={t('configuration.reset_defaults')}
           onPress={HandleResetDefaults}
-          type="outline"
+          variant="outline"
           containerStyle={styles.actionButton}
         />
         {hasChanges && (
-          <Button
+          <AppButton
             title={t('common.save')}
             onPress={HandleSave}
             loading={isSaving}
             disabled={isSaving}
             containerStyle={styles.actionButton}
-            buttonStyle={{
-              backgroundColor: theme.colors.primary,
-            }}
           />
         )}
       </View>

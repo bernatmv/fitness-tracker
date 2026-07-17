@@ -1,12 +1,12 @@
 import React from 'react';
-import { StyleSheet, Platform, View, useWindowDimensions } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { BlurView } from '@react-native-community/blur';
 import { Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppTheme } from '@utils';
+import { ToRgba, useAppTheme } from '@utils';
+import { LiquidGlassView } from '@components/common';
 import { HomeScreen } from '@screens/home';
 import { SettingsScreen } from '@screens/settings';
 import { MetricDetailScreen } from '@screens/metric_detail';
@@ -42,34 +42,6 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   const isDarkMode = theme.mode === 'dark';
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const toRgba = (hex: string, alpha: number): string => {
-    const normalized = hex.startsWith('#') ? hex.slice(1) : hex;
-    if (normalized.length !== 6) return hex;
-    const r = parseInt(normalized.slice(0, 2), 16);
-    const g = parseInt(normalized.slice(2, 4), 16);
-    const b = parseInt(normalized.slice(4, 6), 16);
-    if ([r, g, b].some(n => Number.isNaN(n))) return hex;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
-  const iosMajorVersion =
-    Platform.OS === 'ios'
-      ? typeof Platform.Version === 'string'
-        ? parseInt(Platform.Version, 10)
-        : Platform.Version
-      : 0;
-  const useModernIOSGlass = Platform.OS === 'ios' && iosMajorVersion >= 15;
-  const blurType = useModernIOSGlass
-    ? isDarkMode
-      ? 'chromeMaterialDark'
-      : 'chromeMaterialLight'
-    : isDarkMode
-      ? 'dark'
-      : 'light';
-  const glassFallbackColor = toRgba(
-    useModernIOSGlass ? theme.colors.cardBackground : theme.colors.background,
-    useModernIOSGlass ? 0.72 : 0.9
-  );
   const pillMaxWidth = 420;
   const pillHorizontalMargin = 24;
   const pillWidth = Math.min(
@@ -86,10 +58,19 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         headerShown: false,
         tabBarActiveTintColor: theme.colors.link,
         tabBarInactiveTintColor: theme.colors.text.secondary,
+        // Soft capsule highlight behind the active tab
+        tabBarActiveBackgroundColor: ToRgba(
+          theme.colors.link,
+          isDarkMode ? 0.24 : 0.12
+        ),
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
         tabBarItemStyle: {
-          paddingVertical: 6,
-          borderRadius: 20,
-          marginHorizontal: 6,
+          paddingVertical: 4,
+          borderRadius: 23,
+          marginHorizontal: 8,
           marginVertical: 6,
         },
         // Floating pill style (Slack-style). iOS gets "liquid glass" materials; other platforms keep transparent.
@@ -111,34 +92,10 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
-            <View
-              style={{
-                borderRadius: pillHeight / 2,
-                overflow: 'hidden',
-                height: pillHeight,
-              }}>
-              <BlurView
-                style={StyleSheet.absoluteFill}
-                blurType={blurType}
-                blurAmount={useModernIOSGlass ? 24 : 20}
-                reducedTransparencyFallbackColor={glassFallbackColor}
-              />
-              {/* Tint/border overlay so it still looks "glassy" even if blur is disabled */}
-              <View
-                pointerEvents="none"
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    backgroundColor: glassFallbackColor,
-                    borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: toRgba(
-                      theme.colors.divider,
-                      isDarkMode ? 0.35 : 0.5
-                    ),
-                  },
-                ]}
-              />
-            </View>
+            <LiquidGlassView
+              borderRadius={pillHeight / 2}
+              style={{ height: pillHeight }}
+            />
           ) : undefined,
       }}>
       <Tab.Screen
@@ -208,13 +165,24 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.background,
-        },
         headerTintColor: theme.colors.text.primary,
         headerTitleStyle: {
           color: theme.colors.text.primary,
         },
+        // iOS: translucent glass header that content scrolls under
+        // (screens opt in via contentInsetAdjustmentBehavior="automatic").
+        ...(Platform.OS === 'ios'
+          ? {
+              headerTransparent: true,
+              headerBlurEffect: (theme.mode === 'dark'
+                ? 'systemChromeMaterialDark'
+                : 'systemChromeMaterialLight') as 'systemChromeMaterial',
+            }
+          : {
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+            }),
       }}>
       <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
         {() => (

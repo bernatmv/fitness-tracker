@@ -117,3 +117,16 @@ export const ReorderColorsForTheme = (
     return [firstColor, ...restColors.reverse()];
   }
 };
+
+/**
+ * Convert a hex color + alpha into an rgba() string.
+ * Returns the input unchanged when the hex can't be parsed so callers can
+ * pass through non-hex platform colors safely.
+ */
+export const ToRgba = (hex: string, alpha: number): string => {
+  const rgb = HexToRgb(hex);
+  if (!rgb) {
+    return hex;
+  }
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+};
