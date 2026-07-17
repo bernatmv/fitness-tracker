@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@utils';
+import { TAB_PILL_HEIGHT } from '@constants';
 import {
   AppButton,
   ErrorMessage,
@@ -134,7 +135,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
           styles.scrollContent,
           {
             paddingTop: headerHeight + 8,
-            paddingBottom: 50 + insets.bottom + 16,
+            paddingBottom: TAB_PILL_HEIGHT + insets.bottom + 20,
           },
         ]}
         scrollIndicatorInsets={{ top: headerHeight }}
