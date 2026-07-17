@@ -7,6 +7,7 @@ export type WidgetDiagnostics = {
   widgetUpdaterAvailable: boolean;
   appGroupKeys: string[];
   hasHealthData: boolean;
+  hasWidgetData: boolean;
   hasUserPreferences: boolean;
 };
 
@@ -24,17 +25,20 @@ export const GetWidgetDiagnostics = async (): Promise<WidgetDiagnostics> => {
   const appGroupAvailable = await appGroupStorage.IsAvailable();
   const widgetUpdaterAvailable = widgetUpdater.IsAvailable();
 
-  const [healthData, userPreferences, appGroupKeys] = await Promise.all([
-    appGroupStorage.GetItem(STORAGE_KEYS.HEALTH_DATA),
-    appGroupStorage.GetItem(STORAGE_KEYS.USER_PREFERENCES),
-    appGroupStorage.GetAllKeys(),
-  ]);
+  const [healthData, widgetData, userPreferences, appGroupKeys] =
+    await Promise.all([
+      appGroupStorage.GetItem(STORAGE_KEYS.HEALTH_DATA),
+      appGroupStorage.GetItem(STORAGE_KEYS.WIDGET_DATA),
+      appGroupStorage.GetItem(STORAGE_KEYS.USER_PREFERENCES),
+      appGroupStorage.GetAllKeys(),
+    ]);
 
   return {
     appGroupAvailable,
     widgetUpdaterAvailable,
     appGroupKeys: appGroupKeys.sort(),
     hasHealthData: HasValue(healthData),
+    hasWidgetData: HasValue(widgetData),
     hasUserPreferences: HasValue(userPreferences),
   };
 };

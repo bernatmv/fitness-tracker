@@ -233,6 +233,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         `${t('settings.widgets_has_health_data') || 'Has health data'}: ${
           diagnostics.hasHealthData ? '✅' : '❌'
         }`,
+        `${t('settings.widgets_has_widget_data') || 'Has widget payload'}: ${
+          diagnostics.hasWidgetData ? '✅' : '❌'
+        }`,
         `${t('settings.widgets_has_preferences') || 'Has preferences'}: ${
           diagnostics.hasUserPreferences ? '✅' : '❌'
         }`,

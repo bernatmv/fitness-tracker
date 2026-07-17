@@ -85,6 +85,7 @@
     "widgets_app_group_available": "App Group disponible",
     "widgets_updater_available": "Actualizador de widgets disponible",
     "widgets_has_health_data": "Tiene datos de salud",
+    "widgets_has_widget_data": "Tiene datos del widget",
     "widgets_has_preferences": "Tiene preferencias",
     "widgets_app_group_keys": "Claves de App Group",
     "widgets_none": "Ninguna"

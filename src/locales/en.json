@@ -85,6 +85,7 @@
     "widgets_app_group_available": "App Group available",
     "widgets_updater_available": "Widget updater available",
     "widgets_has_health_data": "Has health data",
+    "widgets_has_widget_data": "Has widget payload",
     "widgets_has_preferences": "Has preferences",
     "widgets_app_group_keys": "App Group keys",
     "widgets_none": "None"

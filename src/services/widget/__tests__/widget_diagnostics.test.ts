@@ -2,6 +2,7 @@ const LoadDiagnostics = async (overrides?: {
   appGroupAvailable?: boolean;
   appGroupKeys?: string[];
   healthData?: string | null;
+  widgetData?: string | null;
   userPreferences?: string | null;
   widgetUpdaterAvailable?: boolean;
 }) => {
@@ -20,6 +21,9 @@ const LoadDiagnostics = async (overrides?: {
   const healthData = hasOverride('healthData')
     ? overrides!.healthData
     : '{"lastFullSync":"2024-01-01T00:00:00Z"}';
+  const widgetData = hasOverride('widgetData')
+    ? overrides!.widgetData
+    : '{"lastFullSync":"2024-01-01T00:00:00Z","metrics":{},"exercises":[]}';
   const userPreferences = hasOverride('userPreferences')
     ? overrides!.userPreferences
     : '{"language":"en","theme":"system"}';
@@ -32,6 +36,8 @@ const LoadDiagnostics = async (overrides?: {
       GetItem: jest.fn((key: string) => {
         if (key === '@fitness_tracker:health_data')
           return Promise.resolve(healthData);
+        if (key === '@fitness_tracker:widget_data')
+          return Promise.resolve(widgetData);
         if (key === '@fitness_tracker:user_preferences')
           return Promise.resolve(userPreferences);
         return Promise.resolve(null);
@@ -70,6 +76,7 @@ describe('GetWidgetDiagnostics', () => {
     expect(result.appGroupAvailable).toBe(true);
     expect(result.widgetUpdaterAvailable).toBe(true);
     expect(result.hasHealthData).toBe(true);
+    expect(result.hasWidgetData).toBe(true);
     expect(result.hasUserPreferences).toBe(true);
     expect(result.appGroupKeys).toEqual([
       '@fitness_tracker:health_data',
@@ -83,6 +90,7 @@ describe('GetWidgetDiagnostics', () => {
   it('should return false for missing values', async () => {
     const { GetWidgetDiagnostics } = await LoadDiagnostics({
       healthData: null,
+      widgetData: null,
       userPreferences: '',
       appGroupKeys: [],
     });
@@ -90,6 +98,7 @@ describe('GetWidgetDiagnostics', () => {
     const result = await GetWidgetDiagnostics();
 
     expect(result.hasHealthData).toBe(false);
+    expect(result.hasWidgetData).toBe(false);
     expect(result.hasUserPreferences).toBe(false);
     expect(result.appGroupKeys).toEqual([]);
   });
