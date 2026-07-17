@@ -12,6 +12,7 @@ import {
 import { GetAllPalettes, GetPaletteColorsById, METRIC_UNITS } from '@constants';
 import { appGroupStorage } from './app_group_storage';
 import { widgetUpdater } from '../widget';
+import { BuildWidgetPayload } from '../widget/widget_payload';
 import { GetStartOfDay, GetDateArray } from '@utils';
 
 /**
@@ -19,6 +20,10 @@ import { GetStartOfDay, GetDateArray } from '@utils';
  */
 export const STORAGE_KEYS = {
   HEALTH_DATA: '@fitness_tracker:health_data',
+  // Trimmed store the iOS widget reads (recent days only, no exercises).
+  // The widget must never decode the full HEALTH_DATA blob: the extension
+  // runs under a ~30MB memory cap and gets killed mid-timeline.
+  WIDGET_DATA: '@fitness_tracker:widget_data',
   APP_CONFIG: '@fitness_tracker:app_config',
   USER_PREFERENCES: '@fitness_tracker:user_preferences',
   LAST_SYNC: '@fitness_tracker:last_sync',
@@ -185,6 +190,10 @@ export const SaveHealthData = async (data: HealthDataStore): Promise<void> => {
       `Saving health data to storage: ${metricsCount} metrics, ${totalDataPoints} data points`
     );
     await storageAdapter.SetItem(STORAGE_KEYS.HEALTH_DATA, jsonData);
+
+    // Write the trimmed widget payload alongside the full store
+    const widgetJson = SerializeHealthData(BuildWidgetPayload(data));
+    await storageAdapter.SetItem(STORAGE_KEYS.WIDGET_DATA, widgetJson);
 
     // Verify data was saved (especially important for App Group storage)
     const saved = await storageAdapter.GetItem(STORAGE_KEYS.HEALTH_DATA);
@@ -473,6 +482,7 @@ export const SaveMetricData = async (
 export const ClearAllHealthData = async (): Promise<void> => {
   try {
     await storageAdapter.RemoveItem(STORAGE_KEYS.HEALTH_DATA);
+    await storageAdapter.RemoveItem(STORAGE_KEYS.WIDGET_DATA);
   } catch (error) {
     console.error('Error clearing health data:', error);
     throw new Error('Failed to clear health data');

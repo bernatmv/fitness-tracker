@@ -10,7 +10,11 @@ import Foundation
 @available(iOS 10.0, *)
 struct WidgetDataManager {
     private static let appGroupIdentifier = "group.com.fitnesstracker.widgets"
-    private static let healthDataKey = "@fitness_tracker:health_data"
+    // Trimmed widget payload written by the app (recent days, no exercises).
+    // Never read "@fitness_tracker:health_data" here: decoding the full
+    // multi-year store can exceed the widget's ~30MB memory cap and get the
+    // extension killed mid-timeline (widget then sticks on its placeholder).
+    private static let healthDataKey = "@fitness_tracker:widget_data"
     private static let userPreferencesKey = "@fitness_tracker:user_preferences"
     
     static var sharedUserDefaults: UserDefaults? {
