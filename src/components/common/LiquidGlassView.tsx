@@ -73,7 +73,15 @@ export const LiquidGlassView: React.FC<LiquidGlassViewProps> = ({
 
   return (
     <View style={style}>
-      <View style={[styles.glass, { borderRadius }]}>
+      {/* Without content children the glass has no intrinsic height (its
+          blur/tint layers are absolutely positioned), so it must fill the
+          sized outer container instead of collapsing to 0. */}
+      <View
+        style={[
+          styles.glass,
+          { borderRadius },
+          children == null && StyleSheet.absoluteFillObject,
+        ]}>
         {Platform.OS === 'ios' && (
           <BlurView
             style={StyleSheet.absoluteFill}
