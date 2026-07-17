@@ -96,7 +96,8 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
             <LiquidGlassView
               borderRadius={pillHeight / 2}
               style={{ height: pillHeight }}
-              tintOpacity={0.92}
+              tintOpacity={0.95}
+              tintColor={theme.colors.statCardBackground}
             />
           ) : undefined,
       }}>
