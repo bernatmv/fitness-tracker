@@ -10,6 +10,9 @@ jest.mock('react-native', () => {
         getItem: jest.fn(),
         removeItem: jest.fn(),
         getAllKeys: jest.fn(),
+        setFile: jest.fn(),
+        getFile: jest.fn(),
+        removeFile: jest.fn(),
         isAvailable: jest.fn(),
       },
     },
@@ -176,6 +179,72 @@ describe('AppGroupStorageService', () => {
 
       const result = await appGroupStorage.GetAllKeys();
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('SetFile', () => {
+    it('should write a file in the App Group container when available', async () => {
+      (
+        NativeModules.AppGroupStorage.isAvailable as jest.Mock
+      ).mockResolvedValue(true);
+      (NativeModules.AppGroupStorage.setFile as jest.Mock).mockResolvedValue(
+        true
+      );
+
+      await appGroupStorage.SetFile('widget_data.json', '{"a":1}');
+      expect(NativeModules.AppGroupStorage.setFile).toHaveBeenCalledWith(
+        'widget_data.json',
+        '{"a":1}'
+      );
+    });
+
+    it('should throw when storage is not available', async () => {
+      (
+        NativeModules.AppGroupStorage.isAvailable as jest.Mock
+      ).mockResolvedValue(false);
+
+      await expect(
+        appGroupStorage.SetFile('widget_data.json', '{}')
+      ).rejects.toThrow('App Group storage is not available');
+    });
+  });
+
+  describe('GetFile', () => {
+    it('should read a file from the App Group container', async () => {
+      (
+        NativeModules.AppGroupStorage.isAvailable as jest.Mock
+      ).mockResolvedValue(true);
+      (NativeModules.AppGroupStorage.getFile as jest.Mock).mockResolvedValue(
+        '{"a":1}'
+      );
+
+      const result = await appGroupStorage.GetFile('widget_data.json');
+      expect(result).toBe('{"a":1}');
+    });
+
+    it('should return null when storage is not available', async () => {
+      (
+        NativeModules.AppGroupStorage.isAvailable as jest.Mock
+      ).mockResolvedValue(false);
+
+      const result = await appGroupStorage.GetFile('widget_data.json');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('RemoveFile', () => {
+    it('should remove a file from the App Group container', async () => {
+      (
+        NativeModules.AppGroupStorage.isAvailable as jest.Mock
+      ).mockResolvedValue(true);
+      (NativeModules.AppGroupStorage.removeFile as jest.Mock).mockResolvedValue(
+        true
+      );
+
+      await appGroupStorage.RemoveFile('widget_data.json');
+      expect(NativeModules.AppGroupStorage.removeFile).toHaveBeenCalledWith(
+        'widget_data.json'
+      );
     });
   });
 });

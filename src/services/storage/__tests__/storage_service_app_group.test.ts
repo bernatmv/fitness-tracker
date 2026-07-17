@@ -8,6 +8,9 @@ jest.mock('../app_group_storage', () => ({
     GetItem: jest.fn(),
     RemoveItem: jest.fn(),
     GetAllKeys: jest.fn(),
+    SetFile: jest.fn(),
+    GetFile: jest.fn(),
+    RemoveFile: jest.fn(),
     Clear: jest.fn(),
   },
 }));

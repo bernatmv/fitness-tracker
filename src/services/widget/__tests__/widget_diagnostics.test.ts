@@ -3,6 +3,7 @@ const LoadDiagnostics = async (overrides?: {
   appGroupKeys?: string[];
   healthData?: string | null;
   widgetData?: string | null;
+  widgetPreferences?: string | null;
   userPreferences?: string | null;
   widgetUpdaterAvailable?: boolean;
 }) => {
@@ -24,6 +25,9 @@ const LoadDiagnostics = async (overrides?: {
   const widgetData = hasOverride('widgetData')
     ? overrides!.widgetData
     : '{"lastFullSync":"2024-01-01T00:00:00Z","metrics":{},"exercises":[]}';
+  const widgetPreferences = hasOverride('widgetPreferences')
+    ? overrides!.widgetPreferences
+    : '{"language":"en","theme":"system"}';
   const userPreferences = hasOverride('userPreferences')
     ? overrides!.userPreferences
     : '{"language":"en","theme":"system"}';
@@ -36,10 +40,14 @@ const LoadDiagnostics = async (overrides?: {
       GetItem: jest.fn((key: string) => {
         if (key === '@fitness_tracker:health_data')
           return Promise.resolve(healthData);
-        if (key === '@fitness_tracker:widget_data')
-          return Promise.resolve(widgetData);
         if (key === '@fitness_tracker:user_preferences')
           return Promise.resolve(userPreferences);
+        return Promise.resolve(null);
+      }),
+      GetFile: jest.fn((fileName: string) => {
+        if (fileName === 'widget_data.json') return Promise.resolve(widgetData);
+        if (fileName === 'widget_preferences.json')
+          return Promise.resolve(widgetPreferences);
         return Promise.resolve(null);
       }),
     },
@@ -77,6 +85,8 @@ describe('GetWidgetDiagnostics', () => {
     expect(result.widgetUpdaterAvailable).toBe(true);
     expect(result.hasHealthData).toBe(true);
     expect(result.hasWidgetData).toBe(true);
+    expect(result.widgetDataChars).toBeGreaterThan(0);
+    expect(result.hasWidgetPreferences).toBe(true);
     expect(result.hasUserPreferences).toBe(true);
     expect(result.appGroupKeys).toEqual([
       '@fitness_tracker:health_data',
@@ -91,6 +101,7 @@ describe('GetWidgetDiagnostics', () => {
     const { GetWidgetDiagnostics } = await LoadDiagnostics({
       healthData: null,
       widgetData: null,
+      widgetPreferences: null,
       userPreferences: '',
       appGroupKeys: [],
     });
@@ -99,6 +110,8 @@ describe('GetWidgetDiagnostics', () => {
 
     expect(result.hasHealthData).toBe(false);
     expect(result.hasWidgetData).toBe(false);
+    expect(result.widgetDataChars).toBe(0);
+    expect(result.hasWidgetPreferences).toBe(false);
     expect(result.hasUserPreferences).toBe(false);
     expect(result.appGroupKeys).toEqual([]);
   });

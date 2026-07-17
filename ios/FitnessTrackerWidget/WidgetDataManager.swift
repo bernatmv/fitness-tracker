@@ -2,167 +2,107 @@
 //  WidgetDataManager.swift
 //  FitnessTrackerWidget
 //
-//  Manages reading data from App Group UserDefaults for widget display
+//  Manages reading widget data FILES from the App Group container.
+//
+//  IMPORTANT: the widget must never open the shared UserDefaults suite
+//  (UserDefaults(suiteName:)). iOS loads the ENTIRE suite into the reading
+//  process, and the app stores its full multi-year health store there —
+//  that alone can blow the widget's ~30MB memory cap and get the extension
+//  killed mid-timeline (the widget then sticks on its redacted placeholder).
+//  The app mirrors a trimmed payload + preferences into small JSON files.
 //
 
 import Foundation
+import os
 
-@available(iOS 10.0, *)
+@available(iOS 14.0, *)
 struct WidgetDataManager {
     private static let appGroupIdentifier = "group.com.fitnesstracker.widgets"
-    // Trimmed widget payload written by the app (recent days, no exercises).
-    // Never read "@fitness_tracker:health_data" here: decoding the full
-    // multi-year store can exceed the widget's ~30MB memory cap and get the
-    // extension killed mid-timeline (widget then sticks on its placeholder).
-    private static let healthDataKey = "@fitness_tracker:widget_data"
-    private static let userPreferencesKey = "@fitness_tracker:user_preferences"
-    
-    static var sharedUserDefaults: UserDefaults? {
-        return UserDefaults(suiteName: appGroupIdentifier)
+    // Keep these names in sync with src/services/widget/widget_payload.ts
+    private static let widgetDataFileName = "widget_data.json"
+    private static let widgetPreferencesFileName = "widget_preferences.json"
+
+    static let log = Logger(
+        subsystem: "com.bernat.wall-of-truth.FitnessTrackerWidget",
+        category: "WidgetData"
+    )
+
+    private static func fileURL(for fileName: String) -> URL? {
+        return FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
+            .appendingPathComponent(fileName)
     }
 
     static func isAppGroupAvailable() -> Bool {
-        // UserDefaults(suiteName:) and containerURL both depend on App Group entitlements.
-        let userDefaultsAvailable = sharedUserDefaults != nil
-        let containerAvailable =
-            FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: appGroupIdentifier
-            ) != nil
-        return userDefaultsAvailable && containerAvailable
+        return FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) != nil
     }
-    
+
+    private static func readFile(_ fileName: String) -> String? {
+        guard let url = fileURL(for: fileName) else {
+            log.error("App Group container unavailable (entitlement/signing issue)")
+            return nil
+        }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            log.info("File \(fileName, privacy: .public) does not exist yet")
+            return nil
+        }
+        do {
+            let content = try String(contentsOf: url, encoding: .utf8)
+            log.info("Read \(fileName, privacy: .public): \(content.count) chars")
+            return content
+        } catch {
+            log.error("Failed reading \(fileName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
     /**
-     * Load health data from App Group storage
+     * Load the trimmed health payload from the App Group container file
      */
     static func loadHealthData() -> HealthDataStore? {
-        guard let userDefaults = sharedUserDefaults else {
-#if DEBUG
-            print("WidgetDataManager: ❌ App Group UserDefaults not available for suite: \(appGroupIdentifier)")
-#endif
+        guard let jsonString = readFile(widgetDataFileName) else {
             return nil
         }
 
-#if DEBUG
-        print("WidgetDataManager: ✅ App Group UserDefaults available")
-        print("WidgetDataManager: Looking for key: \(healthDataKey)")
-
-        // Check if key exists (can be relatively expensive on device).
-        let allKeys = userDefaults.dictionaryRepresentation().keys
-        print("WidgetDataManager: Available keys in App Group: \(Array(allKeys).sorted())")
-#endif
-        
-        guard let jsonString = userDefaults.string(forKey: healthDataKey) else {
-#if DEBUG
-            print("WidgetDataManager: ❌ No health data found in App Group storage for key: \(healthDataKey)")
-#endif
-            return nil
-        }
-
-#if DEBUG
-        print("WidgetDataManager: ✅ Found JSON string, length: \(jsonString.count) characters")
-        print("WidgetDataManager: JSON preview (first 200 chars): \(String(jsonString.prefix(200)))")
-#endif
-        
         guard let jsonData = jsonString.data(using: .utf8) else {
-#if DEBUG
-            print("WidgetDataManager: ❌ Failed to convert JSON string to data")
-#endif
+            log.error("Widget data file is not valid UTF-8")
             return nil
         }
 
         do {
             let decoder = JSONDecoder()
             let healthData = try decoder.decode(HealthDataStore.self, from: jsonData)
-#if DEBUG
-            let metricsCount = healthData.metrics.count
             let totalDataPoints = healthData.metrics.values.reduce(0) { $0 + $1.dataPoints.count }
-            print("WidgetDataManager: ✅ Successfully loaded health data with \(metricsCount) metrics, \(totalDataPoints) total data points")
-            print("WidgetDataManager: Metric types: \(Array(healthData.metrics.keys).sorted())")
-#endif
+            log.info("Decoded widget data: \(healthData.metrics.count) metrics, \(totalDataPoints) data points")
             return healthData
         } catch {
-#if DEBUG
-            print("WidgetDataManager: ❌ Error decoding health data: \(error)")
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    print("WidgetDataManager: Missing key '\(key.stringValue)' in \(context.debugDescription)")
-                    print("WidgetDataManager: Coding path: \(context.codingPath.map { $0.stringValue })")
-                case .typeMismatch(let type, let context):
-                    print("WidgetDataManager: Type mismatch for type \(type) in \(context.debugDescription)")
-                    print("WidgetDataManager: Coding path: \(context.codingPath.map { $0.stringValue })")
-                case .valueNotFound(let type, let context):
-                    print("WidgetDataManager: Value not found for type \(type) in \(context.debugDescription)")
-                    print("WidgetDataManager: Coding path: \(context.codingPath.map { $0.stringValue })")
-                case .dataCorrupted(let context):
-                    print("WidgetDataManager: Data corrupted: \(context.debugDescription)")
-                    print("WidgetDataManager: Coding path: \(context.codingPath.map { $0.stringValue })")
-                @unknown default:
-                    print("WidgetDataManager: Unknown decoding error")
-                }
-            }
-            // Print a sample of the JSON to help debug
-            if let jsonObject = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
-                print("WidgetDataManager: JSON structure - top level keys: \(Array(jsonObject.keys).sorted())")
-                if let metrics = jsonObject["metrics"] as? [String: Any] {
-                    print("WidgetDataManager: Metrics keys: \(Array(metrics.keys).sorted())")
-                }
-            }
-#endif
+            log.error("Failed decoding widget data: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
-    
+
     /**
-     * Load user preferences from App Group storage
+     * Load user preferences from the App Group container file
      */
     static func loadUserPreferences() -> UserPreferences? {
-        guard let userDefaults = sharedUserDefaults else {
-#if DEBUG
-            print("WidgetDataManager: App Group UserDefaults not available")
-#endif
-            return nil
-        }
-
-        guard let jsonString = userDefaults.string(forKey: userPreferencesKey) else {
-#if DEBUG
-            print("WidgetDataManager: No user preferences found in App Group storage")
-#endif
+        guard let jsonString = readFile(widgetPreferencesFileName) else {
             return nil
         }
 
         guard let jsonData = jsonString.data(using: .utf8) else {
-#if DEBUG
-            print("WidgetDataManager: Failed to convert preferences JSON string to data")
-#endif
+            log.error("Widget preferences file is not valid UTF-8")
             return nil
         }
 
         do {
             let decoder = JSONDecoder()
             let preferences = try decoder.decode(UserPreferences.self, from: jsonData)
-#if DEBUG
-            print("WidgetDataManager: Successfully loaded preferences with \(preferences.metricConfigs.count) metric configs")
-#endif
+            log.info("Decoded preferences: \(preferences.metricConfigs.count) metric configs")
             return preferences
         } catch {
-#if DEBUG
-            print("WidgetDataManager: Error decoding user preferences: \(error)")
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    print("WidgetDataManager: Missing key '\(key.stringValue)' in \(context.debugDescription)")
-                case .typeMismatch(let type, let context):
-                    print("WidgetDataManager: Type mismatch for type \(type) in \(context.debugDescription)")
-                case .valueNotFound(let type, let context):
-                    print("WidgetDataManager: Value not found for type \(type) in \(context.debugDescription)")
-                case .dataCorrupted(let context):
-                    print("WidgetDataManager: Data corrupted: \(context.debugDescription)")
-                @unknown default:
-                    print("WidgetDataManager: Unknown decoding error")
-                }
-            }
-#endif
+            log.error("Failed decoding preferences: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

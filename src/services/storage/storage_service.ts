@@ -12,7 +12,11 @@ import {
 import { GetAllPalettes, GetPaletteColorsById, METRIC_UNITS } from '@constants';
 import { appGroupStorage } from './app_group_storage';
 import { widgetUpdater } from '../widget';
-import { BuildWidgetPayload } from '../widget/widget_payload';
+import {
+  BuildWidgetPayload,
+  WIDGET_DATA_FILE,
+  WIDGET_PREFERENCES_FILE,
+} from '../widget/widget_payload';
 import { GetStartOfDay, GetDateArray } from '@utils';
 
 /**
@@ -191,9 +195,21 @@ export const SaveHealthData = async (data: HealthDataStore): Promise<void> => {
     );
     await storageAdapter.SetItem(STORAGE_KEYS.HEALTH_DATA, jsonData);
 
-    // Write the trimmed widget payload alongside the full store
-    const widgetJson = SerializeHealthData(BuildWidgetPayload(data));
-    await storageAdapter.SetItem(STORAGE_KEYS.WIDGET_DATA, widgetJson);
+    // Write the trimmed widget payload as a FILE in the App Group container.
+    // The widget never opens the shared UserDefaults suite: iOS loads the
+    // ENTIRE suite (including the full multi-year store above) into the
+    // reading process, which can blow the widget's ~30MB memory cap.
+    try {
+      if (await appGroupStorage.IsAvailable()) {
+        const widgetJson = SerializeHealthData(BuildWidgetPayload(data));
+        await appGroupStorage.SetFile(WIDGET_DATA_FILE, widgetJson);
+        // Drop the legacy widget key so the shared suite stays small
+        await appGroupStorage.RemoveItem(STORAGE_KEYS.WIDGET_DATA);
+      }
+    } catch (error) {
+      // Non-fatal: the app keeps working; widgets just won't refresh data
+      console.warn('Failed to write widget payload file:', error);
+    }
 
     // Verify data was saved (especially important for App Group storage)
     const saved = await storageAdapter.GetItem(STORAGE_KEYS.HEALTH_DATA);
@@ -350,6 +366,14 @@ export const SaveUserPreferences = async (
   try {
     const jsonData = JSON.stringify(preferences);
     await storageAdapter.SetItem(STORAGE_KEYS.USER_PREFERENCES, jsonData);
+    // Mirror preferences to the widget's file (see SaveHealthData for why)
+    try {
+      if (await appGroupStorage.IsAvailable()) {
+        await appGroupStorage.SetFile(WIDGET_PREFERENCES_FILE, jsonData);
+      }
+    } catch (error) {
+      console.warn('Failed to write widget preferences file:', error);
+    }
     // Update widgets when preferences change (affects which metrics are shown)
     await widgetUpdater.ReloadAllTimelines();
   } catch (error) {
@@ -483,6 +507,7 @@ export const ClearAllHealthData = async (): Promise<void> => {
   try {
     await storageAdapter.RemoveItem(STORAGE_KEYS.HEALTH_DATA);
     await storageAdapter.RemoveItem(STORAGE_KEYS.WIDGET_DATA);
+    await appGroupStorage.RemoveFile(WIDGET_DATA_FILE);
   } catch (error) {
     console.error('Error clearing health data:', error);
     throw new Error('Failed to clear health data');
@@ -609,6 +634,7 @@ const EnsureMinimumDays = (
 export const ClearUserPreferences = async (): Promise<void> => {
   try {
     await storageAdapter.RemoveItem(STORAGE_KEYS.USER_PREFERENCES);
+    await appGroupStorage.RemoveFile(WIDGET_PREFERENCES_FILE);
   } catch (error) {
     console.error('Error clearing user preferences:', error);
     throw new Error('Failed to clear user preferences');

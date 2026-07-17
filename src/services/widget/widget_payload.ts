@@ -9,6 +9,16 @@ import { GetDateRange } from '@utils';
 export const WIDGET_PAYLOAD_MAX_DAYS = 400;
 
 /**
+ * Files the widget reads from the App Group container.
+ * The widget must never open the shared UserDefaults suite — iOS hands the
+ * process the entire suite (including the full multi-year health store),
+ * which can blow the widget's ~30MB memory cap. Files are read individually.
+ * Keep these names in sync with ios/FitnessTrackerWidget/WidgetDataManager.swift.
+ */
+export const WIDGET_DATA_FILE = 'widget_data.json';
+export const WIDGET_PREFERENCES_FILE = 'widget_preferences.json';
+
+/**
  * Build the trimmed store the iOS widget reads from the App Group.
  *
  * The widget extension runs under a hard ~30MB memory cap (not enforced on
