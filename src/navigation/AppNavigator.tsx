@@ -12,6 +12,7 @@ import { SettingsScreen } from '@screens/settings';
 import { MetricDetailScreen } from '@screens/metric_detail';
 import { MetricConfigScreen } from '@screens/metric_detail/MetricConfigScreen';
 import { MetricType, ThemePreference } from '@types';
+import { TAB_PILL_HEIGHT } from '@constants';
 
 type RootStackParamList = {
   MainTabs: undefined;
@@ -49,7 +50,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
     Math.max(0, screenWidth - pillHorizontalMargin * 2)
   );
   const pillInset = Math.max(0, (screenWidth - pillWidth) / 2);
-  const pillHeight = 58;
+  const pillHeight = TAB_PILL_HEIGHT;
   const pillBottom = (Platform.OS === 'ios' ? insets.bottom : 0) + 10;
 
   return (
@@ -68,8 +69,8 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
           fontWeight: '600',
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
-          borderRadius: 23,
+          paddingVertical: 6,
+          borderRadius: 26,
           marginHorizontal: 8,
           marginVertical: 6,
         },
@@ -95,6 +96,7 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
             <LiquidGlassView
               borderRadius={pillHeight / 2}
               style={{ height: pillHeight }}
+              tintOpacity={0.92}
             />
           ) : undefined,
       }}>

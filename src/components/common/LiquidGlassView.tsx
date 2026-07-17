@@ -14,6 +14,11 @@ interface LiquidGlassViewProps {
    * the content underneath instead of taking layout space.
    */
   fadeEdgeHeight?: number;
+  /**
+   * Opacity of the tint layer over the blur. Higher values make the surface
+   * read more solid (defaults keep the airy glass look).
+   */
+  tintOpacity?: number;
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
 }
@@ -30,6 +35,7 @@ export const LiquidGlassView: React.FC<LiquidGlassViewProps> = ({
   borderRadius = 0,
   showBorder = true,
   fadeEdgeHeight = 0,
+  tintOpacity,
   style,
   children,
 }) => {
@@ -52,7 +58,7 @@ export const LiquidGlassView: React.FC<LiquidGlassViewProps> = ({
       : 'light';
   const glassFallbackColor = ToRgba(
     useModernIOSGlass ? theme.colors.cardBackground : theme.colors.background,
-    useModernIOSGlass ? 0.72 : 0.9
+    tintOpacity ?? (useModernIOSGlass ? 0.72 : 0.9)
   );
 
   return (

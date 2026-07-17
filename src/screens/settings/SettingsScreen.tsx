@@ -11,7 +11,7 @@ import {
 } from '@services/storage';
 import { SyncAllDataFromAllTime } from '@services/sync';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
-import { APP_VERSION } from '@constants';
+import { APP_VERSION, TAB_PILL_HEIGHT } from '@constants';
 import { AppButton, LoadingSpinner } from '@components/common';
 import { GetMetricDisplayName, useAppTheme } from '@utils';
 import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
@@ -283,7 +283,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={{ paddingBottom: 50 + insets.bottom + 16 }}>
+      contentContainerStyle={{
+        paddingBottom: TAB_PILL_HEIGHT + insets.bottom + 20,
+      }}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text
           h3
