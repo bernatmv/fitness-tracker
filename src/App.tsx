@@ -6,7 +6,11 @@ import {
   AppState,
   AppStateStatus,
 } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+} from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import './locales/i18n';
@@ -142,6 +146,23 @@ const App = () => {
   const statusBarStyle =
     currentTheme.mode === 'dark' ? 'light-content' : 'dark-content';
 
+  // Keep React Navigation's native layer in sync with the app theme so
+  // screen containers never flash their default (white) background during
+  // push/pop transitions in dark mode.
+  const navigationBaseTheme =
+    currentTheme.mode === 'dark' ? DarkTheme : DefaultTheme;
+  const navigationTheme = {
+    ...navigationBaseTheme,
+    colors: {
+      ...navigationBaseTheme.colors,
+      primary: currentTheme.colors.primary,
+      background: currentTheme.colors.background,
+      card: currentTheme.colors.background,
+      text: currentTheme.colors.text.primary,
+      border: currentTheme.colors.border,
+    },
+  };
+
   if (isLoading) {
     const loadingTheme = GetTheme(DEFAULT_THEME_PREFERENCE);
     return (
@@ -186,7 +207,7 @@ const App = () => {
             { backgroundColor: currentTheme.colors.background },
           ]}>
           <StatusBar barStyle={statusBarStyle} />
-          <NavigationContainer>
+          <NavigationContainer theme={navigationTheme}>
             <AppNavigator
               onThemePreferenceChange={HandleThemePreferenceChange}
             />
