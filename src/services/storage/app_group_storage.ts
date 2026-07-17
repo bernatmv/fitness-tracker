@@ -5,6 +5,9 @@ interface AppGroupStorageInterface {
   getItem(key: string): Promise<string | null>;
   removeItem(key: string): Promise<boolean>;
   getAllKeys(): Promise<string[]>;
+  setFile(fileName: string, content: string): Promise<boolean>;
+  getFile(fileName: string): Promise<string | null>;
+  removeFile(fileName: string): Promise<boolean>;
   isAvailable(): Promise<boolean>;
 }
 
@@ -108,6 +111,44 @@ class AppGroupStorageService {
     }
 
     return await this.storage.getAllKeys();
+  }
+
+  /**
+   * Write a file into the App Group container.
+   * Files are the widget-safe transport: reading a file does NOT load the
+   * whole shared UserDefaults suite into the widget process.
+   */
+  async SetFile(fileName: string, content: string): Promise<void> {
+    const isAvailable = await this.CheckAvailability();
+    if (!isAvailable || !this.storage) {
+      throw new Error('App Group storage is not available');
+    }
+
+    await this.storage.setFile(fileName, content);
+  }
+
+  /**
+   * Read a file from the App Group container
+   */
+  async GetFile(fileName: string): Promise<string | null> {
+    const isAvailable = await this.CheckAvailability();
+    if (!isAvailable || !this.storage) {
+      return null;
+    }
+
+    return await this.storage.getFile(fileName);
+  }
+
+  /**
+   * Remove a file from the App Group container
+   */
+  async RemoveFile(fileName: string): Promise<void> {
+    const isAvailable = await this.CheckAvailability();
+    if (!isAvailable || !this.storage) {
+      return;
+    }
+
+    await this.storage.removeFile(fileName);
   }
 
   /**

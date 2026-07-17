@@ -11,16 +11,19 @@ import SwiftUI
 @available(iOS 16.0, *)
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: ConfigurationAppIntent(), healthData: nil, preferences: nil)
+        WidgetDataManager.log.info("placeholder requested")
+        return SimpleEntry(date: Date(), configuration: ConfigurationAppIntent(), healthData: nil, preferences: nil)
     }
 
     func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
+        WidgetDataManager.log.info("snapshot requested")
         let healthData = WidgetDataManager.loadHealthData()
         let preferences = WidgetDataManager.loadUserPreferences()
         return SimpleEntry(date: Date(), configuration: configuration, healthData: healthData, preferences: preferences)
     }
-    
+
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
+        WidgetDataManager.log.info("timeline requested")
         var entries: [SimpleEntry] = []
 
         // Load data from App Group storage
@@ -66,6 +69,7 @@ struct Provider: AppIntentTimelineProvider {
         #if DEBUG
         print("FitnessTrackerWidget.Provider: Generated \(entries.count) timeline entries")
         #endif
+        WidgetDataManager.log.info("timeline built: \(entries.count) entries, data: \(healthData != nil), prefs: \(preferences != nil)")
         return Timeline(entries: entries, policy: .atEnd)
     }
 
