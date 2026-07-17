@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { ListItem, Switch, Text, Button, Icon } from '@rneui/themed';
+import { ListItem, Switch, Text, Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -12,7 +12,7 @@ import {
 import { SyncAllDataFromAllTime } from '@services/sync';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION } from '@constants';
-import { LoadingSpinner } from '@components/common';
+import { AppButton, LoadingSpinner } from '@components/common';
 import { GetMetricDisplayName, useAppTheme } from '@utils';
 import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
 
@@ -516,23 +516,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       <View style={styles.devSection}>
-        <Button
+        <AppButton
           title={t('settings.clear_all_data') || 'Clear All Health Data'}
           onPress={HandleClearAllData}
           loading={isClearingData}
           disabled={isClearingData}
-          buttonStyle={{ backgroundColor: theme.colors.error }}
-          titleStyle={styles.clearButtonTitle}
+          variant="destructive"
         />
       </View>
 
       {__DEV__ && (
         <View style={styles.devSection}>
-          <Button
+          <AppButton
             title="Clear User Preferences (Dev Only)"
             onPress={HandleClearPreferences}
-            buttonStyle={{ backgroundColor: theme.colors.error }}
-            titleStyle={styles.clearButtonTitle}
+            variant="destructive"
           />
         </View>
       )}
@@ -564,10 +562,5 @@ const styles = StyleSheet.create({
   devSection: {
     padding: 16,
     marginBottom: 24,
-  },
-  clearButtonTitle: {
-    // Intentionally white in both modes (light text on the error-red button);
-    // the theme has no "text on error" token.
-    color: '#FFFFFF',
   },
 });

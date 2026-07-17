@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Button, Text } from '@rneui/themed';
+import { Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@utils';
-import { MetricCard, LoadingSpinner, ErrorMessage } from '@components/common';
+import {
+  AppButton,
+  ErrorMessage,
+  LiquidGlassView,
+  LoadingSpinner,
+  MetricCard,
+} from '@components/common';
 import { LoadHealthData, LoadUserPreferences } from '@services/storage';
 import { SyncFromLastDataDate } from '@services/sync';
 import {
@@ -35,6 +41,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSyncText, setLastSyncText] = useState<string>('');
+  const [headerHeight, setHeaderHeight] = useState(insets.top + 76);
 
   const LoadData = useCallback(async () => {
     try {
@@ -121,21 +128,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Text h3 style={{ color: titleColor }}>
-          {t('home.title')}
-        </Text>
-        <Text style={[styles.lastSync, { color: secondaryTextColor }]}>
-          {lastSyncText && t('home.last_sync', { time: lastSyncText })}
-        </Text>
-      </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 50 + insets.bottom + 16 },
+          {
+            paddingTop: headerHeight + 8,
+            paddingBottom: 50 + insets.bottom + 16,
+          },
         ]}
+        scrollIndicatorInsets={{ top: headerHeight }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -170,7 +172,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
             <Text style={[styles.emptyText, { color: secondaryTextColor }]}>
               {t('home.no_data')}
             </Text>
-            <Button
+            <AppButton
               title={t('home.sync_now')}
               onPress={HandleSync}
               containerStyle={styles.syncButton}
@@ -178,6 +180,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Liquid-glass header the content scrolls under, with a soft fade edge */}
+      <View
+        style={styles.headerOverlay}
+        onLayout={event => {
+          const height = event.nativeEvent.layout.height;
+          if (Math.abs(height - headerHeight) > 1) {
+            setHeaderHeight(height);
+          }
+        }}>
+        <LiquidGlassView fadeEdgeHeight={24}>
+          <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+            <Text h3 style={{ color: titleColor }}>
+              {t('home.title')}
+            </Text>
+            <Text style={[styles.lastSync, { color: secondaryTextColor }]}>
+              {lastSyncText && t('home.last_sync', { time: lastSyncText })}
+            </Text>
+          </View>
+        </LiquidGlassView>
+      </View>
     </View>
   );
 };
@@ -186,9 +209,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
   header: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 12,
   },
   lastSync: {
     fontSize: 14,
@@ -198,8 +228,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingTop: 0,
+    paddingHorizontal: 16,
   },
   emptyState: {
     flex: 1,

@@ -5,9 +5,21 @@ import {
   DarkenColor,
   GetColorForValue,
   IsValidHexColor,
+  ToRgba,
 } from '../color_utils';
 
 describe('color_utils', () => {
+  describe('ToRgba', () => {
+    it('should convert hex + alpha to an rgba string', () => {
+      expect(ToRgba('#ffffff', 0.5)).toBe('rgba(255, 255, 255, 0.5)');
+      expect(ToRgba('0d1117', 0.72)).toBe('rgba(13, 17, 23, 0.72)');
+    });
+
+    it('should return the input unchanged for invalid hex', () => {
+      expect(ToRgba('not-a-color', 0.5)).toBe('not-a-color');
+    });
+  });
+
   describe('HexToRgb', () => {
     it('should convert hex to RGB correctly', () => {
       expect(HexToRgb('#ffffff')).toEqual({ r: 255, g: 255, b: 255 });

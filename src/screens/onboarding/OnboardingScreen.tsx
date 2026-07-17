@@ -12,7 +12,7 @@ import {
   DEFAULT_THEME_PREFERENCE,
 } from '@constants';
 import { UserPreferences } from '@types';
-import { LoadingSpinner } from '@components/common';
+import { AppButton, LoadingSpinner } from '@components/common';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -105,7 +105,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           <Text style={styles.description}>
             {t('onboarding.welcome_description')}
           </Text>
-          <Button
+          <AppButton
             title={t('common.continue')}
             onPress={() => setStep(1)}
             containerStyle={styles.buttonContainer}
@@ -135,7 +135,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             </Text>
           )}
 
-          <Button
+          <AppButton
             title={t('onboarding.permissions_button')}
             onPress={HandleGrantPermissions}
             containerStyle={styles.buttonContainer}
@@ -164,7 +164,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           <Text style={styles.description}>
             {t('onboarding.setup_complete_description')}
           </Text>
-          <Button
+          <AppButton
             title={t('common.done')}
             onPress={HandleComplete}
             containerStyle={styles.buttonContainer}
