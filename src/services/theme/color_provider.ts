@@ -1,5 +1,4 @@
 import { GetPaletteColorsById } from '@constants';
-import { MetricType } from '@types';
 
 /**
  * Get colors for a metric based on palette ID and theme mode

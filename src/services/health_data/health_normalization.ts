@@ -38,5 +38,3 @@ export const NormalizeDurationToMinutes = (
   const minutes = treatAsSeconds ? duration / MINUTES_PER_HOUR : duration;
   return Math.max(minutes, 0);
 };
-
-

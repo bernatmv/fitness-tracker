@@ -75,3 +75,7 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+
+# Local build logs and editor backups
+ios/*.log
+*.backup

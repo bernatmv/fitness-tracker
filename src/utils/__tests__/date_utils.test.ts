@@ -1,5 +1,6 @@
 import {
   FormatDate,
+  GetDateFnsLocale,
   GetStartOfDay,
   GetEndOfDay,
   GetDateRange,
@@ -71,6 +72,32 @@ describe('date_utils', () => {
 
       expect(formatted).toBeTruthy();
       expect(typeof formatted).toBe('string');
+    });
+
+    it('should format using the device locale (en by default in tests)', () => {
+      const date = new Date('2024-01-15T12:00:00');
+      const formatted = FormatDate(date);
+
+      expect(formatted).toBe('Jan 15, 2024');
+    });
+  });
+
+  describe('GetDateFnsLocale', () => {
+    it('should return the Spanish locale for "es"', () => {
+      expect(GetDateFnsLocale('es').code).toBe('es');
+    });
+
+    it('should return the English locale for "en"', () => {
+      expect(GetDateFnsLocale('en').code).toBe('en-US');
+    });
+
+    it('should fall back to English for unsupported languages', () => {
+      expect(GetDateFnsLocale('fr').code).toBe('en-US');
+    });
+
+    it('should default to the device locale when no code is given', () => {
+      // jest.setup mocks react-native-localize to en-US
+      expect(GetDateFnsLocale().code).toBe('en-US');
     });
   });
 });

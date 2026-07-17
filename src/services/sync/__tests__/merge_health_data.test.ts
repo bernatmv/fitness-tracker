@@ -1,5 +1,10 @@
 import { MergeDataPointsByDay, MergeExercisesById } from '../merge_health_data';
-import { ExerciseDetail, HealthDataPoint, MetricType, MetricUnit } from '@types';
+import {
+  ExerciseDetail,
+  HealthDataPoint,
+  MetricType,
+  MetricUnit,
+} from '@types';
 
 describe('merge_health_data', () => {
   describe('MergeDataPointsByDay', () => {
@@ -7,16 +12,21 @@ describe('merge_health_data', () => {
       date: new Date(isoDate),
       value,
       metricType: MetricType.STEPS,
-      unit: MetricUnit.COUNT,
+      unit: MetricUnit.STEPS,
     });
 
     it('preserves existing points not present in incoming', () => {
-      const existing = [dp('2024-01-01T12:00:00Z', 1), dp('2024-01-02T12:00:00Z', 2)];
+      const existing = [
+        dp('2024-01-01T12:00:00Z', 1),
+        dp('2024-01-02T12:00:00Z', 2),
+      ];
       const incoming = [dp('2024-01-02T12:00:00Z', 22)];
 
       const merged = MergeDataPointsByDay(existing, incoming);
 
-      expect(merged.map(x => [x.date.toISOString().split('T')[0], x.value])).toEqual([
+      expect(
+        merged.map(x => [x.date.toISOString().split('T')[0], x.value])
+      ).toEqual([
         ['2024-01-01', 1],
         ['2024-01-02', 22],
       ]);
@@ -47,17 +57,27 @@ describe('merge_health_data', () => {
       }) as unknown as ExerciseDetail;
 
     it('overwrites by id and preserves others', () => {
-      const existing = [ex('a', '2024-01-01T00:00:00Z'), ex('b', '2024-01-02T00:00:00Z')];
-      const incoming = [ex('b', '2024-01-03T00:00:00Z'), ex('c', '2024-01-04T00:00:00Z')];
+      const existing = [
+        ex('a', '2024-01-01T00:00:00Z'),
+        ex('b', '2024-01-02T00:00:00Z'),
+      ];
+      const incoming = [
+        ex('b', '2024-01-03T00:00:00Z'),
+        ex('c', '2024-01-04T00:00:00Z'),
+      ];
 
       const merged = MergeExercisesById(existing, incoming);
 
       const byId = new Map(merged.map(x => [x.id, x]));
-      expect(byId.get('a')?.date.toISOString().split('T')[0]).toBe('2024-01-01');
-      expect(byId.get('b')?.date.toISOString().split('T')[0]).toBe('2024-01-03');
-      expect(byId.get('c')?.date.toISOString().split('T')[0]).toBe('2024-01-04');
+      expect(byId.get('a')?.date.toISOString().split('T')[0]).toBe(
+        '2024-01-01'
+      );
+      expect(byId.get('b')?.date.toISOString().split('T')[0]).toBe(
+        '2024-01-03'
+      );
+      expect(byId.get('c')?.date.toISOString().split('T')[0]).toBe(
+        '2024-01-04'
+      );
     });
   });
 });
-
-

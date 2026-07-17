@@ -2,9 +2,9 @@ import { CalculateDaysToSyncFromLastDataDate } from '../recent_sync';
 
 describe('recent_sync', () => {
   it('defaults to maxDays when lastDataDate is missing', () => {
-    expect(CalculateDaysToSyncFromLastDataDate(undefined, 30, new Date('2024-01-10'))).toBe(
-      30
-    );
+    expect(
+      CalculateDaysToSyncFromLastDataDate(undefined, 30, new Date('2024-01-10'))
+    ).toBe(30);
   });
 
   it('includes lastDataDate day (partial day safe)', () => {
@@ -39,5 +39,3 @@ describe('recent_sync', () => {
     ).toBe(3);
   });
 });
-
-

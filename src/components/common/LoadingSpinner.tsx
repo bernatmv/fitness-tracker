@@ -24,7 +24,11 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     <View style={styles.container}>
       <ActivityIndicator
         size={size}
-        color={theme.mode === 'dark' ? '#FFFFFF' : theme.colors.primary}
+        color={
+          theme.mode === 'dark'
+            ? theme.colors.text.primary
+            : theme.colors.primary
+        }
       />
       {message && (
         <Text style={styles.message}>{message || t('common.loading')}</Text>

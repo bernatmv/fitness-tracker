@@ -248,15 +248,21 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
   }
 
   const backgroundColor = theme.colors.background;
-  const textColor = isDarkMode ? '#FFFFFF' : theme.colors.text.primary;
+  const textColor = theme.colors.text.primary;
   const secondaryTextColor = isDarkMode
-    ? '#8E8E93'
+    ? theme.colors.activityLabel
     : theme.colors.text.secondary;
-  const borderColor = isDarkMode ? '#38383A' : '#E5E5EA';
-  const inputBorderColor = isDarkMode ? '#48484A' : '#C6C6C8';
-  const inputBackgroundColor = isDarkMode ? '#1C1C1E' : '#FFFFFF';
-  const inputTextColor = isDarkMode ? '#FFFFFF' : '#000000';
-  const disabledInputBackgroundColor = isDarkMode ? '#2C2C2E' : '#F2F2F7';
+  const borderColor = isDarkMode ? theme.colors.border : theme.colors.divider;
+  const inputBorderColor = isDarkMode
+    ? theme.colors.text.disabled
+    : theme.colors.border;
+  const inputBackgroundColor = isDarkMode
+    ? theme.colors.surface
+    : theme.colors.background;
+  const inputTextColor = theme.colors.text.primary;
+  const disabledInputBackgroundColor = isDarkMode
+    ? theme.colors.statCardBackground
+    : theme.colors.surface;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
@@ -363,7 +369,7 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
             config.colorRange.paletteId,
             isDarkMode
           );
-          let thresholdColor =
+          const thresholdColor =
             index < colors.length ? colors[index] : colors[colors.length - 1];
 
           return (
@@ -433,9 +439,6 @@ export const MetricConfigScreen: React.FC<MetricConfigScreenProps> = ({
             containerStyle={styles.actionButton}
             buttonStyle={{
               backgroundColor: theme.colors.primary,
-            }}
-            titleStyle={{
-              color: isDarkMode ? '#FFFFFF' : '#FFFFFF',
             }}
           />
         )}

@@ -6,11 +6,15 @@ import {
   Text,
   LayoutChangeEvent,
 } from 'react-native';
-import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { HealthDataPoint, MetricUnit } from '@types';
 import { GetColorForValue, FormatNumber, useAppTheme } from '@utils';
-import { GetDateArray, GetStartOfDay } from '@utils';
+import {
+  FormatDate,
+  GetDateArray,
+  GetDateFnsLocale,
+  GetStartOfDay,
+} from '@utils';
 import { METRIC_UNITS } from '@constants';
 
 const MONTH_LABEL_WIDTH = 24;
@@ -51,15 +55,17 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   const { t } = useTranslation();
   const theme = useAppTheme();
 
-  const DAY_LABELS = useMemo(
-    () =>
-      new Map<number, string>([
-        [1, 'Mon'],
-        [3, 'Wed'],
-        [5, 'Fri'],
-      ]),
-    []
-  );
+  const DAY_LABELS = useMemo(() => {
+    const locale = GetDateFnsLocale();
+    return new Map<number, string>(
+      [1, 3, 5].map(day => [
+        day,
+        locale.localize.day(day as 0 | 1 | 2 | 3 | 4 | 5 | 6, {
+          width: 'abbreviated',
+        }),
+      ])
+    );
+  }, []);
   const labelColumnWidth = 32;
   const [containerWidth, setContainerWidth] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -511,7 +517,7 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
   };
 
   const formatSelectedDate = (date: Date): string => {
-    return format(date, 'MMM do, yyyy');
+    return FormatDate(date);
   };
 
   return (
@@ -715,7 +721,10 @@ export const ActivityWall: React.FC<ActivityWallProps> = ({
               { color: theme.colors.activityLabel },
             ]}>
             {selectedDate && selectedData
-              ? `${formatValue(selectedData.value, selectedData.unit)} on ${formatSelectedDate(selectedDate)}`
+              ? t('metric_detail.value_on_date', {
+                  value: formatValue(selectedData.value, selectedData.unit),
+                  date: formatSelectedDate(selectedDate),
+                })
               : showDescription
                 ? t('metric_detail.select_cell_hint')
                 : (() => {

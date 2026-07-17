@@ -24,9 +24,5 @@ module.exports = {
     '!src/**/*.test.{ts,tsx}',
     '!src/**/__tests__/**',
   ],
-  testMatch: [
-    '**/__tests__/**/*.test.(ts|tsx|js)',
-    '**/*.test.(ts|tsx|js)',
-  ],
+  testMatch: ['**/__tests__/**/*.test.(ts|tsx|js)', '**/*.test.(ts|tsx|js)'],
 };
-

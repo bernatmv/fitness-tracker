@@ -4,14 +4,14 @@ import { Button, Text, Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useAppTheme } from '@utils';
 import { RequestHealthPermissions } from '@services/health_data';
-import { SaveUserPreferences, LoadUserPreferences } from '@services/storage';
+import { SaveUserPreferences } from '@services/storage';
 import { SyncAllDataFromAllTime } from '@services/sync';
 import {
   DEFAULT_METRIC_CONFIGS,
   DEFAULT_SYNC_CONFIG,
   DEFAULT_THEME_PREFERENCE,
 } from '@constants';
-import { MetricType, UserPreferences } from '@types';
+import { UserPreferences } from '@types';
 import { LoadingSpinner } from '@components/common';
 
 interface OnboardingScreenProps {

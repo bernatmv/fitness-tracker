@@ -35,31 +35,5 @@ class WidgetUpdater: NSObject, RCTBridgeModule {
     }
   }
   
-  /**
-   * Reload timelines for a specific widget kind
-   */
-  @objc
-  func reloadTimelines(_ kind: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    if #available(iOS 14.0, *) {
-      WidgetCenter.shared.reloadTimelines(ofKind: kind)
-      resolver(true)
-    } else {
-      rejecter("UNSUPPORTED", "Widgets require iOS 14.0 or later", nil)
-    }
-  }
-  
-  /**
-   * Get available widget kinds
-   */
-  @objc
-  func getAvailableWidgetKinds(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-    if #available(iOS 14.0, *) {
-      // WidgetCenter doesn't provide a direct way to get all widget kinds
-      // We'll return the known widget kind for this app
-      resolver(["FitnessTrackerWidget"])
-    } else {
-      rejecter("UNSUPPORTED", "Widgets require iOS 14.0 or later", nil)
-    }
-  }
 }
 

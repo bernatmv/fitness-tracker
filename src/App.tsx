@@ -19,7 +19,8 @@ import {
   LoadHealthData,
 } from './services/storage';
 import { MigrateToAppGroup } from './services/storage/migrate_to_app_group';
-import { GetTheme, DEFAULT_THEME_PREFERENCE } from './utils';
+import { GetTheme } from './utils';
+import { DEFAULT_THEME_PREFERENCE } from './constants';
 import { SyncAllDataFromAllTime, SyncOnAppActive } from './services/sync';
 import type { ThemePreference } from './types';
 

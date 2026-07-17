@@ -19,7 +19,7 @@ jest.mock('react-native-localize', () => ({
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     // Keep it simple: for tests, return keys as-is.
-    t: (key) => key,
+    t: key => key,
     i18n: {
       language: 'en',
       changeLanguage: () => Promise.resolve(),
@@ -35,5 +35,3 @@ jest.mock('@rneui/themed', () => {
     useTheme: () => ({ theme: LIGHT_THEME }),
   };
 });
-
-

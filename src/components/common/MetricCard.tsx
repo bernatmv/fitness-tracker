@@ -4,7 +4,7 @@ import { Card, Text, Icon } from '@rneui/themed';
 import { HealthDataPoint, MetricConfig } from '@types';
 import { ActivityWall } from '../activity_wall';
 import { useTranslation } from 'react-i18next';
-import { FormatNumber, useAppTheme } from '@utils';
+import { FormatNumber, GetMetricDisplayName, useAppTheme } from '@utils';
 import { METRIC_UNITS } from '@constants';
 import { GetColorsForMetricConfig } from '@services/theme';
 
@@ -83,7 +83,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <Card containerStyle={[styles.card, { backgroundColor, borderColor }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: primaryTextColor }]}>
-          {config.displayName}
+          {GetMetricDisplayName(config, t)}
         </Text>
         <View style={styles.headerRight}>
           <Text style={[styles.value, { color: primaryTextColor }]}>
