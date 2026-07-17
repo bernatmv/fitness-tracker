@@ -19,6 +19,12 @@ interface LiquidGlassViewProps {
    * read more solid (defaults keep the airy glass look).
    */
   tintOpacity?: number;
+  /**
+   * Tint color override. Defaults to a background-matched tint; pass an
+   * elevated surface color to make the glass visibly distinct from the
+   * content behind it.
+   */
+  tintColor?: string;
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
 }
@@ -36,6 +42,7 @@ export const LiquidGlassView: React.FC<LiquidGlassViewProps> = ({
   showBorder = true,
   fadeEdgeHeight = 0,
   tintOpacity,
+  tintColor,
   style,
   children,
 }) => {
@@ -57,7 +64,10 @@ export const LiquidGlassView: React.FC<LiquidGlassViewProps> = ({
       ? 'dark'
       : 'light';
   const glassFallbackColor = ToRgba(
-    useModernIOSGlass ? theme.colors.cardBackground : theme.colors.background,
+    tintColor ??
+      (useModernIOSGlass
+        ? theme.colors.cardBackground
+        : theme.colors.background),
     tintOpacity ?? (useModernIOSGlass ? 0.72 : 0.9)
   );
 

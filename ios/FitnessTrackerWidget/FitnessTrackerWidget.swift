@@ -59,19 +59,26 @@ struct Provider: AppIntentTimelineProvider {
         print("FitnessTrackerWidget.Provider: Selected metric type: \(selectedMetric)")
         #endif
 
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
+        // Single entry: the data only changes when the app syncs, and the app
+        // already reloads timelines on every save. Multiple hourly entries
+        // multiply WidgetKit's view-archival work (each entry's full activity
+        // wall gets rendered and archived), which risks blowing the widget's
+        // render/memory budget for zero benefit.
         let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, configuration: configuration, healthData: healthData, preferences: preferences)
-            entries.append(entry)
-        }
+        entries.append(
+            SimpleEntry(
+                date: currentDate,
+                configuration: configuration,
+                healthData: healthData,
+                preferences: preferences
+            )
+        )
 
-        #if DEBUG
-        print("FitnessTrackerWidget.Provider: Generated \(entries.count) timeline entries")
-        #endif
         WidgetDataManager.log.info("timeline built: \(entries.count) entries, data: \(healthData != nil), prefs: \(preferences != nil)")
-        return Timeline(entries: entries, policy: .atEnd)
+        // Refresh hourly as a self-healing fallback (app syncs trigger
+        // immediate reloads anyway).
+        let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate) ?? currentDate.addingTimeInterval(3600)
+        return Timeline(entries: entries, policy: .after(nextRefresh))
     }
 
 //    func relevances() async -> WidgetRelevances<ConfigurationAppIntent> {
