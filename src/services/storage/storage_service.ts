@@ -203,6 +203,16 @@ export const SaveHealthData = async (data: HealthDataStore): Promise<void> => {
       if (await appGroupStorage.IsAvailable()) {
         const widgetJson = SerializeHealthData(BuildWidgetPayload(data));
         await appGroupStorage.SetFile(WIDGET_DATA_FILE, widgetJson);
+        // Mirror preferences too: fresh installs/updates may never call
+        // SaveUserPreferences, so syncing must guarantee the widget's
+        // preferences file exists (the widget shows "No Preferences"
+        // without it).
+        const prefsJson = await appGroupStorage.GetItem(
+          STORAGE_KEYS.USER_PREFERENCES
+        );
+        if (prefsJson) {
+          await appGroupStorage.SetFile(WIDGET_PREFERENCES_FILE, prefsJson);
+        }
         // Drop the legacy widget key so the shared suite stays small
         await appGroupStorage.RemoveItem(STORAGE_KEYS.WIDGET_DATA);
       }

@@ -71,6 +71,52 @@ describe('Storage Service with App Group', () => {
       );
     });
 
+    it('should mirror the widget payload AND preferences files on every save', async () => {
+      const { storageService, appGroupStorage } = LoadModules();
+      const prefsJson = '{"language":"en","theme":"light"}';
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
+      (appGroupStorage.SetItem as jest.Mock).mockResolvedValue(undefined);
+      (appGroupStorage.GetItem as jest.Mock).mockImplementation((key: string) =>
+        Promise.resolve(
+          key === '@fitness_tracker:user_preferences' ? prefsJson : null
+        )
+      );
+      (appGroupStorage.SetFile as jest.Mock).mockResolvedValue(undefined);
+
+      await storageService.SaveHealthData(mockHealthData);
+
+      expect(appGroupStorage.SetFile).toHaveBeenCalledWith(
+        'widget_data.json',
+        expect.stringContaining('"lastFullSync"')
+      );
+      // Preferences must be mirrored on sync too: fresh installs/updates
+      // never call SaveUserPreferences, so syncing is the only reliable
+      // moment to guarantee the widget's preferences file exists.
+      expect(appGroupStorage.SetFile).toHaveBeenCalledWith(
+        'widget_preferences.json',
+        prefsJson
+      );
+    });
+
+    it('should not write a preferences file when none are stored yet', async () => {
+      const { storageService, appGroupStorage } = LoadModules();
+      (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(true);
+      (appGroupStorage.SetItem as jest.Mock).mockResolvedValue(undefined);
+      (appGroupStorage.GetItem as jest.Mock).mockResolvedValue(null);
+      (appGroupStorage.SetFile as jest.Mock).mockResolvedValue(undefined);
+
+      await storageService.SaveHealthData(mockHealthData);
+
+      expect(appGroupStorage.SetFile).toHaveBeenCalledWith(
+        'widget_data.json',
+        expect.stringContaining('"lastFullSync"')
+      );
+      expect(appGroupStorage.SetFile).not.toHaveBeenCalledWith(
+        'widget_preferences.json',
+        expect.anything()
+      );
+    });
+
     it('should fall back to AsyncStorage when App Group is not available', async () => {
       const { AsyncStorage, storageService, appGroupStorage } = LoadModules();
       (appGroupStorage.IsAvailable as jest.Mock).mockResolvedValue(false);
