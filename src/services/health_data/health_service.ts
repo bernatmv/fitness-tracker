@@ -8,6 +8,7 @@ import { METRIC_UNITS } from '@constants';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import {
   DurationMinutesFromIsoRange,
+  GetFetchUnitForMetric,
   NormalizeDurationToMinutes,
 } from './health_normalization';
 
@@ -38,6 +39,7 @@ type HealthFetchOptions = {
   startDate: string;
   endDate: string;
   period?: number;
+  unit?: string;
 };
 
 type IOSFetchFunction = (
@@ -129,10 +131,15 @@ const FetchIOSMetricData = async (
   endDate: Date
 ): Promise<MetricFetchResult> => {
   return new Promise((resolve, reject) => {
+    const fetchUnit = GetFetchUnitForMetric(metricType);
     const options: HealthFetchOptions = {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       period: 1440, // Daily aggregation (minutes in a day)
+      // Duration metrics must request minutes explicitly: the native
+      // default is seconds, and small daily values slip past the
+      // seconds-vs-minutes heuristic (e.g. 20 min = 1200 s <= 1440).
+      ...(fetchUnit ? { unit: fetchUnit } : {}),
     };
 
     const fetchFunction = GetIOSFetchFunction(

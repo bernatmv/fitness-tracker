@@ -1,3 +1,5 @@
+import { MetricType } from '@types';
+
 /**
  * Small pure helpers for normalizing HealthKit duration-like values.
  *
@@ -37,4 +39,27 @@ export const NormalizeDurationToMinutes = (
   const treatAsSeconds = duration > maxPlausibleMinutes;
   const minutes = treatAsSeconds ? duration / MINUTES_PER_HOUR : duration;
   return Math.max(minutes, 0);
+};
+
+/**
+ * Unit to request from HealthKit for a metric, or undefined to use the
+ * native default.
+ *
+ * react-native-health's getAppleExerciseTime and getAppleStandTime default
+ * to SECONDS when no unit is passed. The seconds-vs-minutes heuristic in
+ * NormalizeDurationToMinutes can't catch small values (a 20-minute day is
+ * 1200 seconds, which looks like a plausible minute count), so duration
+ * metrics must request minutes explicitly. The heuristic stays as a safety
+ * net only.
+ */
+export const GetFetchUnitForMetric = (
+  metricType: MetricType
+): 'minute' | undefined => {
+  switch (metricType) {
+    case MetricType.EXERCISE_TIME:
+    case MetricType.STANDING_TIME:
+      return 'minute';
+    default:
+      return undefined;
+  }
 };

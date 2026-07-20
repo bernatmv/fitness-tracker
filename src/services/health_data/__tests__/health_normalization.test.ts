@@ -1,6 +1,8 @@
+import { MetricType } from '@types';
 import {
   DurationMinutesFromIsoRange,
   NormalizeDurationToMinutes,
+  GetFetchUnitForMetric,
 } from '../health_normalization';
 
 describe('health_normalization', () => {
@@ -47,6 +49,20 @@ describe('health_normalization', () => {
     it('does not misclassify large-but-plausible minute values when max is higher', () => {
       // 12 hours in minutes
       expect(NormalizeDurationToMinutes(720, 24 * 60)).toBe(720);
+    });
+  });
+
+  describe('GetFetchUnitForMetric', () => {
+    it('requests minutes for duration metrics (native default is seconds)', () => {
+      expect(GetFetchUnitForMetric(MetricType.EXERCISE_TIME)).toBe('minute');
+      expect(GetFetchUnitForMetric(MetricType.STANDING_TIME)).toBe('minute');
+    });
+
+    it('leaves non-duration metrics on their native default units', () => {
+      expect(GetFetchUnitForMetric(MetricType.STEPS)).toBeUndefined();
+      expect(GetFetchUnitForMetric(MetricType.CALORIES_BURNED)).toBeUndefined();
+      expect(GetFetchUnitForMetric(MetricType.FLOORS_CLIMBED)).toBeUndefined();
+      expect(GetFetchUnitForMetric(MetricType.SLEEP_HOURS)).toBeUndefined();
     });
   });
 });

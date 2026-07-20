@@ -301,6 +301,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Text>
         <ListItem
           onPress={HandleSyncAllData}
+          containerStyle={styles.row}
           bottomDivider
           disabled={isSyncingAll}>
           <ListItem.Content>
@@ -334,7 +335,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Text>
         {preferences &&
           Object.values(preferences.metricConfigs).map(config => (
-            <ListItem key={config.metricType} bottomDivider>
+            <ListItem
+              key={config.metricType}
+              onPress={() => HandleToggleMetric(config.metricType)}
+              containerStyle={styles.row}
+              bottomDivider>
               <ListItem.Content>
                 <ListItem.Title style={{ color: theme.colors.text.primary }}>
                   {GetMetricDisplayName(config, t)}
@@ -355,6 +360,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Text>
         <ListItem
           onPress={() => HandleThemePreferenceChange('system')}
+          containerStyle={styles.row}
           bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
@@ -368,6 +374,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </ListItem>
         <ListItem
           onPress={() => HandleThemePreferenceChange('light')}
+          containerStyle={styles.row}
           bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
@@ -381,6 +388,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </ListItem>
         <ListItem
           onPress={() => HandleThemePreferenceChange('dark')}
+          containerStyle={styles.row}
           bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
@@ -392,7 +400,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             onPress={() => HandleThemePreferenceChange('dark')}
           />
         </ListItem>
-        <ListItem bottomDivider>
+        <ListItem
+          onPress={HandleToggleMultiRowLayout}
+          containerStyle={styles.row}
+          bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               {t('settings.multi_row_layout')}
@@ -413,7 +424,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.language')}
         </Text>
-        <ListItem onPress={() => HandleChangeLanguage('en')} bottomDivider>
+        <ListItem
+          onPress={() => HandleChangeLanguage('en')}
+          containerStyle={styles.row}
+          bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               English
@@ -421,7 +435,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </ListItem.Content>
           <ListItem.CheckBox checked={preferences?.language === 'en'} />
         </ListItem>
-        <ListItem onPress={() => HandleChangeLanguage('es')} bottomDivider>
+        <ListItem
+          onPress={() => HandleChangeLanguage('es')}
+          containerStyle={styles.row}
+          bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               Español
@@ -436,7 +453,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.sync')}
         </Text>
-        <ListItem bottomDivider>
+        <ListItem containerStyle={styles.row} bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               {t('settings.sync_strategy')}
@@ -447,7 +464,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </ListItem.Content>
         </ListItem>
         {preferences?.syncConfig.periodicIntervalMinutes && (
-          <ListItem bottomDivider>
+          <ListItem containerStyle={styles.row} bottomDivider>
             <ListItem.Content>
               <ListItem.Title style={{ color: theme.colors.text.primary }}>
                 {t('settings.sync_interval')}
@@ -467,7 +484,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.about')}
         </Text>
-        <ListItem bottomDivider>
+        <ListItem containerStyle={styles.row} bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               {t('settings.version', { version: APP_VERSION })}
@@ -481,7 +498,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.widgets') || 'Widgets'}
         </Text>
-        <ListItem onPress={HandleWidgetDiagnostics} bottomDivider>
+        <ListItem
+          onPress={HandleWidgetDiagnostics}
+          containerStyle={styles.row}
+          bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               {t('settings.widgets_diagnostics') || 'Widget Diagnostics'}
@@ -498,7 +518,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             size={24}
           />
         </ListItem>
-        <ListItem onPress={HandleWidgetRefresh} bottomDivider>
+        <ListItem
+          onPress={HandleWidgetRefresh}
+          containerStyle={styles.row}
+          bottomDivider>
           <ListItem.Content>
             <ListItem.Title style={{ color: theme.colors.text.primary }}>
               {t('settings.widgets_refresh') || 'Refresh Widgets'}
@@ -564,5 +587,10 @@ const styles = StyleSheet.create({
   devSection: {
     padding: 16,
     marginBottom: 24,
+  },
+  row: {
+    paddingLeft: 16,
+    // Extra breathing room so switches/checkboxes don't hug the edge
+    paddingRight: 24,
   },
 });
