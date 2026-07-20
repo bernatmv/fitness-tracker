@@ -63,3 +63,15 @@ export const GetFetchUnitForMetric = (
       return undefined;
   }
 };
+
+/**
+ * Statistics bucket size (minutes) to request from HealthKit per metric.
+ *
+ * Standing time uses HOURLY buckets because the app reports Apple-ring-style
+ * "stand hours": the number of distinct clock hours containing at least one
+ * minute of standing. Summing literal stood minutes (daily bucket) reads far
+ * lower than the ring users compare against.
+ */
+export const GetFetchPeriodForMetric = (metricType: MetricType): number => {
+  return metricType === MetricType.STANDING_TIME ? 60 : 1440;
+};
