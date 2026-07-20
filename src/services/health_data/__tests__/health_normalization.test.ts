@@ -3,6 +3,7 @@ import {
   DurationMinutesFromIsoRange,
   NormalizeDurationToMinutes,
   GetFetchUnitForMetric,
+  GetFetchPeriodForMetric,
 } from '../health_normalization';
 
 describe('health_normalization', () => {
@@ -49,6 +50,18 @@ describe('health_normalization', () => {
     it('does not misclassify large-but-plausible minute values when max is higher', () => {
       // 12 hours in minutes
       expect(NormalizeDurationToMinutes(720, 24 * 60)).toBe(720);
+    });
+  });
+
+  describe('GetFetchPeriodForMetric', () => {
+    it('fetches standing time in hourly buckets (stand-hours semantics)', () => {
+      expect(GetFetchPeriodForMetric(MetricType.STANDING_TIME)).toBe(60);
+    });
+
+    it('fetches everything else as daily aggregates', () => {
+      expect(GetFetchPeriodForMetric(MetricType.STEPS)).toBe(1440);
+      expect(GetFetchPeriodForMetric(MetricType.EXERCISE_TIME)).toBe(1440);
+      expect(GetFetchPeriodForMetric(MetricType.SLEEP_HOURS)).toBe(1440);
     });
   });
 

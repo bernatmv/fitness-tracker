@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Platform,
+} from 'react-native';
 import { Text } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -134,10 +140,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: headerHeight + 8,
+            // iOS clears the glass header with a real contentInset (below):
+            // RefreshControl misbehaves over a large paddingTop, leaving a
+            // phantom gap after refreshing. Android keeps the padding.
+            paddingTop: Platform.OS === 'ios' ? 0 : headerHeight + 8,
             paddingBottom: TAB_PILL_HEIGHT + insets.bottom + 20,
           },
         ]}
+        contentInset={
+          Platform.OS === 'ios' ? { top: headerHeight + 8 } : undefined
+        }
+        contentOffset={
+          Platform.OS === 'ios' ? { x: 0, y: -(headerHeight + 8) } : undefined
+        }
+        automaticallyAdjustContentInsets={false}
         scrollIndicatorInsets={{ top: headerHeight }}
         refreshControl={
           <RefreshControl

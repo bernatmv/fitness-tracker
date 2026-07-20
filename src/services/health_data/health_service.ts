@@ -8,6 +8,7 @@ import { METRIC_UNITS } from '@constants';
 import { GetDateArray, GetStartOfDay } from '@utils';
 import {
   DurationMinutesFromIsoRange,
+  GetFetchPeriodForMetric,
   GetFetchUnitForMetric,
   NormalizeDurationToMinutes,
 } from './health_normalization';
@@ -135,7 +136,9 @@ const FetchIOSMetricData = async (
     const options: HealthFetchOptions = {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      period: 1440, // Daily aggregation (minutes in a day)
+      // Daily aggregation for most metrics; hourly buckets for standing
+      // time so we can count Apple-ring-style "stand hours".
+      period: GetFetchPeriodForMetric(metricType),
       // Duration metrics must request minutes explicitly: the native
       // default is seconds, and small daily values slip past the
       // seconds-vs-minutes heuristic (e.g. 20 min = 1200 s <= 1440).
@@ -166,8 +169,6 @@ const FetchIOSMetricData = async (
       }
 
       const dailyTotals = new Map<string, number>();
-      // For standing time, we need to sum minutes first, then convert to hours
-      const dailyTotalsMinutes = new Map<string, number>();
       const daysWithSamples = new Set<string>();
 
       safeResults.forEach(result => {
@@ -194,13 +195,16 @@ const FetchIOSMetricData = async (
           dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
           daysWithSamples.add(startDay);
         } else if (metricType === MetricType.STANDING_TIME) {
-          // Sum minutes first (don't convert yet)
-          // HealthKit may return stand time in seconds in some mappings; normalize to minutes.
-          value = NormalizeDurationToMinutes(value, 24 * 60);
-          dailyTotalsMinutes.set(
-            startDay,
-            (dailyTotalsMinutes.get(startDay) || 0) + value
-          );
+          // Each result is an HOURLY bucket (period 60). Count Apple-ring
+          // style "stand hours": a clock hour counts when it contains any
+          // standing at all.
+          value = NormalizeDurationToMinutes(value, 60);
+          if (value > 0) {
+            dailyTotals.set(
+              startDay,
+              Math.min((dailyTotals.get(startDay) || 0) + 1, 24)
+            );
+          }
           daysWithSamples.add(startDay);
         } else if (metricType === MetricType.EXERCISE_TIME) {
           // HealthKit may return exercise time in seconds; normalize to minutes.
@@ -216,14 +220,6 @@ const FetchIOSMetricData = async (
           daysWithSamples.add(startDay);
         }
       });
-
-      // Convert standing time from minutes to hours after summing
-      if (metricType === MetricType.STANDING_TIME) {
-        dailyTotalsMinutes.forEach((totalMinutes, day) => {
-          const hours = totalMinutes / 60;
-          dailyTotals.set(day, Math.round(hours));
-        });
-      }
 
       const allDates = GetDateArray(
         GetStartOfDay(startDate),
