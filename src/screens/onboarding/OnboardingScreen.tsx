@@ -10,6 +10,7 @@ import {
   DEFAULT_METRIC_CONFIGS,
   DEFAULT_SYNC_CONFIG,
   DEFAULT_THEME_PREFERENCE,
+  SYNC_YEARS,
 } from '@constants';
 import { UserPreferences } from '@types';
 import { AppButton, LoadingSpinner } from '@components/common';
@@ -55,10 +56,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
         await SaveUserPreferences(preferences);
 
-        // Trigger initial sync of all health data
+        // Trigger initial sync, capped at SYNC_YEARS.INITIAL so onboarding
+        // stays fast; deeper history is available on demand from Settings
         setIsSyncing(true);
         try {
-          await SyncAllDataFromAllTime();
+          await SyncAllDataFromAllTime(SYNC_YEARS.INITIAL);
         } catch (syncError) {
           console.error('Error syncing initial health data:', syncError);
           // Don't block onboarding completion if sync fails

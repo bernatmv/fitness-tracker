@@ -11,7 +11,7 @@ import {
 } from '@services/storage';
 import { SyncAllDataFromAllTime } from '@services/sync';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
-import { APP_VERSION, TAB_PILL_HEIGHT } from '@constants';
+import { APP_VERSION, SYNC_YEARS, TAB_PILL_HEIGHT } from '@constants';
 import { AppButton, LoadingSpinner } from '@components/common';
 import { GetMetricDisplayName, useAppTheme } from '@utils';
 import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
@@ -19,6 +19,17 @@ import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
 interface SettingsScreenProps {
   onThemePreferenceChange?: (preference: ThemePreference) => void;
 }
+
+const SYNC_YEAR_OPTIONS = [
+  {
+    years: SYNC_YEARS.RECENT,
+    descriptionKey: 'settings.sync_recent_years_description',
+  },
+  {
+    years: SYNC_YEARS.FULL,
+    descriptionKey: 'settings.sync_full_years_description',
+  },
+] as const;
 
 /**
  * SettingsScreen Component
@@ -32,7 +43,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const insets = useSafeAreaInsets();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [syncingYears, setSyncingYears] = useState<number | null>(null);
   const [isClearingData, setIsClearingData] = useState(false);
 
   useEffect(() => {
@@ -116,36 +127,35 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     await SaveUserPreferences(updatedPreferences);
   };
 
-  const HandleSyncAllData = async () => {
+  const HandleSyncYears = async (years: number) => {
     Alert.alert(
-      t('settings.sync_all_data_title') || 'Sync All Health Data',
-      t('settings.sync_all_data_message') ||
-        'This will import all available health data from all time. Existing data for each day will be overwritten. This may take a while.',
+      t('settings.sync_years_title', { years }),
+      t('settings.sync_years_message', { years }),
       [
         {
           text: t('common.cancel') || 'Cancel',
           style: 'cancel',
         },
         {
-          text: t('settings.sync_all_data') || 'Sync All',
+          text: t('settings.sync_confirm') || 'Sync',
           onPress: async () => {
             try {
-              setIsSyncingAll(true);
-              await SyncAllDataFromAllTime();
+              setSyncingYears(years);
+              await SyncAllDataFromAllTime(years);
               Alert.alert(
                 t('common.success') || 'Success',
-                t('settings.sync_all_data_success') ||
-                  'All health data has been synced successfully'
+                t('settings.sync_years_success') ||
+                  'Your health data has been synced successfully'
               );
             } catch (error) {
-              console.error('Error syncing all data:', error);
+              console.error('Error syncing health data:', error);
               Alert.alert(
                 t('common.error') || 'Error',
-                t('settings.sync_all_data_error') ||
+                t('settings.sync_years_error') ||
                   'Failed to sync health data. Please check your permissions.'
               );
             } finally {
-              setIsSyncingAll(false);
+              setSyncingYears(null);
             }
           },
         },
@@ -299,33 +309,35 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.data') || 'Data'}
         </Text>
-        <ListItem
-          onPress={HandleSyncAllData}
-          containerStyle={styles.row}
-          bottomDivider
-          disabled={isSyncingAll}>
-          <ListItem.Content>
-            <ListItem.Title style={{ color: theme.colors.text.primary }}>
-              {t('settings.sync_all_data') || 'Sync All Health Data'}
-            </ListItem.Title>
-            <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
-              {t('settings.sync_all_data_description') ||
-                'Import all available health data from all time'}
-            </ListItem.Subtitle>
-          </ListItem.Content>
-          {isSyncingAll ? (
-            <View style={{ marginRight: 8 }}>
-              <LoadingSpinner />
-            </View>
-          ) : (
-            <Icon
-              name="refresh"
-              type="material"
-              color={theme.colors.link}
-              size={24}
-            />
-          )}
-        </ListItem>
+        {SYNC_YEAR_OPTIONS.map(option => (
+          <ListItem
+            key={option.years}
+            onPress={() => HandleSyncYears(option.years)}
+            containerStyle={styles.row}
+            bottomDivider
+            disabled={syncingYears !== null}>
+            <ListItem.Content>
+              <ListItem.Title style={{ color: theme.colors.text.primary }}>
+                {t('settings.sync_years', { years: option.years })}
+              </ListItem.Title>
+              <ListItem.Subtitle style={{ color: theme.colors.text.secondary }}>
+                {t(option.descriptionKey)}
+              </ListItem.Subtitle>
+            </ListItem.Content>
+            {syncingYears === option.years ? (
+              <View style={{ marginRight: 8 }}>
+                <LoadingSpinner />
+              </View>
+            ) : (
+              <Icon
+                name="refresh"
+                type="material"
+                color={theme.colors.link}
+                size={24}
+              />
+            )}
+          </ListItem>
+        ))}
       </View>
 
       <View style={styles.section}>

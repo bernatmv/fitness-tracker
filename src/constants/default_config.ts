@@ -90,6 +90,17 @@ export const DEFAULT_SYNC_CONFIG = {
 };
 
 /**
+ * How many years back each history sync reaches.
+ * INITIAL caps the automatic first-launch sync so a fresh install stays
+ * fast; deeper history is available on demand from Settings.
+ */
+export const SYNC_YEARS = {
+  INITIAL: 2,
+  RECENT: 5,
+  FULL: 10,
+} as const;
+
+/**
  * App version
  */
 export const APP_VERSION = '1.0.0';

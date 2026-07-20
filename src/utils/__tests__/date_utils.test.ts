@@ -5,6 +5,7 @@ import {
   GetEndOfDay,
   GetDateRange,
   GetDateArray,
+  GetDateYearsAgo,
 } from '../date_utils';
 
 describe('date_utils', () => {
@@ -17,6 +18,30 @@ describe('date_utils', () => {
       expect(start.getMinutes()).toBe(0);
       expect(start.getSeconds()).toBe(0);
       expect(start.getMilliseconds()).toBe(0);
+    });
+  });
+
+  describe('GetDateYearsAgo', () => {
+    it('should return the same calendar date N years earlier', () => {
+      const from = new Date('2026-07-21T10:00:00');
+      const result = GetDateYearsAgo(5, from);
+
+      expect(result.getFullYear()).toBe(2021);
+      expect(result.getMonth()).toBe(from.getMonth());
+      expect(result.getDate()).toBe(from.getDate());
+    });
+
+    it('should not mutate the input date', () => {
+      const from = new Date('2026-07-21T10:00:00');
+      GetDateYearsAgo(10, from);
+
+      expect(from.getFullYear()).toBe(2026);
+    });
+
+    it('should default to now when no reference date is given', () => {
+      const result = GetDateYearsAgo(2);
+
+      expect(result.getFullYear()).toBe(new Date().getFullYear() - 2);
     });
   });
 

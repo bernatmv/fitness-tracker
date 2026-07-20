@@ -24,7 +24,7 @@ import {
 } from './services/storage';
 import { MigrateToAppGroup } from './services/storage/migrate_to_app_group';
 import { GetTheme } from './utils';
-import { DEFAULT_THEME_PREFERENCE } from './constants';
+import { DEFAULT_THEME_PREFERENCE, SYNC_YEARS } from './constants';
 import { SyncAllDataFromAllTime, SyncOnAppActive } from './services/sync';
 import type { ThemePreference } from './types';
 
@@ -124,9 +124,11 @@ const App = () => {
       if (preferences?.permissionsGranted) {
         const healthData = await LoadHealthData();
         // If no health data exists or last sync is very old, trigger initial sync
+        // capped at SYNC_YEARS.INITIAL so the first launch stays fast; deeper
+        // history is available on demand from Settings.
         if (!healthData || !healthData.lastFullSync) {
           try {
-            await SyncAllDataFromAllTime();
+            await SyncAllDataFromAllTime(SYNC_YEARS.INITIAL);
           } catch (syncError) {
             console.error('Error syncing initial health data:', syncError);
             // Don't block app from loading if sync fails

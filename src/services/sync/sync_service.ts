@@ -7,7 +7,7 @@ import {
   SyncConfig,
   ExerciseDetail,
 } from '@types';
-import { METRIC_UNITS } from '@constants';
+import { METRIC_UNITS, SYNC_YEARS } from '@constants';
 import {
   FetchMetricDataWithMeta,
   FetchExercises,
@@ -19,7 +19,12 @@ import {
   UpdateLastSyncTime,
   GetLastSyncTime,
 } from '../storage';
-import { GetDateRange, GetStartOfDay, GetDateArray } from '@utils';
+import {
+  GetDateRange,
+  GetDateYearsAgo,
+  GetStartOfDay,
+  GetDateArray,
+} from '@utils';
 import { MergeDataPointsByDay, MergeExercisesById } from './merge_health_data';
 import { CalculateDaysToSyncFromLastDataDate } from './recent_sync';
 
@@ -106,19 +111,19 @@ export const SyncAllMetrics = async (
 };
 
 /**
- * Sync all health data from all available time
+ * Sync all health data for the last N years (default: full history)
  * This will overwrite existing data for each day
  */
-export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
+export const SyncAllDataFromAllTime = async (
+  years: number = SYNC_YEARS.FULL
+): Promise<HealthDataStore> => {
   const hasPermission = await CheckHealthPermissions();
   if (!hasPermission) {
     throw new Error('Health data permissions not granted');
   }
 
-  // Use a very early date (10 years ago) to get all available data
   const endDate = new Date();
-  const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - 10);
+  const startDate = GetDateYearsAgo(years, endDate);
 
   const metricTypes = Object.values(MetricType);
 
