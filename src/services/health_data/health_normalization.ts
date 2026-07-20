@@ -75,3 +75,60 @@ export const GetFetchUnitForMetric = (
 export const GetFetchPeriodForMetric = (metricType: MetricType): number => {
   return metricType === MetricType.STANDING_TIME ? 60 : 1440;
 };
+
+/**
+ * Maximum days per HealthKit query for a metric, or Infinity for a single
+ * query.
+ *
+ * Standing time (hourly statistics buckets) and sleep (raw stage samples)
+ * produce enormous result arrays over multi-year ranges — serializing them
+ * through the RN bridge in one shot dominates full-sync time. Splitting
+ * those metrics into yearly queries (fetched in parallel) bounds each
+ * payload without dropping any data. Daily-bucketed metrics return ~365
+ * rows/year and don't need chunking.
+ */
+export const GetFetchChunkDays = (metricType: MetricType): number => {
+  switch (metricType) {
+    case MetricType.STANDING_TIME:
+    case MetricType.SLEEP_HOURS:
+      return 366;
+    default:
+      return Infinity;
+  }
+};
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export type DateChunk = { start: Date; end: Date };
+
+/**
+ * Split [start, end] into contiguous chunks of at most maxDays each.
+ * Consecutive chunks are separated by 1ms so a sample or statistics bucket
+ * sitting exactly on a boundary is never counted twice.
+ */
+export const SplitDateRangeIntoChunks = (
+  start: Date,
+  end: Date,
+  maxDays: number
+): DateChunk[] => {
+  if (
+    !Number.isFinite(maxDays) ||
+    end.getTime() - start.getTime() <= maxDays * MS_PER_DAY
+  ) {
+    return [{ start, end }];
+  }
+
+  const chunks: DateChunk[] = [];
+  let chunkStart = start.getTime();
+  const endMs = end.getTime();
+  const chunkSpan = maxDays * MS_PER_DAY;
+
+  while (chunkStart <= endMs) {
+    const chunkEnd = Math.min(chunkStart + chunkSpan, endMs);
+    chunks.push({ start: new Date(chunkStart), end: new Date(chunkEnd) });
+    if (chunkEnd >= endMs) break;
+    chunkStart = chunkEnd + 1;
+  }
+
+  return chunks;
+};

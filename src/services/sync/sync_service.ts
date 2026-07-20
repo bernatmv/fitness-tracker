@@ -38,59 +38,61 @@ export const SyncAllMetrics = async (
   const metricTypes = Object.values(MetricType);
 
   // Load existing data or create new store
-  let healthDataStore = await LoadHealthData();
-  if (!healthDataStore) {
-    healthDataStore = InitializeHealthDataStore();
-  }
+  let healthDataStore = (await LoadHealthData()) ?? InitializeHealthDataStore();
 
   // Fetch data for each metric
   // NOTE: This is commonly used for incremental refresh (e.g. last 30 days).
   // We MUST merge by day to avoid wiping previously synced history.
-  for (const metricType of metricTypes) {
-    try {
-      const result = await FetchMetricDataWithMeta(metricType, start, end);
-      const dataPoints = result.dataPoints;
+  // Metrics (and exercises) fetch in parallel: each task only touches its
+  // own store key, and per-task try/catch keeps one failure from blocking
+  // the rest.
+  await Promise.all([
+    ...metricTypes.map(async metricType => {
+      try {
+        const result = await FetchMetricDataWithMeta(metricType, start, end);
+        const dataPoints = result.dataPoints;
 
-      const existingDataPoints =
-        healthDataStore.metrics[metricType]?.dataPoints ?? [];
-      const mergedDataPoints = MergeDataPointsByDay(
-        existingDataPoints,
-        dataPoints
-      );
-      const existingLastDataDate =
-        healthDataStore.metrics[metricType]?.lastDataDate ?? null;
-      const lastDataDate =
-        existingLastDataDate && result.lastDataDate
-          ? existingLastDataDate > result.lastDataDate
-            ? existingLastDataDate
-            : result.lastDataDate
-          : (existingLastDataDate ?? result.lastDataDate ?? undefined);
+        const existingDataPoints =
+          healthDataStore.metrics[metricType]?.dataPoints ?? [];
+        const mergedDataPoints = MergeDataPointsByDay(
+          existingDataPoints,
+          dataPoints
+        );
+        const existingLastDataDate =
+          healthDataStore.metrics[metricType]?.lastDataDate ?? null;
+        const lastDataDate =
+          existingLastDataDate && result.lastDataDate
+            ? existingLastDataDate > result.lastDataDate
+              ? existingLastDataDate
+              : result.lastDataDate
+            : (existingLastDataDate ?? result.lastDataDate ?? undefined);
 
-      const metricData: HealthMetricData = {
-        metricType,
-        unit: METRIC_UNITS[metricType],
-        dataPoints: mergedDataPoints,
-        lastSync: new Date(),
-        lastDataDate,
-      };
+        const metricData: HealthMetricData = {
+          metricType,
+          unit: METRIC_UNITS[metricType],
+          dataPoints: mergedDataPoints,
+          lastSync: new Date(),
+          lastDataDate,
+        };
 
-      healthDataStore.metrics[metricType] = metricData;
-    } catch (error) {
-      console.error(`Error syncing ${metricType}:`, error);
-      // Continue with other metrics even if one fails
-    }
-  }
-
-  // Fetch exercises
-  try {
-    const exercises = await FetchExercises(start, end);
-    healthDataStore.exercises = MergeExercisesById(
-      healthDataStore.exercises,
-      exercises
-    );
-  } catch (error) {
-    console.error('Error syncing exercises:', error);
-  }
+        healthDataStore.metrics[metricType] = metricData;
+      } catch (error) {
+        console.error(`Error syncing ${metricType}:`, error);
+        // Continue with other metrics even if one fails
+      }
+    }),
+    (async () => {
+      try {
+        const exercises = await FetchExercises(start, end);
+        healthDataStore.exercises = MergeExercisesById(
+          healthDataStore.exercises,
+          exercises
+        );
+      } catch (error) {
+        console.error('Error syncing exercises:', error);
+      }
+    })(),
+  ]);
 
   // Update timestamps
   healthDataStore.lastFullSync = new Date();
@@ -123,69 +125,70 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
   const metricTypes = Object.values(MetricType);
 
   // Load existing data or create new store
-  let healthDataStore = await LoadHealthData();
-  if (!healthDataStore) {
-    healthDataStore = InitializeHealthDataStore();
-  }
+  let healthDataStore = (await LoadHealthData()) ?? InitializeHealthDataStore();
 
-  // Fetch data for each metric and merge/overwrite by date
-  for (const metricType of metricTypes) {
-    try {
-      const { dataPoints: newDataPoints } = await FetchMetricDataWithMeta(
-        metricType,
-        startDate,
-        endDate
-      );
+  // Fetch each metric and the exercises in parallel, merging/overwriting by
+  // date. Each task only touches its own store key, and per-task try/catch
+  // keeps one failure from blocking the rest.
+  await Promise.all([
+    ...metricTypes.map(async metricType => {
+      try {
+        const { dataPoints: newDataPoints } = await FetchMetricDataWithMeta(
+          metricType,
+          startDate,
+          endDate
+        );
 
-      // Create a map of existing data points by date string
-      const existingDataMap = new Map<string, HealthDataPoint>();
-      if (healthDataStore.metrics[metricType]) {
-        healthDataStore.metrics[metricType].dataPoints.forEach(dp => {
-          const dateKey = dp.date.toISOString().split('T')[0];
-          existingDataMap.set(dateKey, dp);
+        // Create a map of existing data points by date string
+        const existingDataMap = new Map<string, HealthDataPoint>();
+        if (healthDataStore.metrics[metricType]) {
+          healthDataStore.metrics[metricType].dataPoints.forEach(dp => {
+            const dateKey = dp.date.toISOString().split('T')[0];
+            existingDataMap.set(dateKey, dp);
+          });
+        }
+
+        // Overwrite existing data points with new data
+        newDataPoints.forEach(newDp => {
+          const dateKey = newDp.date.toISOString().split('T')[0];
+          existingDataMap.set(dateKey, newDp);
         });
+
+        // Convert map back to array and sort by date
+        const mergedDataPoints = Array.from(existingDataMap.values()).sort(
+          (a, b) => a.date.getTime() - b.date.getTime()
+        );
+
+        const metricData: HealthMetricData = {
+          metricType,
+          unit: METRIC_UNITS[metricType],
+          dataPoints: mergedDataPoints,
+          lastSync: new Date(),
+        };
+
+        healthDataStore.metrics[metricType] = metricData;
+      } catch (error) {
+        console.error(`Error syncing ${metricType}:`, error);
+        // Continue with other metrics even if one fails
       }
-
-      // Overwrite existing data points with new data
-      newDataPoints.forEach(newDp => {
-        const dateKey = newDp.date.toISOString().split('T')[0];
-        existingDataMap.set(dateKey, newDp);
-      });
-
-      // Convert map back to array and sort by date
-      const mergedDataPoints = Array.from(existingDataMap.values()).sort(
-        (a, b) => a.date.getTime() - b.date.getTime()
-      );
-
-      const metricData: HealthMetricData = {
-        metricType,
-        unit: METRIC_UNITS[metricType],
-        dataPoints: mergedDataPoints,
-        lastSync: new Date(),
-      };
-
-      healthDataStore.metrics[metricType] = metricData;
-    } catch (error) {
-      console.error(`Error syncing ${metricType}:`, error);
-      // Continue with other metrics even if one fails
-    }
-  }
-
-  // Fetch exercises and merge
-  try {
-    const newExercises = await FetchExercises(startDate, endDate);
-    // Merge exercises by ID, keeping existing ones and adding new ones
-    const existingExerciseMap = new Map<string, ExerciseDetail>();
-    healthDataStore.exercises.forEach((ex: ExerciseDetail) => {
-      existingExerciseMap.set(ex.id, ex);
-    });
-    newExercises.forEach((newEx: ExerciseDetail) => {
-      existingExerciseMap.set(newEx.id, newEx);
-    });
-    healthDataStore.exercises = Array.from(existingExerciseMap.values());
-  } catch (error) {
-    console.error('Error syncing exercises:', error);
-  }
+    }),
+    (async () => {
+      try {
+        const newExercises = await FetchExercises(startDate, endDate);
+        // Merge exercises by ID, keeping existing ones and adding new ones
+        const existingExerciseMap = new Map<string, ExerciseDetail>();
+        healthDataStore.exercises.forEach((ex: ExerciseDetail) => {
+          existingExerciseMap.set(ex.id, ex);
+        });
+        newExercises.forEach((newEx: ExerciseDetail) => {
+          existingExerciseMap.set(newEx.id, newEx);
+        });
+        healthDataStore.exercises = Array.from(existingExerciseMap.values());
+      } catch (error) {
+        console.error('Error syncing exercises:', error);
+      }
+    })(),
+  ]);
 
   // Update timestamps
   healthDataStore.lastFullSync = new Date();
@@ -511,70 +514,73 @@ export const SyncOnAppActive = async (): Promise<HealthDataStore | null> => {
   const metricTypes = Object.values(MetricType);
 
   // Load or create health data store
-  let healthDataStore = existingData;
-  if (!healthDataStore) {
-    healthDataStore = InitializeHealthDataStore();
-  }
+  let healthDataStore = existingData ?? InitializeHealthDataStore();
 
-  // Fetch and merge data for each metric
-  for (const metricType of metricTypes) {
-    try {
-      const { dataPoints: newDataPoints } = await FetchMetricDataWithMeta(
-        metricType,
-        start,
-        end
-      );
-
-      // Create a map of existing data points by date string
-      const existingDataMap = new Map<string, HealthDataPoint>();
-      if (healthDataStore.metrics[metricType]) {
-        healthDataStore.metrics[metricType].dataPoints.forEach(
-          (dp: HealthDataPoint) => {
-            const dateKey = GetStartOfDay(dp.date).toISOString().split('T')[0];
-            existingDataMap.set(dateKey, dp);
-          }
+  // Fetch and merge each metric and the exercises in parallel. Each task
+  // only touches its own store key, and per-task try/catch keeps one
+  // failure from blocking the rest.
+  await Promise.all([
+    ...metricTypes.map(async metricType => {
+      try {
+        const { dataPoints: newDataPoints } = await FetchMetricDataWithMeta(
+          metricType,
+          start,
+          end
         );
+
+        // Create a map of existing data points by date string
+        const existingDataMap = new Map<string, HealthDataPoint>();
+        if (healthDataStore.metrics[metricType]) {
+          healthDataStore.metrics[metricType].dataPoints.forEach(
+            (dp: HealthDataPoint) => {
+              const dateKey = GetStartOfDay(dp.date)
+                .toISOString()
+                .split('T')[0];
+              existingDataMap.set(dateKey, dp);
+            }
+          );
+        }
+
+        // Merge new data points (overwrite existing dates)
+        newDataPoints.forEach((newDp: HealthDataPoint) => {
+          const dateKey = GetStartOfDay(newDp.date).toISOString().split('T')[0];
+          existingDataMap.set(dateKey, newDp);
+        });
+
+        // Convert map back to array and sort by date
+        const mergedDataPoints = Array.from(existingDataMap.values()).sort(
+          (a, b) => a.date.getTime() - b.date.getTime()
+        );
+
+        const metricData: HealthMetricData = {
+          metricType,
+          unit: METRIC_UNITS[metricType],
+          dataPoints: mergedDataPoints,
+          lastSync: new Date(),
+        };
+
+        healthDataStore.metrics[metricType] = metricData;
+      } catch (error) {
+        console.error(`Error syncing ${metricType} on app active:`, error);
+        // Continue with other metrics even if one fails
       }
-
-      // Merge new data points (overwrite existing dates)
-      newDataPoints.forEach((newDp: HealthDataPoint) => {
-        const dateKey = GetStartOfDay(newDp.date).toISOString().split('T')[0];
-        existingDataMap.set(dateKey, newDp);
-      });
-
-      // Convert map back to array and sort by date
-      const mergedDataPoints = Array.from(existingDataMap.values()).sort(
-        (a, b) => a.date.getTime() - b.date.getTime()
-      );
-
-      const metricData: HealthMetricData = {
-        metricType,
-        unit: METRIC_UNITS[metricType],
-        dataPoints: mergedDataPoints,
-        lastSync: new Date(),
-      };
-
-      healthDataStore.metrics[metricType] = metricData;
-    } catch (error) {
-      console.error(`Error syncing ${metricType} on app active:`, error);
-      // Continue with other metrics even if one fails
-    }
-  }
-
-  // Fetch and merge exercises
-  try {
-    const newExercises = await FetchExercises(start, end);
-    const existingExerciseMap = new Map<string, ExerciseDetail>();
-    healthDataStore.exercises.forEach((ex: ExerciseDetail) => {
-      existingExerciseMap.set(ex.id, ex);
-    });
-    newExercises.forEach((newEx: ExerciseDetail) => {
-      existingExerciseMap.set(newEx.id, newEx);
-    });
-    healthDataStore.exercises = Array.from(existingExerciseMap.values());
-  } catch (error) {
-    console.error('Error syncing exercises on app active:', error);
-  }
+    }),
+    (async () => {
+      try {
+        const newExercises = await FetchExercises(start, end);
+        const existingExerciseMap = new Map<string, ExerciseDetail>();
+        healthDataStore.exercises.forEach((ex: ExerciseDetail) => {
+          existingExerciseMap.set(ex.id, ex);
+        });
+        newExercises.forEach((newEx: ExerciseDetail) => {
+          existingExerciseMap.set(newEx.id, newEx);
+        });
+        healthDataStore.exercises = Array.from(existingExerciseMap.values());
+      } catch (error) {
+        console.error('Error syncing exercises on app active:', error);
+      }
+    })(),
+  ]);
 
   // Update timestamps
   healthDataStore.lastFullSync = new Date();
