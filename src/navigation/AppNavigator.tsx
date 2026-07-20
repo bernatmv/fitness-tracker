@@ -43,7 +43,8 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   const isDarkMode = theme.mode === 'dark';
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const pillMaxWidth = 420;
+  // Icons-only pill: compact and centered instead of edge-to-edge
+  const pillMaxWidth = 220;
   const pillHorizontalMargin = 24;
   const pillWidth = Math.min(
     pillMaxWidth,
@@ -59,19 +60,16 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         headerShown: false,
         tabBarActiveTintColor: theme.colors.link,
         tabBarInactiveTintColor: theme.colors.text.secondary,
+        // Icons-only minimal: no labels, larger centered icons
+        tabBarShowLabel: false,
         // Soft capsule highlight behind the active tab
         tabBarActiveBackgroundColor: ToRgba(
           theme.colors.link,
           isDarkMode ? 0.24 : 0.12
         ),
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
         tabBarItemStyle: {
-          paddingVertical: 6,
-          borderRadius: 26,
-          marginHorizontal: 8,
+          borderRadius: 22,
+          marginHorizontal: 6,
           marginVertical: 6,
         },
         // Floating pill style (Slack-style). iOS gets "liquid glass" materials; other platforms keep transparent.
@@ -106,8 +104,8 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         component={HomeScreenWrapper}
         options={{
           title: t('home.nav'),
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home" type="material" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Icon name="home" type="material" color={color} size={26} />
           ),
         }}
       />
@@ -115,8 +113,8 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         name="Settings"
         options={{
           title: t('settings.title'),
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="settings" type="material" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Icon name="settings" type="material" color={color} size={26} />
           ),
         }}>
         {() => (
