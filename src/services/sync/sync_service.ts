@@ -22,6 +22,7 @@ import {
 import { GetDateRange, GetStartOfDay, GetDateArray } from '@utils';
 import { MergeDataPointsByDay, MergeExercisesById } from './merge_health_data';
 import { CalculateDaysToSyncFromLastDataDate } from './recent_sync';
+import { screenWake } from '../system';
 
 /**
  * Sync all health metrics
@@ -115,6 +116,18 @@ export const SyncAllDataFromAllTime = async (): Promise<HealthDataStore> => {
     throw new Error('Health data permissions not granted');
   }
 
+  // Keep the screen awake for the whole sync. This can take minutes; if the
+  // screen auto-locks, iOS suspends the app mid-fetch and the loop never
+  // reaches SaveHealthData — so nothing gets persisted.
+  await screenWake.Activate();
+  try {
+    return await RunFullSync();
+  } finally {
+    await screenWake.Release();
+  }
+};
+
+const RunFullSync = async (): Promise<HealthDataStore> => {
   // Use a very early date (10 years ago) to get all available data
   const endDate = new Date();
   const startDate = new Date();

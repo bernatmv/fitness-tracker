@@ -18,6 +18,8 @@
 		14456BC62EE0C839007969CA /* WidgetUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC42EE0C839007969CA /* WidgetUpdater.m */; };
 		14456BC72EE0C839007969CA /* AppGroupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC32EE0C839007969CA /* AppGroupStorage.swift */; };
 		14456BC82EE0C839007969CA /* WidgetUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC52EE0C839007969CA /* WidgetUpdater.swift */; };
+		14456BD32EE0C900007969CA /* ScreenWake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14456BD12EE0C900007969CA /* ScreenWake.swift */; };
+		14456BD42EE0C900007969CA /* ScreenWake.m in Sources */ = {isa = PBXBuildFile; fileRef = 14456BD22EE0C900007969CA /* ScreenWake.m */; };
 		14456BC92EE0C839007969CA /* AppGroupStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 14456BC22EE0C839007969CA /* AppGroupStorage.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		B87C0123ABA75DFF39692ED5 /* libPods-FitnessTracker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 99EE1EF41342768510868017 /* libPods-FitnessTracker.a */; };
@@ -73,6 +75,8 @@
 		14456BC32EE0C839007969CA /* AppGroupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppGroupStorage.swift; path = FitnessTracker/AppGroupStorage.swift; sourceTree = "<group>"; };
 		14456BC42EE0C839007969CA /* WidgetUpdater.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WidgetUpdater.m; path = FitnessTracker/WidgetUpdater.m; sourceTree = "<group>"; };
 		14456BC52EE0C839007969CA /* WidgetUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WidgetUpdater.swift; path = FitnessTracker/WidgetUpdater.swift; sourceTree = "<group>"; };
+		14456BD12EE0C900007969CA /* ScreenWake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ScreenWake.swift; path = FitnessTracker/ScreenWake.swift; sourceTree = "<group>"; };
+		14456BD22EE0C900007969CA /* ScreenWake.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = ScreenWake.m; path = FitnessTracker/ScreenWake.m; sourceTree = "<group>"; };
 		37DEADB20E8DB0C619C1A1BA /* Pods-FitnessTracker.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FitnessTracker.release.xcconfig"; path = "Target Support Files/Pods-FitnessTracker/Pods-FitnessTracker.release.xcconfig"; sourceTree = "<group>"; };
 		7552D8F64C2E1EDA1022148B /* Pods-FitnessTracker.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FitnessTracker.debug.xcconfig"; path = "Target Support Files/Pods-FitnessTracker/Pods-FitnessTracker.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = FitnessTracker/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -193,6 +197,8 @@
 				14456BC32EE0C839007969CA /* AppGroupStorage.swift */,
 				14456BC42EE0C839007969CA /* WidgetUpdater.m */,
 				14456BC52EE0C839007969CA /* WidgetUpdater.swift */,
+				14456BD12EE0C900007969CA /* ScreenWake.swift */,
+				14456BD22EE0C900007969CA /* ScreenWake.m */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -518,6 +524,8 @@
 				14456BC62EE0C839007969CA /* WidgetUpdater.m in Sources */,
 				14456BC72EE0C839007969CA /* AppGroupStorage.swift in Sources */,
 				14456BC82EE0C839007969CA /* WidgetUpdater.swift in Sources */,
+				14456BD32EE0C900007969CA /* ScreenWake.swift in Sources */,
+				14456BD42EE0C900007969CA /* ScreenWake.m in Sources */,
 				14456BC92EE0C839007969CA /* AppGroupStorage.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
@@ -605,7 +613,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FitnessTracker/FitnessTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 426R48XBW3;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = FitnessTracker/Info.plist;
@@ -642,7 +650,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FitnessTracker/FitnessTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 426R48XBW3;
 				INFOPLIST_FILE = FitnessTracker/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
