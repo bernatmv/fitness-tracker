@@ -113,6 +113,8 @@
     "title": "Configuración",
     "threshold_settings": "Configuración de Umbrales",
     "range": "Umbral {{number}}",
+    "threshold_from": "Desde",
+    "threshold_to": "Hasta",
     "preview": "Vista Previa",
     "reset_defaults": "Restaurar Valores Predeterminados"
   },

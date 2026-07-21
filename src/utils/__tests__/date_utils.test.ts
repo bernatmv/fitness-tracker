@@ -116,8 +116,15 @@ describe('date_utils', () => {
       expect(GetDateFnsLocale('en').code).toBe('en-US');
     });
 
+    it.each(['ca', 'de', 'fr', 'it', 'pl'])(
+      'should return the matching locale for "%s"',
+      code => {
+        expect(GetDateFnsLocale(code).code).toBe(code);
+      }
+    );
+
     it('should fall back to English for unsupported languages', () => {
-      expect(GetDateFnsLocale('fr').code).toBe('en-US');
+      expect(GetDateFnsLocale('pt').code).toBe('en-US');
     });
 
     it('should default to the device locale when no code is given', () => {

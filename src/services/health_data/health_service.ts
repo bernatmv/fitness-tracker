@@ -1,17 +1,14 @@
 import { Platform } from 'react-native';
-import AppleHealthKit, {
-  HealthValue,
-  HealthKitPermissions,
-} from 'react-native-health';
+import AppleHealthKit, { HealthKitPermissions } from 'react-native-health';
 import { HealthDataPoint, MetricType, ExerciseDetail } from '@types';
-import { METRIC_UNITS } from '@constants';
-import { GetDateArray, GetStartOfDay } from '@utils';
 import {
-  DurationMinutesFromIsoRange,
+  GetFetchChunkDays,
   GetFetchPeriodForMetric,
   GetFetchUnitForMetric,
   NormalizeDurationToMinutes,
+  SplitDateRangeIntoChunks,
 } from './health_normalization';
+import { AggregateHealthResults, RawHealthResult } from './health_aggregation';
 
 export type MetricFetchResult = {
   dataPoints: HealthDataPoint[];
@@ -124,36 +121,14 @@ export const FetchMetricDataWithMeta = async (
 };
 
 /**
- * Fetch iOS health data
+ * Fetch a single date-range chunk of raw HealthKit results
  */
-const FetchIOSMetricData = async (
+const FetchIOSHealthChunk = (
+  fetchFunction: IOSFetchFunction,
   metricType: MetricType,
-  startDate: Date,
-  endDate: Date
-): Promise<MetricFetchResult> => {
+  options: HealthFetchOptions
+): Promise<RawHealthResult[]> => {
   return new Promise((resolve, reject) => {
-    const fetchUnit = GetFetchUnitForMetric(metricType);
-    const options: HealthFetchOptions = {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      // Daily aggregation for most metrics; hourly buckets for standing
-      // time so we can count Apple-ring-style "stand hours".
-      period: GetFetchPeriodForMetric(metricType),
-      // Duration metrics must request minutes explicitly: the native
-      // default is seconds, and small daily values slip past the
-      // seconds-vs-minutes heuristic (e.g. 20 min = 1200 s <= 1440).
-      ...(fetchUnit ? { unit: fetchUnit } : {}),
-    };
-
-    const fetchFunction = GetIOSFetchFunction(
-      metricType
-    ) as IOSFetchFunction | null;
-
-    if (!fetchFunction) {
-      reject(new Error(`Unsupported metric type: ${metricType}`));
-      return;
-    }
-
     fetchFunction(options, (error: string, results: unknown) => {
       if (error) {
         console.error(`Error fetching ${metricType}:`, error);
@@ -161,91 +136,67 @@ const FetchIOSMetricData = async (
         return;
       }
 
-      let safeResults: HealthValue[] = [];
       if (Array.isArray(results)) {
-        safeResults = results as HealthValue[];
+        resolve(results as RawHealthResult[]);
       } else if (results) {
-        safeResults = [results as HealthValue];
+        resolve([results as RawHealthResult]);
+      } else {
+        resolve([]);
       }
-
-      const dailyTotals = new Map<string, number>();
-      const daysWithSamples = new Set<string>();
-
-      safeResults.forEach(result => {
-        const normalized = result as HealthValue & {
-          startDate?: string;
-          date?: string;
-          endDate?: string;
-          quantity?: number;
-        };
-        const startIso =
-          normalized.startDate ??
-          normalized.date ??
-          normalized.endDate ??
-          new Date().toISOString();
-        const startDay = GetStartOfDay(new Date(startIso))
-          .toISOString()
-          .split('T')[0];
-
-        let value = normalized.value ?? normalized.quantity ?? 0;
-
-        if (metricType === MetricType.SLEEP_HOURS) {
-          const endIso = normalized.endDate ?? startIso;
-          value = DurationMinutesFromIsoRange(startIso, endIso);
-          dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
-          daysWithSamples.add(startDay);
-        } else if (metricType === MetricType.STANDING_TIME) {
-          // Each result is an HOURLY bucket (period 60). Count Apple-ring
-          // style "stand hours": a clock hour counts when it contains any
-          // standing at all.
-          value = NormalizeDurationToMinutes(value, 60);
-          if (value > 0) {
-            dailyTotals.set(
-              startDay,
-              Math.min((dailyTotals.get(startDay) || 0) + 1, 24)
-            );
-          }
-          daysWithSamples.add(startDay);
-        } else if (metricType === MetricType.EXERCISE_TIME) {
-          // HealthKit may return exercise time in seconds; normalize to minutes.
-          value = NormalizeDurationToMinutes(value, 24 * 60);
-          dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
-          daysWithSamples.add(startDay);
-        } else {
-          // For other metrics (exercise time, steps, etc.), sum directly
-          // Note: If HealthKit returns multiple samples per day, they should be
-          // incremental (each adds more time), so summing is correct.
-          // If period parameter works correctly, we should get one sample per day.
-          dailyTotals.set(startDay, (dailyTotals.get(startDay) || 0) + value);
-          daysWithSamples.add(startDay);
-        }
-      });
-
-      const allDates = GetDateArray(
-        GetStartOfDay(startDate),
-        GetStartOfDay(endDate)
-      );
-
-      const dataPoints: HealthDataPoint[] = allDates.map(date => {
-        const key = date.toISOString().split('T')[0];
-        return {
-          date,
-          value: dailyTotals.get(key) || 0,
-          metricType,
-          unit: METRIC_UNITS[metricType],
-        };
-      });
-
-      const lastDataDate =
-        daysWithSamples.size > 0
-          ? new Date(
-              `${Array.from(daysWithSamples).sort().slice(-1)[0]}T00:00:00.000Z`
-            )
-          : null;
-
-      resolve({ dataPoints, lastDataDate });
     });
   });
+};
+
+/**
+ * Fetch iOS health data
+ */
+const FetchIOSMetricData = async (
+  metricType: MetricType,
+  startDate: Date,
+  endDate: Date
+): Promise<MetricFetchResult> => {
+  const fetchFunction = GetIOSFetchFunction(
+    metricType
+  ) as IOSFetchFunction | null;
+
+  if (!fetchFunction) {
+    throw new Error(`Unsupported metric type: ${metricType}`);
+  }
+
+  const fetchUnit = GetFetchUnitForMetric(metricType);
+  // Daily aggregation for most metrics; hourly buckets for standing
+  // time so we can count Apple-ring-style "stand hours".
+  const period = GetFetchPeriodForMetric(metricType);
+
+  // High-volume metrics (hourly standing buckets, raw sleep samples) are
+  // split into ~1-year chunks fetched in parallel: several small bridge
+  // payloads are much faster than one giant multi-year payload.
+  const chunks = SplitDateRangeIntoChunks(
+    startDate,
+    endDate,
+    GetFetchChunkDays(metricType)
+  );
+
+  const chunkResults = await Promise.all(
+    chunks.map(chunk =>
+      FetchIOSHealthChunk(fetchFunction, metricType, {
+        startDate: chunk.start.toISOString(),
+        endDate: chunk.end.toISOString(),
+        period,
+        // Duration metrics must request minutes explicitly: the native
+        // default is seconds, and small daily values slip past the
+        // seconds-vs-minutes heuristic (e.g. 20 min = 1200 s <= 1440).
+        ...(fetchUnit ? { unit: fetchUnit } : {}),
+      })
+    )
+  );
+
+  return AggregateHealthResults(
+    metricType,
+    chunkResults.flat(),
+    startDate,
+    endDate
+  );
 };
 
 /**

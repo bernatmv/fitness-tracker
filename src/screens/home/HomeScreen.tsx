@@ -89,20 +89,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
     LoadData();
   }, [LoadData]);
 
-  // Reload preferences when screen comes into focus (e.g., returning from Settings)
+  // Silently reload data + preferences when the screen regains focus
+  // (e.g. returning from Settings after "Sync All Health Data"). The Home
+  // tab stays mounted across tab switches, so without this the wall keeps
+  // showing the health data loaded at mount. No loading spinner here — this
+  // fires on every tab focus and should be invisible.
   useFocusEffect(
     useCallback(() => {
-      const ReloadPreferences = async () => {
+      const ReloadOnFocus = async () => {
         try {
-          const prefs = await LoadUserPreferences();
+          const [data, prefs] = await Promise.all([
+            LoadHealthData(),
+            LoadUserPreferences(),
+          ]);
+          setHealthData(data);
           if (prefs) {
             setPreferences(prefs);
           }
+          if (data?.lastFullSync) {
+            setLastSyncText(FormatRelativeTime(data.lastFullSync));
+          }
         } catch (error) {
-          console.error('Error reloading preferences:', error);
+          console.error('Error reloading on focus:', error);
         }
       };
-      ReloadPreferences();
+      ReloadOnFocus();
     }, [])
   );
 
