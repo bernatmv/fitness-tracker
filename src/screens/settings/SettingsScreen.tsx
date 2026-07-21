@@ -15,6 +15,7 @@ import { APP_VERSION, TAB_PILL_HEIGHT } from '@constants';
 import { AppButton, LoadingSpinner } from '@components/common';
 import { GetMetricDisplayName, useAppTheme } from '@utils';
 import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
+import { SUPPORTED_LANGUAGES } from '@locales/languages';
 
 interface SettingsScreenProps {
   onThemePreferenceChange?: (preference: ThemePreference) => void;
@@ -424,28 +425,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
           {t('settings.language')}
         </Text>
-        <ListItem
-          onPress={() => HandleChangeLanguage('en')}
-          containerStyle={styles.row}
-          bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title style={{ color: theme.colors.text.primary }}>
-              English
-            </ListItem.Title>
-          </ListItem.Content>
-          <ListItem.CheckBox checked={preferences?.language === 'en'} />
-        </ListItem>
-        <ListItem
-          onPress={() => HandleChangeLanguage('es')}
-          containerStyle={styles.row}
-          bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title style={{ color: theme.colors.text.primary }}>
-              Español
-            </ListItem.Title>
-          </ListItem.Content>
-          <ListItem.CheckBox checked={preferences?.language === 'es'} />
-        </ListItem>
+        {SUPPORTED_LANGUAGES.map(language => (
+          <ListItem
+            key={language.code}
+            onPress={() => HandleChangeLanguage(language.code)}
+            containerStyle={styles.row}
+            bottomDivider>
+            <ListItem.Content>
+              <ListItem.Title style={{ color: theme.colors.text.primary }}>
+                {language.nativeName}
+              </ListItem.Title>
+            </ListItem.Content>
+            <ListItem.CheckBox
+              checked={preferences?.language === language.code}
+              onPress={() => HandleChangeLanguage(language.code)}
+            />
+          </ListItem>
+        ))}
       </View>
 
       <View style={styles.section}>

@@ -7,12 +7,17 @@ import {
   differenceInDays,
 } from 'date-fns';
 import type { Locale as DateFnsLocale } from 'date-fns';
-import { enUS, es } from 'date-fns/locale';
+import { enUS, ca, de, es, fr, it, pl } from 'date-fns/locale';
 import { getLocales } from 'react-native-localize';
 
 const DATE_FNS_LOCALES: Record<string, DateFnsLocale> = {
   en: enUS,
+  ca,
+  de,
   es,
+  fr,
+  it,
+  pl,
 };
 
 /**
