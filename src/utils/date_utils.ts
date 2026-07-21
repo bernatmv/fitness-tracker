@@ -99,6 +99,18 @@ export const GetDateRange = (days: number): { start: Date; end: Date } => {
 };
 
 /**
+ * Get the same calendar date N years before the reference date
+ */
+export const GetDateYearsAgo = (
+  years: number,
+  from: Date = new Date()
+): Date => {
+  const result = new Date(from);
+  result.setFullYear(result.getFullYear() - years);
+  return result;
+};
+
+/**
  * Get array of dates between start and end
  */
 export const GetDateArray = (startDate: Date, endDate: Date): Date[] => {
