@@ -92,7 +92,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={styles.content}>
       {step === 0 && (
         <View style={styles.stepContainer}>
           <Icon
@@ -101,10 +103,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             size={80}
             color={theme.colors.link}
           />
-          <Text h2 style={styles.title}>
+          <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
             {t('onboarding.welcome_title')}
           </Text>
-          <Text style={styles.description}>
+          <Text
+            style={[
+              styles.description,
+              { color: theme.colors.text.secondary },
+            ]}>
             {t('onboarding.welcome_description')}
           </Text>
           <AppButton
@@ -124,10 +130,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             size={80}
             color={theme.colors.link}
           />
-          <Text h2 style={styles.title}>
+          <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
             {t('onboarding.permissions_title')}
           </Text>
-          <Text style={styles.description}>
+          <Text
+            style={[
+              styles.description,
+              { color: theme.colors.text.secondary },
+            ]}>
             {t('onboarding.permissions_description')}
           </Text>
 
@@ -148,6 +158,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             onPress={() => setStep(2)}
             type="clear"
             containerStyle={styles.buttonContainer}
+            titleStyle={{ color: theme.colors.link }}
           />
         </View>
       )}
@@ -160,10 +171,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             size={80}
             color={theme.colors.success}
           />
-          <Text h2 style={styles.title}>
+          <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
             {t('onboarding.setup_complete')}
           </Text>
-          <Text style={styles.description}>
+          <Text
+            style={[
+              styles.description,
+              { color: theme.colors.text.secondary },
+            ]}>
             {t('onboarding.setup_complete_description')}
           </Text>
           <AppButton
