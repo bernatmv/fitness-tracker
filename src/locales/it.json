@@ -9,7 +9,7 @@
     "retry": "Riprova",
     "close": "Chiudi",
     "continue": "Continua",
-    "skip": "Salta",
+    "open_settings": "Apri Impostazioni",
     "back": "Indietro"
   },
   "metrics": {
@@ -32,7 +32,7 @@
     "welcome_description": "Segui il tuo percorso fitness con bellissime visualizzazioni dell'attività",
     "permissions_title": "Accesso ai Dati Sanitari",
     "permissions_description": "Abbiamo bisogno di accedere ai tuoi dati sanitari per mostrare la tua attività. I tuoi dati restano sul tuo dispositivo.",
-    "permissions_button": "Consenti Accesso",
+    "permissions_denied_description": "Puoi attivare l'accesso a Salute in qualsiasi momento in Impostazioni per vedere la tua attività.",
     "setup_complete": "Tutto pronto!",
     "setup_complete_description": "Inizia oggi a seguire il tuo percorso fitness",
     "syncing_data": "Sincronizzazione dei dati sanitari..."
@@ -51,6 +51,7 @@
     "appearance": "Aspetto",
     "sync": "Sincronizzazione",
     "about": "Informazioni",
+    "privacy_policy": "Informativa sulla Privacy",
     "widgets": "Widget",
     "language": "Lingua",
     "theme": "Tema",

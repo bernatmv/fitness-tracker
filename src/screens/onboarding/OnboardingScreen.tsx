@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Linking } from 'react-native';
 import { Button, Text, Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useAppTheme } from '@utils';
@@ -32,30 +32,32 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
 
-  const HandleGrantPermissions = async () => {
+  const HandleRequestPermissions = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const granted = await RequestHealthPermissions();
+      setPermissionsGranted(granted);
+
+      // Initialize user preferences
+      const preferences: UserPreferences = {
+        language: 'en',
+        dateFormat: 'PP',
+        theme: DEFAULT_THEME_PREFERENCE,
+        metricConfigs: DEFAULT_METRIC_CONFIGS,
+        widgets: [],
+        syncConfig: DEFAULT_SYNC_CONFIG,
+        onboardingCompleted: true,
+        permissionsGranted: granted,
+        enableMultiRowLayout: false,
+      };
+
+      await SaveUserPreferences(preferences);
 
       if (granted) {
-        // Initialize user preferences
-        const preferences: UserPreferences = {
-          language: 'en',
-          dateFormat: 'PP',
-          theme: DEFAULT_THEME_PREFERENCE,
-          metricConfigs: DEFAULT_METRIC_CONFIGS,
-          widgets: [],
-          syncConfig: DEFAULT_SYNC_CONFIG,
-          onboardingCompleted: true,
-          permissionsGranted: true,
-          enableMultiRowLayout: false,
-        };
-
-        await SaveUserPreferences(preferences);
-
         // Trigger initial sync, capped at SYNC_YEARS.INITIAL so onboarding
         // stays fast; deeper history is available on demand from Settings
         setIsSyncing(true);
@@ -67,11 +69,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         } finally {
           setIsSyncing(false);
         }
-
-        setStep(2); // Move to completion step
-      } else {
-        setError(t('errors.no_permission'));
       }
+
+      setStep(2); // Move to completion step either way
     } catch (err) {
       console.error('Error granting permissions:', err);
       setError(t('errors.generic'));
@@ -148,17 +148,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           )}
 
           <AppButton
-            title={t('onboarding.permissions_button')}
-            onPress={HandleGrantPermissions}
+            title={t('common.continue')}
+            onPress={HandleRequestPermissions}
             containerStyle={styles.buttonContainer}
             size="lg"
-          />
-          <Button
-            title={t('common.skip')}
-            onPress={() => setStep(2)}
-            type="clear"
-            containerStyle={styles.buttonContainer}
-            titleStyle={{ color: theme.colors.link }}
           />
         </View>
       )}
@@ -166,20 +159,26 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       {step === 2 && (
         <View style={styles.stepContainer}>
           <Icon
-            name="check-circle"
+            name={permissionsGranted ? 'check-circle' : 'info'}
             type="material"
             size={80}
-            color={theme.colors.success}
+            color={
+              permissionsGranted ? theme.colors.success : theme.colors.link
+            }
           />
           <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
-            {t('onboarding.setup_complete')}
+            {permissionsGranted
+              ? t('onboarding.setup_complete')
+              : t('errors.no_permission')}
           </Text>
           <Text
             style={[
               styles.description,
               { color: theme.colors.text.secondary },
             ]}>
-            {t('onboarding.setup_complete_description')}
+            {permissionsGranted
+              ? t('onboarding.setup_complete_description')
+              : t('onboarding.permissions_denied_description')}
           </Text>
           <AppButton
             title={t('common.done')}
@@ -187,6 +186,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             containerStyle={styles.buttonContainer}
             size="lg"
           />
+          {!permissionsGranted && (
+            <Button
+              title={t('common.open_settings')}
+              onPress={() => Linking.openSettings()}
+              type="clear"
+              containerStyle={styles.buttonContainer}
+              titleStyle={{ color: theme.colors.link }}
+            />
+          )}
         </View>
       )}
     </ScrollView>

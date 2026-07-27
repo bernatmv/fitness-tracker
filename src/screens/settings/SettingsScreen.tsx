@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
 import { ListItem, Switch, Text, Icon } from '@rneui/themed';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import { SyncAllDataFromAllTime } from '@services/sync';
 import { UserPreferences, MetricType, ThemePreference } from '@types';
 import { APP_VERSION, SYNC_YEARS, TAB_PILL_HEIGHT } from '@constants';
 import { AppButton, LoadingSpinner } from '@components/common';
-import { GetMetricDisplayName, useAppTheme } from '@utils';
+import { GetMetricDisplayName, GetPrivacyPolicyUrl, useAppTheme } from '@utils';
 import { GetWidgetDiagnostics, widgetUpdater } from '@services/widget';
 import { SUPPORTED_LANGUAGES } from '@locales/languages';
 
@@ -498,6 +498,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {t('settings.version', { version: APP_VERSION })}
             </ListItem.Title>
           </ListItem.Content>
+        </ListItem>
+        <ListItem
+          onPress={() => Linking.openURL(GetPrivacyPolicyUrl(i18n.language))}
+          containerStyle={styles.row}
+          bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title style={{ color: theme.colors.text.primary }}>
+              {t('settings.privacy_policy')}
+            </ListItem.Title>
+          </ListItem.Content>
+          <Icon
+            name="open-in-new"
+            type="material"
+            color={theme.colors.link}
+            size={24}
+          />
         </ListItem>
       </View>
 

@@ -9,7 +9,7 @@
     "retry": "Torna-ho a provar",
     "close": "Tanca",
     "continue": "Continua",
-    "skip": "Omet",
+    "open_settings": "Obre la Configuració",
     "back": "Enrere"
   },
   "metrics": {
@@ -32,7 +32,7 @@
     "welcome_description": "Segueix el teu progrés de fitness amb visualitzacions d'activitat espectaculars",
     "permissions_title": "Accés a les Dades de Salut",
     "permissions_description": "Necessitem accés a les teves dades de salut per mostrar la teva activitat. Les teves dades es queden al teu dispositiu.",
-    "permissions_button": "Concedeix l'Accés",
+    "permissions_denied_description": "Pots activar l'accés a Salut en qualsevol moment a la Configuració per veure la teva activitat.",
     "setup_complete": "Tot a punt!",
     "setup_complete_description": "Comença avui a seguir el teu progrés de fitness",
     "syncing_data": "S'estan sincronitzant les dades de salut..."
@@ -51,6 +51,7 @@
     "appearance": "Aparença",
     "sync": "Sincronització",
     "about": "Quant a",
+    "privacy_policy": "Política de Privacitat",
     "widgets": "Widgets",
     "language": "Idioma",
     "theme": "Tema",
