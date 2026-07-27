@@ -106,6 +106,22 @@ export const SYNC_YEARS = {
 export const APP_VERSION = '1.0.0';
 
 /**
+ * Privacy policy (App Store guideline 5.1.1(i) requires an
+ * easily accessible link within the app)
+ */
+export const PRIVACY_POLICY_BASE_URL = 'https://www.wall-of-truth.com';
+// ponytail: languages with a published privacy page; add 'pl' once
+// wall-of-truth.com/pl/privacy/ goes live
+export const PRIVACY_POLICY_LANGUAGES = [
+  'en',
+  'es',
+  'fr',
+  'it',
+  'de',
+  'ca',
+] as const;
+
+/**
  * Default theme preference
  */
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
