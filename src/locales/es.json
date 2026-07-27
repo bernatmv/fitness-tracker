@@ -9,7 +9,7 @@
     "retry": "Reintentar",
     "close": "Cerrar",
     "continue": "Continuar",
-    "skip": "Omitir",
+    "open_settings": "Abrir Ajustes",
     "back": "Atrás"
   },
   "metrics": {
@@ -32,7 +32,7 @@
     "welcome_description": "Rastrea tu viaje fitness con hermosas visualizaciones de actividad",
     "permissions_title": "Acceso a Datos de Salud",
     "permissions_description": "Necesitamos acceso a tus datos de salud para mostrar tu actividad. Tus datos permanecen en tu dispositivo.",
-    "permissions_button": "Otorgar Acceso",
+    "permissions_denied_description": "Puedes activar el acceso a Salud en cualquier momento desde Ajustes para ver tu actividad.",
     "setup_complete": "¡Todo listo!",
     "setup_complete_description": "Comienza a rastrear tu viaje fitness hoy",
     "syncing_data": "Sincronizando datos de salud..."

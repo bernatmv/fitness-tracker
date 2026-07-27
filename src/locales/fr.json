@@ -9,7 +9,7 @@
     "retry": "Réessayer",
     "close": "Fermer",
     "continue": "Continuer",
-    "skip": "Passer",
+    "open_settings": "Ouvrir les Réglages",
     "back": "Retour"
   },
   "metrics": {
@@ -32,7 +32,7 @@
     "welcome_description": "Suivez votre parcours fitness avec de superbes visualisations d'activité",
     "permissions_title": "Accès aux Données de Santé",
     "permissions_description": "Nous avons besoin d'accéder à vos données de santé pour afficher votre activité. Vos données restent sur votre appareil.",
-    "permissions_button": "Autoriser l'Accès",
+    "permissions_denied_description": "Vous pouvez activer l'accès à Santé à tout moment dans Réglages pour voir votre activité.",
     "setup_complete": "Vous êtes prêt !",
     "setup_complete_description": "Commencez à suivre votre parcours fitness dès aujourd'hui",
     "syncing_data": "Synchronisation des données de santé..."
