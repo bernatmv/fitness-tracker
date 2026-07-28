@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Linking } from 'react-native';
 import { Button, Text, Icon } from '@rneui/themed';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useAppTheme } from '@utils';
+import { ToRgba, useAppTheme } from '@utils';
 import { RequestHealthPermissions } from '@services/health_data';
 import { SaveUserPreferences } from '@services/storage';
 import { SyncAllDataFromAllTime } from '@services/sync';
@@ -19,6 +20,8 @@ interface OnboardingScreenProps {
   onComplete: () => void;
 }
 
+const TOTAL_STEPS = 3;
+
 /**
  * OnboardingScreen Component
  * First-time setup and permissions flow
@@ -28,6 +31,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -91,112 +95,106 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     return <LoadingSpinner message={message} />;
   }
 
+  const stepConfigs = [
+    {
+      icon: 'fitness-center',
+      color: theme.colors.link,
+      title: t('onboarding.welcome_title'),
+      description: t('onboarding.welcome_description'),
+      buttonTitle: t('common.continue'),
+      onPress: () => setStep(1),
+    },
+    {
+      icon: 'health-and-safety',
+      color: theme.colors.link,
+      title: t('onboarding.permissions_title'),
+      description: t('onboarding.permissions_description'),
+      buttonTitle: t('common.continue'),
+      onPress: HandleRequestPermissions,
+    },
+    {
+      icon: permissionsGranted ? 'check-circle' : 'info',
+      color: permissionsGranted ? theme.colors.success : theme.colors.link,
+      title: permissionsGranted
+        ? t('onboarding.setup_complete')
+        : t('errors.no_permission'),
+      description: permissionsGranted
+        ? t('onboarding.setup_complete_description')
+        : t('onboarding.permissions_denied_description'),
+      buttonTitle: t('common.done'),
+      onPress: HandleComplete,
+    },
+  ];
+  const current = stepConfigs[step];
+  const showSettingsLink = step === 2 && !permissionsGranted;
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.content}>
-      {step === 0 && (
-        <View style={styles.stepContainer}>
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: Math.max(insets.bottom, 24) },
+      ]}>
+      <View style={styles.body}>
+        <View
+          style={[
+            styles.iconBadge,
+            { backgroundColor: ToRgba(current.color, 0.12) },
+          ]}>
           <Icon
-            name="fitness-center"
+            name={current.icon}
             type="material"
-            size={80}
-            color={theme.colors.link}
-          />
-          <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
-            {t('onboarding.welcome_title')}
-          </Text>
-          <Text
-            style={[
-              styles.description,
-              { color: theme.colors.text.secondary },
-            ]}>
-            {t('onboarding.welcome_description')}
-          </Text>
-          <AppButton
-            title={t('common.continue')}
-            onPress={() => setStep(1)}
-            containerStyle={styles.buttonContainer}
-            size="lg"
+            size={64}
+            color={current.color}
           />
         </View>
-      )}
-
-      {step === 1 && (
-        <View style={styles.stepContainer}>
-          <Icon
-            name="health-and-safety"
-            type="material"
-            size={80}
-            color={theme.colors.link}
-          />
-          <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
-            {t('onboarding.permissions_title')}
+        <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
+          {current.title}
+        </Text>
+        <Text
+          style={[styles.description, { color: theme.colors.text.secondary }]}>
+          {current.description}
+        </Text>
+        {error && (
+          <Text style={[styles.errorText, { color: theme.colors.error }]}>
+            {error}
           </Text>
-          <Text
-            style={[
-              styles.description,
-              { color: theme.colors.text.secondary },
-            ]}>
-            {t('onboarding.permissions_description')}
-          </Text>
+        )}
+      </View>
 
-          {error && (
-            <Text style={[styles.errorText, { color: theme.colors.error }]}>
-              {error}
-            </Text>
-          )}
-
-          <AppButton
-            title={t('common.continue')}
-            onPress={HandleRequestPermissions}
-            containerStyle={styles.buttonContainer}
-            size="lg"
-          />
-        </View>
-      )}
-
-      {step === 2 && (
-        <View style={styles.stepContainer}>
-          <Icon
-            name={permissionsGranted ? 'check-circle' : 'info'}
-            type="material"
-            size={80}
-            color={
-              permissionsGranted ? theme.colors.success : theme.colors.link
-            }
-          />
-          <Text h2 style={[styles.title, { color: theme.colors.text.primary }]}>
-            {permissionsGranted
-              ? t('onboarding.setup_complete')
-              : t('errors.no_permission')}
-          </Text>
-          <Text
-            style={[
-              styles.description,
-              { color: theme.colors.text.secondary },
-            ]}>
-            {permissionsGranted
-              ? t('onboarding.setup_complete_description')
-              : t('onboarding.permissions_denied_description')}
-          </Text>
-          <AppButton
-            title={t('common.done')}
-            onPress={HandleComplete}
-            containerStyle={styles.buttonContainer}
-            size="lg"
-          />
-          {!permissionsGranted && (
-            <Button
-              title={t('common.open_settings')}
-              onPress={() => Linking.openSettings()}
-              type="clear"
-              containerStyle={styles.buttonContainer}
-              titleStyle={{ color: theme.colors.link }}
+      <View style={styles.footer}>
+        <View style={styles.dots}>
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === step
+                  ? [
+                      styles.dotActive,
+                      { backgroundColor: theme.colors.primary },
+                    ]
+                  : { backgroundColor: theme.colors.divider },
+              ]}
             />
-          )}
+          ))}
         </View>
-      )}
+        <AppButton
+          title={current.buttonTitle}
+          onPress={current.onPress}
+          containerStyle={styles.buttonContainer}
+          size="lg"
+        />
+        {showSettingsLink && (
+          <Button
+            title={t('common.open_settings')}
+            onPress={() => Linking.openSettings()}
+            type="clear"
+            containerStyle={styles.buttonContainer}
+            titleStyle={{ color: theme.colors.link }}
+          />
+        )}
+      </View>
     </ScrollView>
   );
 };
@@ -207,31 +205,56 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
-  stepContainer: {
+  body: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  iconBadge: {
+    width: 136,
+    height: 136,
+    borderRadius: 68,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
   title: {
-    marginTop: 24,
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
   },
   description: {
     fontSize: 17,
     textAlign: 'center',
-    marginBottom: 32,
-    opacity: 0.8,
     lineHeight: 24,
-  },
-  buttonContainer: {
-    width: '100%',
-    marginTop: 12,
+    paddingHorizontal: 8,
   },
   errorText: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 16,
+    marginTop: 16,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingTop: 24,
+  },
+  dots: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  dotActive: {
+    width: 24,
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: 12,
   },
 });
