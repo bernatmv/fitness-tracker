@@ -21,6 +21,7 @@ import {
 } from '@components/common';
 import { LoadHealthData, LoadUserPreferences } from '@services/storage';
 import { SyncFromLastDataDate } from '@services/sync';
+import { storeReviewService } from '@services/system';
 import {
   MetricType,
   HealthDataStore,
@@ -66,6 +67,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onMetricPress }) => {
       }
 
       setLoadingState(LoadingState.SUCCESS);
+
+      // Ask for a review only once the wall is actually on screen with data in it — the
+      // moment the app has just shown its value. Never during onboarding, never mid-sync,
+      // and never on an empty wall, where there is nothing to have an opinion about.
+      // The service owns the milestone and rate-limit rules; failures are swallowed there.
+      if (data?.lastFullSync) {
+        void storeReviewService.MaybeAskAfterMilestone();
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       setLoadingState(LoadingState.ERROR);
