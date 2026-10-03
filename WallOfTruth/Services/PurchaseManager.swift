@@ -14,11 +14,6 @@ final class PurchaseManager {
     }
 
     nonisolated static let trialLength: TimeInterval = 7 * 24 * 60 * 60
-    /// First build number of the free app. Anyone whose original download is
-    /// an older build paid for the app and keeps everything.
-    /// Must stay above every build number ever shipped (Xcode Cloud assigns
-    /// them), see docs/native_app.md.
-    nonisolated static let firstFreemiumBuild = 100
 
     private(set) var access: Access = Access.cached
     private(set) var pro: Product?
@@ -28,7 +23,7 @@ final class PurchaseManager {
     private(set) var trialEnd: Date?
     private(set) var isPurchasing = false
     private(set) var isLoadingProducts = false
-    /// True once access is known for sure (StoreKit answered, legacy check done).
+    /// True once StoreKit has answered at least once this launch.
     private(set) var isResolved = false
     /// Ask to Buy: a purchase waiting for a parent's approval.
     private(set) var awaitingApproval = false
@@ -112,43 +107,19 @@ final class PurchaseManager {
         }
         trialUsed = trialStart != nil
         trialEnd = trialStart?.addingTimeInterval(Self.trialLength)
-        let legacy = await Self.isLegacyPurchaser()
         guard generation == accessGeneration else { return }
-        // Unknown legacy status (offline, unverified) keeps a cached grant.
-        let isLegacy = legacy ?? (access == .legacyPurchase)
-        set(Self.resolve(proOwned: proOwned, legacy: isLegacy, trialStart: trialStart, now: Date()))
-        isResolved = proOwned || legacy != nil
+        set(Self.resolve(proOwned: proOwned, trialStart: trialStart, now: Date()))
+        isResolved = true
     }
 
     /// Pure resolution so the rules are unit-testable.
-    nonisolated static func resolve(proOwned: Bool, legacy: Bool, trialStart: Date?, now: Date) -> Access {
+    nonisolated static func resolve(proOwned: Bool, trialStart: Date?, now: Date) -> Access {
         if proOwned { return .pro }
-        if legacy { return .legacyPurchase }
         if let trialStart {
             let endsAt = trialStart.addingTimeInterval(trialLength)
             return now < endsAt ? .trial(endsAt: endsAt) : .free
         }
         return .free
-    }
-
-    /// Build numbers are what `originalAppVersion` reports on iOS.
-    nonisolated static func isLegacy(originalAppVersion: String) -> Bool {
-        guard let build = Int(originalAppVersion.split(separator: ".").first ?? "") else { return false }
-        return build < firstFreemiumBuild
-    }
-
-    /// Checked once and remembered: the original purchase never changes, and
-    /// re-reading the app transaction can prompt for an Apple Account sign-in.
-    /// `nil` means it could not be determined right now.
-    private static func isLegacyPurchaser() async -> Bool? {
-        let key = "legacy_purchaser_v2"
-        if let known = UserDefaults.standard.object(forKey: key) as? Bool { return known }
-        guard let result = try? await AppTransaction.shared, case .verified(let app) = result else { return nil }
-        // Sandbox and Xcode always report "1.0"; only production is meaningful.
-        guard app.environment == .production else { return false }
-        let legacy = isLegacy(originalAppVersion: app.originalAppVersion)
-        UserDefaults.standard.set(legacy, forKey: key)
-        return legacy
     }
 
     func buyPro() async { await purchase(pro) }

@@ -20,7 +20,7 @@ struct AccessTests {
     }
 
     @Test func paidUsersSeeEverythingAndNoUpsell() {
-        for access in [Access.pro, .legacyPurchase] {
+        for access in [Access.pro] {
             #expect(Metric.allCases.allSatisfy { access.canView($0, now: now) })
             #expect(!access.showsUpsell)
         }
@@ -31,27 +31,17 @@ struct PurchaseResolutionTests {
     let now = Date(timeIntervalSince1970: 1_800_000_000)
 
     @Test func proBeatsEverything() {
-        #expect(PurchaseManager.resolve(proOwned: true, legacy: false, trialStart: now, now: now) == .pro)
-    }
-
-    @Test func legacyBuyersKeepFullAccess() {
-        #expect(PurchaseManager.resolve(proOwned: false, legacy: true, trialStart: nil, now: now) == .legacyPurchase)
+        #expect(PurchaseManager.resolve(proOwned: true, trialStart: now, now: now) == .pro)
     }
 
     @Test func trialLastsSevenDays() {
         let started = now.addingTimeInterval(-6 * 86_400)
-        #expect(PurchaseManager.resolve(proOwned: false, legacy: false, trialStart: started, now: now)
+        #expect(PurchaseManager.resolve(proOwned: false, trialStart: started, now: now)
             == .trial(endsAt: started.addingTimeInterval(7 * 86_400)))
         let expired = now.addingTimeInterval(-8 * 86_400)
-        #expect(PurchaseManager.resolve(proOwned: false, legacy: false, trialStart: expired, now: now) == .free)
+        #expect(PurchaseManager.resolve(proOwned: false, trialStart: expired, now: now) == .free)
     }
 
-    @Test func legacyBuildDetection() {
-        #expect(PurchaseManager.isLegacy(originalAppVersion: "17"))
-        #expect(PurchaseManager.isLegacy(originalAppVersion: "99"))
-        #expect(!PurchaseManager.isLegacy(originalAppVersion: "100"))
-        #expect(!PurchaseManager.isLegacy(originalAppVersion: "abc"))
-    }
 }
 
 struct LegacyMigrationTests {

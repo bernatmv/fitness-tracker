@@ -8,14 +8,12 @@ enum Access: Codable, Equatable, Sendable {
     case trial(endsAt: Date)
     /// Lifetime Pro purchase.
     case pro
-    /// Bought the app back when it was paid-upfront.
-    case legacyPurchase
 
     func isFullAccess(now: Date = Date()) -> Bool {
         switch self {
         case .free: false
         case .trial(let endsAt): now < endsAt
-        case .pro, .legacyPurchase: true
+        case .pro: true
         }
     }
 
@@ -27,7 +25,7 @@ enum Access: Codable, Equatable, Sendable {
     var showsUpsell: Bool {
         switch self {
         case .free, .trial: true
-        case .pro, .legacyPurchase: false
+        case .pro: false
         }
     }
 }

@@ -68,7 +68,6 @@
 "settings.pro.upsell.detail" = "Toutes les mesures, toutes les plages, tous les widgets. Un seul paiement.";
 "settings.pro.owned" = "Pro déverrouillé";
 "settings.pro.owned.detail" = "Toutes les mesures sont à vous. Merci !";
-"settings.pro.legacy" = "Vous avez acheté Wall of Truth avant qu’elle devienne gratuite, donc Pro est à vous. Merci !";
 "onboarding.welcome.lead" = "Bienvenue dans";
 "onboarding.feature.wall" = "Un mur par mesure";
 "onboarding.feature.wall.detail" = "Chaque jour de vos données Santé devient un carré. Les trous et les séries sautent aux yeux.";

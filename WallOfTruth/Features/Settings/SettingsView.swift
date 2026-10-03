@@ -151,7 +151,7 @@ private struct ProStatusCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(upsell ? "settings.pro.upsell" : "settings.pro.owned").font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Theme.Colors.primaryText)
-                    Text(purchases.access == .legacyPurchase ? "settings.pro.legacy" : (upsell ? "settings.pro.upsell.detail" : "settings.pro.owned.detail"))
+                    Text(upsell ? "settings.pro.upsell.detail" : "settings.pro.owned.detail")
                         .font(.system(size: 13)).foregroundStyle(Theme.Colors.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }

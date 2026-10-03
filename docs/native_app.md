@@ -24,7 +24,7 @@ These only work in Debug builds; see `Services/DebugFlags.swift`.
 | --- | --- |
 | `-DemoData YES` | Generated data instead of HealthKit (simulator, screenshots) |
 | `-SkipOnboarding YES` | Go straight to the home screen |
-| `-Access free\|trial\|pro\|legacy` | Force an access level and skip StoreKit |
+| `-Access free\|trial\|pro` | Force an access level and skip StoreKit |
 | `-Screen paywall\|paywall-steps\|settings\|weeks\|months\|recap\|detail-STEPS\|detail-STEPS-config\|widgets` | Open a screen on launch. `widgets` is an in-app gallery of every widget layout. |
 
 ## Structure
@@ -56,7 +56,6 @@ These only work in Debug builds; see `Services/DebugFlags.swift`.
 - **Free:** Calories, with every feature.
 - **Pro:** unlocks the other five metrics and their widgets.
 - **Trial:** grants Pro for 7 days from the trial purchase date. When it ends, the other metrics lock again and nothing is charged. The paywall states all of this before the trial starts.
-- **Existing buyers:** anyone whose original download is a build below 100 (`PurchaseManager.firstFreemiumBuild`) bought the paid app and keeps everything (`Access.legacyPurchase`). This is checked through `AppTransaction`, in production only.
 
 Conversion levers:
 
@@ -68,7 +67,6 @@ Conversion levers:
 
 ### App Store Connect checklist
 
-1. **Before the first upload, check the build numbers.** Find the highest build number ever shipped in App Store Connect (TestFlight → Builds). Xcode Cloud may have assigned its own numbers. `PurchaseManager.firstFreemiumBuild` (currently 100) and the new app's build number must both be above it. Otherwise new users get Pro for free, or paying users lose it.
-2. Create both in-app purchases with the IDs above. The trial's display name must follow the "7-day Trial" convention. Turn on Family Sharing for Pro, because the paywall promises it.
-3. Set the app price to Free with the release that ships the new build. Attach both IAPs to that version's submission.
-4. In the review notes, explain the trial and the grandfathering of earlier buyers.
+1. Create both in-app purchases with the IDs above. The trial's display name must follow the "7-day Trial" convention. Turn on Family Sharing for Pro, because the paywall promises it.
+2. Set the app price to Free with the release that ships the new build. Attach both IAPs to that version's submission.
+3. In the review notes, explain the free trial.

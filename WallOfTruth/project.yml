@@ -9,7 +9,6 @@ settings:
   base:
     DEVELOPMENT_TEAM: 426R48XBW3
     MARKETING_VERSION: "2.0.0"
-    # Builds below 100 were the paid-upfront app; see PurchaseManager.firstFreemiumBuild.
     CURRENT_PROJECT_VERSION: "100"
     SWIFT_VERSION: "5.0"
     SWIFT_STRICT_CONCURRENCY: minimal
