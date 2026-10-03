@@ -29,7 +29,7 @@ enum Theme {
         static let inkLight = Color(UIColor(hex: 0xFFFFFF))
         /// Days that haven't happened yet: neutral, never tinted, so they
         /// can't be mistaken for a below-goal day.
-        static let futureCell = dynamic(light: 0xF1EFF4, dark: 0x232327)
+        static let futureCell = dynamic(light: 0xF1EFF4, dark: 0x2A2A2F)
         static let todayOutline = dynamic(light: 0x3F3F46, dark: 0xD4D4D8)
         static let star = dynamic(light: 0xF59E0B, dark: 0xFBBF24)
         static let pro = dynamic(light: 0xF59E0B, dark: 0xFBBF24)

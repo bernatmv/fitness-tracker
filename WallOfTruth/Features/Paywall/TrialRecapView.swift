@@ -57,7 +57,12 @@ struct TrialRecapView: View {
             }
             .padding(.horizontal, Theme.Spacing.xl)
             .padding(.vertical, Theme.Spacing.m)
-            .background(Theme.Colors.background.ignoresSafeArea())
+            .background {
+                Theme.Colors.background
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.35)], startPoint: .top, endPoint: .bottom))
+                    .padding(.top, -Theme.Spacing.xxl)
+                    .ignoresSafeArea()
+            }
         }
         .screenBackground()
         // Marked on screen, so a refused presentation retries next launch.
