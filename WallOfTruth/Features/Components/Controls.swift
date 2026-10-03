@@ -59,3 +59,41 @@ extension View {
         background(Theme.Colors.background.ignoresSafeArea())
     }
 }
+
+/// Opaque bar background that fades into the content below, so scrolled
+/// content never shows through a floating header.
+struct TopBarBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        content.background {
+            VStack(spacing: 0) {
+                Theme.Colors.background
+                LinearGradient(colors: [Theme.Colors.background, Theme.Colors.background.opacity(0)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: Theme.Spacing.l)
+                    .padding(.bottom, -Theme.Spacing.l)
+            }
+            .ignoresSafeArea(edges: .top)
+        }
+    }
+}
+
+extension View {
+    func topBarBackground() -> some View { modifier(TopBarBackground()) }
+}
+
+/// Sheet header: close button leading (HabitKit), centred title.
+struct SheetHeader: View {
+    let title: Text
+    let close: () -> Void
+
+    var body: some View {
+        ZStack {
+            title.font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+            HStack {
+                CircleButton(symbol: "xmark", label: "common.close", action: close)
+                Spacer()
+            }
+        }
+        .padding(Theme.Spacing.l)
+        .topBarBackground()
+    }
+}

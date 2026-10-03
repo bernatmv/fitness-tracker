@@ -18,7 +18,6 @@
 "unit.hours" = "%@ Std.";
 "unit.floors" = "%@ Etagen";
 "home.today %@ %@" = "%1$@ · Ziel %2$@";
-"home.locked.days %lld" = "Wartende Tage mit Daten: %lld";
 "home.locked.empty" = "Freischalten und deine Wand starten";
 "home.style.weeks" = "Wochenansicht";
 "home.style.months" = "Monatsansicht";
@@ -37,12 +36,9 @@
 "detail.stats.bestday" = "Bester Tag";
 "ranges.title" = "Deine Bereiche";
 "ranges.edit" = "Bearbeiten";
-"ranges.days %lld" = "%lld T";
 "ranges.footer" = "Tage in jedem Bereich in den letzten 12 Monaten. Dein erster Bereich ist dein Tagesziel.";
 "range.below" = "Unter dem Ziel";
-"range.number %lld" = "Bereich %lld";
 "config.title" = "Bereiche und Farbe";
-"config.title %@" = "%@";
 "config.ranges" = "Bereiche";
 "config.color" = "Farbe";
 "config.from" = "Ab";
@@ -102,7 +98,6 @@
 "pro.cta.buy %@" = "Pro für %@ freischalten";
 "pro.fineprint.lifetime" = "Einmaliger Kauf. Kein Abo. Mit deiner Familie geteilt.";
 "pro.restore" = "Wiederherstellen";
-"trial.active %lld" = "Pro-Test · verbleibende Tage: %lld";
 "trial.active.detail" = "Behalte alle Wände mit einem einmaligen Kauf.";
 "trial.ended" = "Dein Testzeitraum ist abgelaufen";
 "trial.ended.detail" = "Deine Wände sind noch da. Schalte sie dauerhaft frei.";
@@ -133,3 +128,14 @@
 "status.empty.title" = "Noch keine Health-Daten";
 "status.empty.detail" = "Erlaube Wall of Truth in Health unter „Datenzugriff & Geräte“, deine Daten zu lesen, und versuche es erneut.";
 "status.retry" = "Erneut versuchen";
+"range.goal" = "Ziel";
+"range.strong" = "Stark";
+"range.great" = "Super";
+"range.peak" = "Spitze";
+"config.value" = "Wert";
+"config.hours" = "Stunden";
+"config.value.hint" = "Dieser Bereich beginnt bei diesem Wert.";
+"config.hours.hint" = "Dieser Bereich beginnt bei so vielen Stunden Schlaf.";
+"common.save" = "Sichern";
+"common.cancel" = "Abbrechen";
+"recap.total %lld" = "Zieltage von %lld";

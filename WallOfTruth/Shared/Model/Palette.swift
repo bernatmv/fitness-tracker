@@ -19,11 +19,11 @@ struct Palette: Identifiable, Hashable, Sendable {
     /// How the five levels are built: solid colors, not transparency, so
     /// every tier stays saturated and distinct on cards, widgets and blurs.
     /// Level 0 ("not met") is a faint tint, 1–2 climb toward the base color,
-    /// 3 is the base and 4 steps past it. On dark the ladder tops out at
-    /// the base itself (brighter = more); on light the peak goes deeper.
-    static let darkMix: [Double] = [0.11, 0.32, 0.56, 0.80]
-    static let lightMix: [Double] = [0.13, 0.34, 0.62, 1.0]
-    static let peakShift: Double = 0.32
+    /// 4 is the full base color. On dark the top tier also gets a slight
+    /// glow toward white so it pops; hues are never darkened.
+    static let darkMix: [Double] = [0.11, 0.30, 0.52, 0.74]
+    static let lightMix: [Double] = [0.12, 0.32, 0.54, 0.74]
+    static let peakGlow: Double = 0.14
 
     static func components(hex: UInt32, level: Int, dark: Bool) -> (r: Double, g: Double, b: Double) {
         let base = (Double((hex >> 16) & 0xFF) / 255, Double((hex >> 8) & 0xFF) / 255, Double(hex & 0xFF) / 255)
@@ -35,7 +35,7 @@ struct Palette: Identifiable, Hashable, Sendable {
         // empty days stay visible on white.
         let floor = dark ? (0.114, 0.114, 0.125) : (level == 0 ? (0.93, 0.925, 0.94) : (1.0, 1.0, 1.0))
         if level == 4 {
-            return dark ? (base.0, base.1, base.2) : mix(base, (0.08, 0.06, 0.10), peakShift * 0.75)
+            return dark ? mix(base, (1.0, 1.0, 1.0), peakGlow) : (base.0, base.1, base.2)
         }
         return mix(floor, base, (dark ? darkMix : lightMix)[level])
     }

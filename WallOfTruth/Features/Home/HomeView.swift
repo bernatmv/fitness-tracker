@@ -5,6 +5,8 @@ import SwiftUI
 struct PaywallRequest: Identifiable {
     let id = UUID()
     var highlight: Metric?
+    /// The one-time automatic showing after onboarding.
+    var isOnboarding = false
 }
 
 struct HomeView: View {
@@ -15,6 +17,7 @@ struct HomeView: View {
     @State private var paywall: PaywallRequest?
     @State private var showsSettings = false
     @State private var showsRecap = false
+    @State private var recapWantsUpgrade = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -46,7 +49,7 @@ struct HomeView: View {
                 .animation(.smooth, value: model.hasAnyData)
             }
             .scrollIndicators(.hidden)
-            .refreshable { await model.refresh() }
+            .refreshable { await model.refreshRecent() }
             .screenBackground()
             .safeAreaInset(edge: .top) { topBar }
             .overlay(alignment: .bottom) {
@@ -56,10 +59,13 @@ struct HomeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Metric.self) { MetricDetailView(metric: $0) }
         }
-        .sheet(item: $paywall) { PaywallView(highlight: $0.highlight) }
+        .sheet(item: $paywall) { PaywallView(highlight: $0.highlight, isOnboarding: $0.isOnboarding) }
         .sheet(isPresented: $showsSettings) { SettingsView() }
-        .sheet(isPresented: $showsRecap) {
-            TrialRecapView { showsRecap = false; paywall = PaywallRequest() }
+        .sheet(isPresented: $showsRecap, onDismiss: {
+            // Present the paywall only once the recap sheet is gone.
+            if recapWantsUpgrade { recapWantsUpgrade = false; paywall = PaywallRequest() }
+        }) {
+            TrialRecapView { recapWantsUpgrade = true; showsRecap = false }
                 .presentationDetents([.large])
         }
         .task { await firstAppearance() }
@@ -77,19 +83,21 @@ struct HomeView: View {
         HStack(spacing: Theme.Spacing.s) {
             CircleButton(symbol: "gearshape", label: "settings.title") { showsSettings = true }
             Spacer()
-            if model.isSyncing {
-                ProgressView().controlSize(.small).tint(Theme.Colors.secondaryText)
-            }
             if model.access.showsUpsell {
                 CircleButton(symbol: "crown.fill", filled: true, label: "pro.title") { paywall = PaywallRequest() }
             }
         }
         .overlay {
-            Text("app.name").font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+            HStack(spacing: Theme.Spacing.s) {
+                Text("app.name").font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                if model.isSyncing {
+                    ProgressView().controlSize(.mini).tint(Theme.Colors.secondaryText)
+                }
+            }
         }
         .padding(.horizontal, Theme.Spacing.screen)
         .padding(.vertical, Theme.Spacing.s)
-        .background(Theme.Colors.background.opacity(0.94).ignoresSafeArea(edges: .top))
+        .topBarBackground()
     }
 
     /// First launch after onboarding shows the paywall once the wall is
@@ -108,12 +116,14 @@ struct HomeView: View {
             path = [Metric(rawValue: String(screen.dropFirst(7))) ?? .steps]; return
         default: break
         }
-        let key = "onboarding_paywall_shown"
-        // Only once access is certain, so paying users never see it.
-        if !UserDefaults.standard.bool(forKey: key), await purchases.waitUntilResolved(), model.access == .free {
-            UserDefaults.standard.set(true, forKey: key)
+        // Prompts wait until access is certain (paying users never see a
+        // paywall) and the first quick sync is done (the Health permission
+        // sheet it may raise must not collide with ours).
+        guard await purchases.waitUntilResolved() else { return }
+        await model.waitForFirstPass()
+        if !PaywallView.onboardingShown, model.access == .free {
             try? await Task.sleep(for: .seconds(1.2))
-            paywall = PaywallRequest()
+            paywall = PaywallRequest(isOnboarding: true)
         } else if TrialRecap.shouldShow(trialEnd: purchases.trialEnd, access: model.access) {
             TrialRecap.markShown()
             showsRecap = true

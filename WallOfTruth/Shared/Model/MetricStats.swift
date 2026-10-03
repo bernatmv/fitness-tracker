@@ -20,11 +20,12 @@ struct MetricStats: Equatable, Sendable {
     /// Goal rate over days that have data.
     var goalRate: Double { daysWithData == 0 ? 0 : Double(daysMeetingGoal) / Double(daysWithData) }
 
+    /// Totals and averages cover `range`; streaks cover all history so a
+    /// long streak is never cut at the range edge.
     /// - Parameter today: Today is still in progress, so an unmet today does
     ///   not break the current streak.
     init(series: DaySeries, scale: ThresholdScale, range: ClosedRange<Day>, today: Day = .today) {
         guard !series.isEmpty else { return }
-        var run = 0
         var day = range.lowerBound
         while day <= range.upperBound {
             let value = series[day]
@@ -33,19 +34,18 @@ struct MetricStats: Equatable, Sendable {
                 total += value
                 if value > (best?.value ?? 0) { best = (day, value) }
             }
-            if scale.meetsGoal(value) {
-                daysMeetingGoal += 1
-                run += 1
-                bestStreak = max(bestStreak, run)
-            } else {
-                run = 0
-            }
+            if scale.meetsGoal(value) { daysMeetingGoal += 1 }
             day = day.advanced(by: 1)
         }
         average = daysWithData == 0 ? 0 : total / Double(daysWithData)
 
+        var run = 0
+        for value in series.values {
+            run = scale.meetsGoal(value) ? run + 1 : 0
+            bestStreak = max(bestStreak, run)
+        }
         var cursor = scale.meetsGoal(series[today]) ? today : today.advanced(by: -1)
-        while cursor >= range.lowerBound, scale.meetsGoal(series[cursor]) {
+        while cursor >= series.start, scale.meetsGoal(series[cursor]) {
             currentStreak += 1
             cursor = cursor.advanced(by: -1)
         }

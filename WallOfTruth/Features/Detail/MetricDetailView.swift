@@ -45,7 +45,7 @@ struct MetricDetailView: View {
         }
         .padding(.horizontal, Theme.Spacing.xl)
         .padding(.vertical, Theme.Spacing.s)
-        .background(Theme.Colors.background.opacity(0.94).ignoresSafeArea(edges: .top))
+        .topBarBackground()
     }
 
     private var titleBlock: some View {
@@ -101,6 +101,12 @@ private struct SelectedDayCard: View {
 /// Human name of a range level.
 enum RangeName {
     static func text(_ level: Int) -> String {
-        level == 0 ? String(localized: "range.below") : String(format: String(localized: "range.number %lld"), level)
+        switch level {
+        case ...0: String(localized: "range.below")
+        case 1: String(localized: "range.goal")
+        case 2: String(localized: "range.strong")
+        case 3: String(localized: "range.great")
+        default: String(localized: "range.peak")
+        }
     }
 }

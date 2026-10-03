@@ -55,7 +55,7 @@ struct RangesCard: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
-                Text(String(format: String(localized: "ranges.days %lld"), count)).font(.mono(13, weight: .medium))
+                Text(verbatim: "\(count)").font(.mono(13, weight: .medium))
                 Capsule().fill(Theme.Colors.field)
                     .frame(width: 64, height: 4)
                     .overlay(alignment: .leading) {
@@ -69,8 +69,10 @@ struct RangesCard: View {
 
     private func span(_ level: Int) -> String {
         let range = settings.scale.range(of: level)
-        let lower = MetricFormat.value(range.lower, for: metric)
-        guard let upper = range.upper else { return "≥ " + lower }
-        return level == 0 ? "< " + MetricFormat.value(upper, for: metric) : lower + " – " + MetricFormat.value(upper, for: metric)
+        guard let upper = range.upper else { return "≥ " + MetricFormat.value(range.lower, for: metric) }
+        if level == 0 { return "< " + MetricFormat.value(upper, for: metric) }
+        // Unit once, after the upper bound: "10,000 – 15,000 steps".
+        let lower = metric == .sleep ? MetricFormat.value(range.lower, for: metric) : MetricFormat.number(range.lower, for: metric)
+        return lower + " – " + MetricFormat.value(upper, for: metric)
     }
 }

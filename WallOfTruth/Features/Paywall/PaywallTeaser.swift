@@ -30,12 +30,14 @@ struct PaywallTeaser: View {
                     .opacity(front ? 1 : 0)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(metric.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
-                    Text(hasData ? String(format: String(localized: "home.locked.days %lld"), series.values.filter { $0 > 0 }.count) : String(localized: "pro.teaser.sample"))
+                    Text(hasData ? Plural.string("home.locked.days %lld", series.values.filter { $0 > 0 }.count) : String(localized: "pro.teaser.sample"))
                         .font(.system(size: 12)).foregroundStyle(Theme.Colors.secondaryText)
                 }
                 .opacity(front ? 1 : 0)
                 Spacer()
-                Image(systemName: "lock.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.Colors.tertiaryText)
+                Image(systemName: "lock.fill").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.Colors.secondaryText)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Theme.Colors.control))
                     .opacity(front ? 1 : 0)
             }
             // Same rule as the home cards: the shape shows, the details don't.
@@ -65,7 +67,7 @@ struct TrialBanner: View {
 
     var body: some View {
         if case .trial(let endsAt) = purchases.access, endsAt > Date() {
-            banner(symbol: "hourglass", title: Text(String(format: String(localized: "trial.active %lld"), daysLeft(endsAt))),
+            banner(symbol: "hourglass", title: Text(Plural.string("trial.active %lld", daysLeft(endsAt))),
                    detail: "trial.active.detail")
         } else if purchases.access.showsUpsell, let end = purchases.trialEnd, end <= Date(),
                   Date().timeIntervalSince(end) < TrialRecap.freshFor {

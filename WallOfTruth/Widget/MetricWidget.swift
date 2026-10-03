@@ -29,16 +29,22 @@ struct MetricProvider: AppIntentTimelineProvider {
     /// One entry per refresh; the app reloads timelines after every sync,
     /// and a midnight refresh starts the new day's cell.
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<MetricEntry> {
-        let entry = MetricEntry(date: Date(), metric: configuration.metricType.metric, snapshot: WidgetSnapshot.load())
-        return Timeline(entries: [entry], policy: .after(WidgetSchedule.nextRefresh(access: entry.snapshot?.access)))
+        let snapshot = WidgetSnapshot.load()
+        let dates = WidgetSchedule.entryDates(access: snapshot?.access)
+        let entries = dates.map { MetricEntry(date: $0, metric: configuration.metricType.metric, snapshot: snapshot) }
+        return Timeline(entries: entries, policy: .after(WidgetSchedule.nextRefresh(access: snapshot?.access)))
     }
 
-    func recommendations() -> [AppIntentRecommendation<ConfigurationAppIntent>] {
-        MetricTypeAppEnum.allCases.map { AppIntentRecommendation(intent: ConfigurationAppIntent(metric: $0), description: $0.metric.title) }
-    }
 }
 
 enum WidgetSchedule {
+    /// Now, plus the moment a trial ends, so locked metrics lock on time
+    /// even if WidgetKit delays the next reload.
+    static func entryDates(now: Date = Date(), access: Access?) -> [Date] {
+        if case .trial(let endsAt)? = access, endsAt > now { return [now, endsAt] }
+        return [now]
+    }
+
     /// Next midnight, or within the hour as a self-healing fallback.
     static func nextRefresh(now: Date = Date(), access: Access? = nil) -> Date {
         let midnight = Day(now).advanced(by: 1).date()

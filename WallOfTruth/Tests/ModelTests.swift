@@ -251,6 +251,13 @@ struct TrialRecapTests {
 }
 
 struct WidgetScheduleTests {
+    @Test func addsAnEntryAtTrialEnd() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let ends = now.addingTimeInterval(600)
+        #expect(WidgetSchedule.entryDates(now: now, access: .trial(endsAt: ends)) == [now, ends])
+        #expect(WidgetSchedule.entryDates(now: now, access: .free) == [now])
+    }
+
     @Test func refreshesWhenTheTrialEnds() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let ends = now.addingTimeInterval(600)
@@ -277,5 +284,37 @@ struct DigitContrastTests {
         #expect(!rose.prefersDarkText(level: 1, dark: true))
         #expect(rose.prefersDarkText(level: 4, dark: true))
         #expect(!Palette.with(id: "indigo").prefersDarkText(level: 4, dark: false))
+    }
+}
+
+struct LongStreakTests {
+    @Test func streaksAreNotCutByTheStatsRange() {
+        let today = Day(year: 2026, month: 10, day: 4)
+        var series = DaySeries.empty
+        series.merge(Dictionary(uniqueKeysWithValues: (0..<500).map { (today.advanced(by: -$0), 20.0) }))
+        let stats = MetricStats(series: series, scale: ThresholdScale([10, 20, 30, 40]), range: today.advanced(by: -364)...today, today: today)
+        #expect(stats.currentStreak == 500)
+        #expect(stats.bestStreak == 500)
+        #expect(stats.daysWithData == 365)
+    }
+}
+
+struct StandHoursTests {
+    @Test func overlappingSourcesCountEachHourOnce() {
+        let tz = TimeZone(identifier: "UTC")!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = tz
+        func at(_ hour: Int, _ minute: Int = 0) -> Date { calendar.date(from: DateComponents(year: 2026, month: 5, day: 2, hour: hour, minute: minute))! }
+        let result = StandHours.perDay([at(9), at(9), at(10), at(10, 30), at(23)], timeZone: tz)
+        #expect(result == [Day(year: 2026, month: 5, day: 2): 3])
+    }
+}
+
+struct DeepLinkTests {
+    @Test func parsesWidgetLinks() {
+        #expect(DeepLink.parse(DeepLink.paywall) == .paywall)
+        #expect(DeepLink.parse(DeepLink.metric(.sleep)) == .metric(.sleep))
+        #expect(DeepLink.parse(URL(string: "https://example.com")!) == nil)
+        #expect(DeepLink.parse(URL(string: "walloftruth://metric/NOPE")!) == nil)
     }
 }

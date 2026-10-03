@@ -5,12 +5,16 @@ import SwiftUI
 /// one-time payment, and keep closing and restoring always one tap away.
 struct PaywallView: View {
     var highlight: Metric?
+    var isOnboarding = false
     @Environment(AppModel.self) private var model
     @Environment(PurchaseManager.self) private var purchases
     @Environment(\.dismiss) private var dismiss
     @State private var plan: Plan = .trial
 
     enum Plan { case trial, lifetime }
+
+    static let onboardingKey = "onboarding_paywall_shown"
+    static var onboardingShown: Bool { UserDefaults.standard.bool(forKey: onboardingKey) }
 
     private var selectedPlan: Plan { purchases.canStartTrial ? plan : .lifetime }
 
@@ -24,7 +28,7 @@ struct PaywallView: View {
             }
             .padding(.horizontal, Theme.Spacing.xl)
             .padding(.top, Theme.Spacing.xxl + Theme.Spacing.l)
-            .padding(.bottom, Theme.Spacing.l)
+            .padding(.bottom, Theme.Spacing.xxl * 2)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) { footer }
@@ -32,7 +36,12 @@ struct PaywallView: View {
         .screenBackground()
         .presentationDragIndicator(.hidden)
         .onChange(of: purchases.access) { _, access in
-            if !access.showsUpsell { dismiss() }
+            // Bought Pro or started the trial: done here.
+            if access.isFullAccess() { dismiss() }
+        }
+        .onAppear {
+            // Marked only once actually on screen, so a refused presentation retries next launch.
+            if isOnboarding { UserDefaults.standard.set(true, forKey: Self.onboardingKey) }
         }
         .alert(alertTitle, isPresented: Binding(get: { purchases.message != nil }, set: { if !$0 { purchases.message = nil } })) {
             Button("common.ok", role: .cancel) {}
@@ -165,7 +174,7 @@ struct PaywallView: View {
         .padding(.bottom, Theme.Spacing.s)
         .background {
             Theme.Colors.background
-                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.4)], startPoint: .top, endPoint: .bottom))
+                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.6)], startPoint: .top, endPoint: .bottom))
                 .padding(.top, -Theme.Spacing.xxl - Theme.Spacing.l)
                 .ignoresSafeArea()
         }

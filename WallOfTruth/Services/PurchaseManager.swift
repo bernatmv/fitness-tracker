@@ -105,9 +105,9 @@ final class PurchaseManager {
             default: break
             }
         }
+        guard generation == accessGeneration else { return }
         trialUsed = trialStart != nil
         trialEnd = trialStart?.addingTimeInterval(Self.trialLength)
-        guard generation == accessGeneration else { return }
         set(Self.resolve(proOwned: proOwned, trialStart: trialStart, now: Date()))
         isResolved = true
     }
@@ -139,7 +139,8 @@ final class PurchaseManager {
             return
         }
         await refreshAccess()
-        message = access.showsUpsell ? .nothingToRestore : .restored
+        // Any purchase found (Pro or a trial) counts as restored.
+        message = access == .pro || trialUsed ? .restored : .nothingToRestore
     }
 
     private func purchase(_ product: Product?) async {

@@ -108,7 +108,7 @@ private struct DayCell: View {
                 .overlay {
                     if selected || day == today {
                         RoundedRectangle(cornerRadius: Theme.Radius.dayCell, style: .continuous)
-                            .strokeBorder(selected ? Theme.Colors.accent : style.palette.color, lineWidth: 1.5)
+                            .strokeBorder(selected ? Theme.Colors.accent : Theme.Colors.todayOutline, lineWidth: 1.5)
                     }
                 }
                 .overlay(alignment: .topTrailing) {

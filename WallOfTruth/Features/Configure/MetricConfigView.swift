@@ -42,15 +42,7 @@ struct MetricConfigView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top) {
-            ZStack {
-                Text(String(format: String(localized: "config.title %@"), metric.title)).font(.system(size: 17, weight: .semibold))
-                HStack {
-                    Spacer()
-                    CircleButton(symbol: "xmark", label: "common.close") { dismiss() }
-                }
-            }
-            .padding(Theme.Spacing.l)
-            .background(Theme.Colors.background.opacity(0.94))
+            SheetHeader(title: Text(verbatim: metric.title)) { dismiss() }
         }
         .screenBackground()
         .presentationDragIndicator(.visible)
@@ -62,6 +54,8 @@ private struct RangeEditor: View {
     let metric: Metric
     let settings: MetricSettings
     let onChange: ([Double]) -> Void
+    @State private var editing: Int?
+    @State private var draft = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,11 +70,20 @@ private struct RangeEditor: View {
                     }
                     Spacer()
                     stepButton("minus", index: index, direction: -1)
-                    Text(metric == .sleep ? MetricFormat.value(settings.scale.bounds[index], for: metric) : MetricFormat.number(settings.scale.bounds[index], for: metric))
-                        .font(.mono(16, weight: .semibold))
-                        .lineLimit(1)
-                        .contentTransition(.numericText())
-                        .frame(minWidth: 76)
+                    // Tap to type an exact value; ± nudges by one step.
+                    Button {
+                        draft = ThresholdInput.editableText(settings.scale.bounds[index], for: metric)
+                        editing = index
+                    } label: {
+                        Text(metric == .sleep ? MetricFormat.value(settings.scale.bounds[index], for: metric) : MetricFormat.number(settings.scale.bounds[index], for: metric))
+                            .font(.mono(16, weight: .semibold))
+                            .lineLimit(1)
+                            .contentTransition(.numericText())
+                            .frame(minWidth: 76)
+                            .padding(.vertical, 6)
+                            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.Colors.field))
+                    }
+                    .buttonStyle(.plain)
                     stepButton("plus", index: index, direction: 1)
                 }
                 .padding(.vertical, Theme.Spacing.m)
@@ -100,6 +103,19 @@ private struct RangeEditor: View {
         }
         .padding(.horizontal, Theme.Spacing.l)
         .surface()
+        .alert(Text(RangeName.text((editing ?? 0) + 1)), isPresented: Binding(get: { editing != nil }, set: { if !$0 { editing = nil } })) {
+            TextField(metric == .sleep ? "config.hours" : "config.value", text: $draft)
+                .keyboardType(.decimalPad)
+            Button("common.cancel", role: .cancel) {}
+            Button("common.save") {
+                if let index = editing, let value = ThresholdInput.parse(draft, for: metric) {
+                    onChange(ThresholdScale.adjusting(settings.scale.bounds, index: index,
+                                                      by: value - settings.scale.bounds[index], step: metric.thresholdStep))
+                }
+            }
+        } message: {
+            Text(metric == .sleep ? "config.hours.hint" : "config.value.hint")
+        }
     }
 
     private func stepButton(_ symbol: String, index: Int, direction: Double) -> some View {

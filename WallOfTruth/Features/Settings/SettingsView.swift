@@ -27,15 +27,7 @@ struct SettingsView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top) {
-            ZStack {
-                Text("settings.title").font(.system(size: 17, weight: .semibold))
-                HStack {
-                    Spacer()
-                    CircleButton(symbol: "xmark", label: "common.close") { dismiss() }
-                }
-            }
-            .padding(Theme.Spacing.l)
-            .background(Theme.Colors.background.opacity(0.94))
+            SheetHeader(title: Text("settings.title")) { dismiss() }
         }
         .screenBackground()
         .sheet(item: $paywall) { PaywallView(highlight: $0.highlight) }
@@ -98,7 +90,7 @@ struct SettingsView: View {
     @ViewBuilder private var dataRows: some View {
         row("arrow.triangle.2.circlepath", "settings.resync", busy: model.isSyncing) { Task { await model.resyncAll() } }
         Divider().overlay(Theme.Colors.separator)
-        row("heart.text.square", "settings.health") { openURL(URL(string: "x-apple-health://")!) }
+        row("heart.fill", "settings.health") { openURL(URL(string: "x-apple-health://")!) }
         Divider().overlay(Theme.Colors.separator)
         row("globe", "settings.language") { openURL(URL(string: UIApplication.openSettingsURLString)!) }
     }

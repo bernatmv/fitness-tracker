@@ -18,7 +18,6 @@
 "unit.hours" = "%@ h";
 "unit.floors" = "%@ étages";
 "home.today %@ %@" = "%1$@ · objectif %2$@";
-"home.locked.days %lld" = "Jours de données en attente : %lld";
 "home.locked.empty" = "Déverrouillez pour lancer votre mur";
 "home.style.weeks" = "Vue par semaines";
 "home.style.months" = "Vue par mois";
@@ -37,12 +36,9 @@
 "detail.stats.bestday" = "Meilleur jour";
 "ranges.title" = "Vos plages";
 "ranges.edit" = "Modifier";
-"ranges.days %lld" = "%lld j";
 "ranges.footer" = "Jours dans chaque plage sur les 12 derniers mois. Votre première plage est votre objectif quotidien.";
 "range.below" = "Sous l’objectif";
-"range.number %lld" = "Plage %lld";
 "config.title" = "Plages et couleur";
-"config.title %@" = "%@";
 "config.ranges" = "Plages";
 "config.color" = "Couleur";
 "config.from" = "À partir de";
@@ -102,7 +98,6 @@
 "pro.cta.buy %@" = "Déverrouiller Pro pour %@";
 "pro.fineprint.lifetime" = "Achat unique. Sans abonnement. Partagé avec votre famille.";
 "pro.restore" = "Restaurer";
-"trial.active %lld" = "Essai Pro · jours restants : %lld";
 "trial.active.detail" = "Gardez tous vos murs avec un achat unique.";
 "trial.ended" = "Votre essai est terminé";
 "trial.ended.detail" = "Vos murs sont toujours là. Déverrouillez-les pour de bon.";
@@ -133,3 +128,14 @@
 "status.empty.title" = "Aucune donnée Santé pour l’instant";
 "status.empty.detail" = "Autorisez Wall of Truth à lire vos données dans Santé, sous Accès aux données et appareils, puis réessayez.";
 "status.retry" = "Réessayer";
+"range.goal" = "Objectif";
+"range.strong" = "Solide";
+"range.great" = "Excellent";
+"range.peak" = "Sommet";
+"config.value" = "Valeur";
+"config.hours" = "Heures";
+"config.value.hint" = "Cette plage commence à cette valeur.";
+"config.hours.hint" = "Cette plage commence à ce nombre d’heures de sommeil.";
+"common.save" = "Enregistrer";
+"common.cancel" = "Annuler";
+"recap.total %lld" = "jours d’objectif sur %lld";

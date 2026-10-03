@@ -52,7 +52,7 @@ struct MetricCard: View {
     private var subtitle: String {
         if locked {
             let days = series.values.filter { $0 > 0 }.count
-            return days > 0 ? String(format: String(localized: "home.locked.days %lld"), days) : String(localized: "home.locked.empty")
+            return days > 0 ? Plural.string("home.locked.days %lld", days) : String(localized: "home.locked.empty")
         }
         return String(format: String(localized: "home.today %@ %@"),
                       MetricFormat.value(todayValue, for: metric),

@@ -33,6 +33,7 @@ struct TrialRecapView: View {
                     Text("recap.title").font(.system(size: 32, weight: .bold))
                     Text("recap.subtitle").font(.system(size: 16)).foregroundStyle(Theme.Colors.secondaryText)
                 }
+                summary
                 VStack(spacing: Theme.Spacing.m) {
                     ForEach(metrics) { metric in row(metric) }
                 }
@@ -58,12 +59,36 @@ struct TrialRecapView: View {
         .screenBackground()
     }
 
+    private var trialDays: [Day] {
+        let end = min(purchases.trialEnd.map { Day($0) } ?? .today, .today)
+        return (0..<7).map { end.advanced(by: $0 - 6) }
+    }
+
+    private func hits(_ metric: Metric) -> Int {
+        let settings = model.preferences[metric]
+        let series = model.history(metric)
+        return trialDays.filter { settings.scale.meetsGoal(series[$0]) }.count
+    }
+
+    /// One headline number before the per-metric rows.
+    private var summary: some View {
+        let total = metrics.reduce(0) { $0 + hits($1) }
+        let possible = metrics.count * trialDays.count
+        return HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+            Text(verbatim: "\(total)").font(.system(size: 48, weight: .bold)).foregroundStyle(Theme.Colors.accent)
+            Text(String(format: String(localized: "recap.total %lld"), possible))
+                .font(.system(size: 16, weight: .medium)).foregroundStyle(Theme.Colors.secondaryText)
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.Spacing.l)
+        .surface(radius: Theme.Radius.card)
+    }
+
     private func row(_ metric: Metric) -> some View {
         let settings = model.preferences[metric]
         let series = model.history(metric)
-        let end = min(purchases.trialEnd.map { Day($0) } ?? .today, .today)
-        let days = (0..<7).map { end.advanced(by: $0 - 6) }
-        let hits = days.filter { settings.scale.meetsGoal(series[$0]) }.count
+        let days = trialDays
+        let hits = hits(metric)
         return HStack(spacing: Theme.Spacing.m) {
             IconTile(metric: metric, palette: settings.palette, size: 40)
             VStack(alignment: .leading, spacing: 2) {

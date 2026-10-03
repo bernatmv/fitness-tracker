@@ -48,11 +48,9 @@ struct HistoryWallCard: View {
     private func chunk(end: Day) -> some View {
         let layout = WeekGridLayout(weeks: chunkWeeks, end: end, firstWeekday: Calendar.current.firstWeekday)
         let width = CGFloat(chunkWeeks) * pitch - cell * Theme.Grid.gapFraction
-        // The newest chunk ends at the card edge, so its last labels would clip.
-        let lastLabelColumn = end == .today ? chunkWeeks - 4 : chunkWeeks - 2
         return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             ZStack(alignment: .topLeading) {
-                ForEach(layout.monthStarts.filter { $0.column <= lastLabelColumn }, id: \.column) { start in
+                ForEach(layout.monthStarts, id: \.column) { start in
                     Text(start.month.date(), format: start.month.month == 1 ? .dateTime.month(.abbreviated).year(.twoDigits) : .dateTime.month(.abbreviated))
                         .font(.mono(10))
                         .foregroundStyle(Theme.Colors.tertiaryText)
@@ -61,6 +59,7 @@ struct HistoryWallCard: View {
                 }
             }
             .frame(width: width, height: 12, alignment: .topLeading)
+            .clipped()
             WeekHeatmap(style: style, weeks: chunkWeeks, end: end, selected: selected, fadeLeading: false) { day in
                 selected = selected == day ? nil : day
             }

@@ -172,3 +172,33 @@ struct HomeStatusTests {
         #expect(HomeStatus.resolve(hasData: false, isSyncing: false, hasSynced: true) == .noData)
     }
 }
+
+struct ThresholdInputTests {
+    let en = Locale(identifier: "en_US"), es = Locale(identifier: "es_ES")
+
+    @Test func parsesLocaleNumbersAndSleepHours() {
+        #expect(ThresholdInput.parse("12,500", for: .steps, locale: en) == 12_500)
+        #expect(ThresholdInput.parse("12500", for: .steps, locale: es) == 12_500)
+        #expect(ThresholdInput.parse("7,5", for: .sleep, locale: es) == 450)
+        #expect(ThresholdInput.parse("7.5", for: .sleep, locale: en) == 450)
+        #expect(ThresholdInput.parse("abc", for: .steps, locale: en) == nil)
+        #expect(ThresholdInput.parse("-3", for: .floors, locale: en) == nil)
+    }
+
+    @Test func editableTextRoundTrips() {
+        #expect(ThresholdInput.editableText(450, for: .sleep, locale: en) == "7.5")
+        #expect(ThresholdInput.parse(ThresholdInput.editableText(10_000, for: .steps, locale: es), for: .steps, locale: es) == 10_000)
+    }
+}
+
+struct MigrateOnceTests {
+    @Test func runsOnceAndDropsOldCaches() {
+        let suite = UserDefaults(suiteName: "legacy-\(UUID())")!
+        let local = UserDefaults(suiteName: "local-\(UUID())")!
+        suite.set(#"{"theme":"dark"}"#, forKey: LegacyMigration.preferencesKey)
+        suite.set("huge", forKey: "@fitness_tracker:health_data")
+        #expect(LegacyMigration.migrateOnce(defaults: suite, local: local)?.theme == .dark)
+        #expect(suite.string(forKey: "@fitness_tracker:health_data") == nil)
+        #expect(LegacyMigration.migrateOnce(defaults: suite, local: local) == nil)
+    }
+}

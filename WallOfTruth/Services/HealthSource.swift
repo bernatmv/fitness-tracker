@@ -74,11 +74,7 @@ final class HealthKitSource: HealthSource, @unchecked Sendable {
             predicates: [.categorySample(type: HKCategoryType(.appleStandHour), predicate: predicate)],
             sortDescriptors: []
         )
-        var result: [Day: Double] = [:]
-        for sample in try await descriptor.result(for: store) {
-            result[Day(sample.startDate), default: 0] = min((result[Day(sample.startDate)] ?? 0) + 1, 24)
-        }
-        return result
+        return StandHours.perDay(try await descriptor.result(for: store).map(\.startDate))
     }
 
     private func sleepMinutes(from: Day, through: Day) async throws -> [Day: Double] {

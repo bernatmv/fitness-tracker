@@ -90,7 +90,11 @@ struct OnboardingView: View {
                         Text(metric.title).font(.label)
                         Spacer()
                         if metric.isFree {
-                            Text("onboarding.free").font(.mono(11, weight: .bold)).foregroundStyle(Theme.Colors.positive)
+                            Text("onboarding.free")
+                                .font(.mono(10, weight: .bold)).tracking(1)
+                                .foregroundStyle(Theme.Colors.onAccent)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Capsule().fill(Theme.Colors.positive))
                         } else {
                             ProBadge()
                         }

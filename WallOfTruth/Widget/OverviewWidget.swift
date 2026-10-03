@@ -15,7 +15,8 @@ struct OverviewProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<OverviewEntry>) -> Void) {
         let snapshot = WidgetSnapshot.load()
-        completion(Timeline(entries: [OverviewEntry(date: Date(), snapshot: snapshot)], policy: .after(WidgetSchedule.nextRefresh(access: snapshot?.access))))
+        let entries = WidgetSchedule.entryDates(access: snapshot?.access).map { OverviewEntry(date: $0, snapshot: snapshot) }
+        completion(Timeline(entries: entries, policy: .after(WidgetSchedule.nextRefresh(access: snapshot?.access))))
     }
 }
 
@@ -80,22 +81,32 @@ struct OverviewWidgetView: View {
                         Image(systemName: metric.symbol).font(.system(size: 13, weight: .semibold)).foregroundStyle(palette.color)
                     }
                     .frame(maxWidth: .infinity)
-                ForEach(0..<days, id: \.self) { offset in
-                    let day = today.advanced(by: offset - days + 1)
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(palette.color(level: locked ? 0 : item.settings.scale.level(for: item.series[day])))
-                        .aspectRatio(1, contentMode: .fit)
-                        .overlay {
-                            if day == today, !locked {
-                                RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Theme.Colors.todayOutline, lineWidth: 1.5)
-                            } else if locked, offset == days - 1 {
-                                Image(systemName: "lock.fill").font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.Colors.tertiaryText)
+                HStack(spacing: 6) {
+                    ForEach(0..<days, id: \.self) { offset in
+                        let day = today.advanced(by: offset - days + 1)
+                        let level = locked ? Self.teaserLevel(offset: offset, metric: metric) : item.settings.scale.level(for: item.series[day])
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(palette.color(level: level))
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay {
+                                if day == today, !locked {
+                                    RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Theme.Colors.todayOutline, lineWidth: 1.5)
+                                }
                             }
-                        }
-                        .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .layoutPriority(1)
+                .blur(radius: locked ? 2.5 : 0)
+                .overlay { if locked { ProBadge() } }
             }
-            .opacity(locked ? 0.7 : 1)
         }
+    }
+
+    /// A plausible, fixed pattern behind the blur of locked rows.
+    static func teaserLevel(offset: Int, metric: Metric) -> Int {
+        let seed = (Metric.allCases.firstIndex(of: metric) ?? 0) * 3
+        return [2, 3, 1, 4, 3, 2, 4, 3, 1, 2][(offset + seed) % 10]
     }
 }

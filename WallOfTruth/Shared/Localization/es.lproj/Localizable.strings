@@ -18,7 +18,6 @@
 "unit.hours" = "%@ h";
 "unit.floors" = "%@ pisos";
 "home.today %@ %@" = "%1$@ · objetivo %2$@";
-"home.locked.days %lld" = "Días de datos a la espera: %lld";
 "home.locked.empty" = "Desbloquea para empezar tu muro";
 "home.style.weeks" = "Vista por semanas";
 "home.style.months" = "Vista por meses";
@@ -37,12 +36,9 @@
 "detail.stats.bestday" = "Mejor día";
 "ranges.title" = "Tus rangos";
 "ranges.edit" = "Editar";
-"ranges.days %lld" = "%lld d";
 "ranges.footer" = "Días en cada rango durante los últimos 12 meses. Tu primer rango es tu objetivo diario.";
 "range.below" = "Bajo el objetivo";
-"range.number %lld" = "Rango %lld";
 "config.title" = "Rangos y color";
-"config.title %@" = "%@";
 "config.ranges" = "Rangos";
 "config.color" = "Color";
 "config.from" = "Desde";
@@ -102,7 +98,6 @@
 "pro.cta.buy %@" = "Desbloquear Pro por %@";
 "pro.fineprint.lifetime" = "Compra única. Sin suscripción. Compartida con tu familia.";
 "pro.restore" = "Restaurar";
-"trial.active %lld" = "Prueba Pro · días restantes: %lld";
 "trial.active.detail" = "Conserva todos tus muros con una compra única.";
 "trial.ended" = "Tu prueba ha terminado";
 "trial.ended.detail" = "Tus muros siguen aquí. Desbloquéalos para siempre.";
@@ -133,3 +128,14 @@
 "status.empty.title" = "Aún no hay datos de Salud";
 "status.empty.detail" = "Permite que Wall of Truth lea tus datos en Salud, en Acceso a datos y dispositivos, y vuelve a intentarlo.";
 "status.retry" = "Reintentar";
+"range.goal" = "Objetivo";
+"range.strong" = "Fuerte";
+"range.great" = "Genial";
+"range.peak" = "Máximo";
+"config.value" = "Valor";
+"config.hours" = "Horas";
+"config.value.hint" = "Este rango empieza en este valor.";
+"config.hours.hint" = "Este rango empieza con estas horas de sueño.";
+"common.save" = "Guardar";
+"common.cancel" = "Cancelar";
+"recap.total %lld" = "días con objetivo de %lld";

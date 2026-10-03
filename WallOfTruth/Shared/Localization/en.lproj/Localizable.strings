@@ -18,7 +18,6 @@
 "unit.hours" = "%@ h";
 "unit.floors" = "%@ floors";
 "home.today %@ %@" = "%1$@ · goal %2$@";
-"home.locked.days %lld" = "%lld days of data waiting";
 "home.locked.empty" = "Unlock to start your wall";
 "home.style.weeks" = "Weeks view";
 "home.style.months" = "Months view";
@@ -37,12 +36,9 @@
 "detail.stats.bestday" = "Best day";
 "ranges.title" = "Your ranges";
 "ranges.edit" = "Edit";
-"ranges.days %lld" = "%lld d";
 "ranges.footer" = "Days in each range over the last 12 months. Your first range is your daily goal.";
 "range.below" = "Below goal";
-"range.number %lld" = "Range %lld";
 "config.title" = "Ranges and color";
-"config.title %@" = "%@";
 "config.ranges" = "Ranges";
 "config.color" = "Color";
 "config.from" = "From";
@@ -102,7 +98,6 @@
 "pro.cta.buy %@" = "Unlock Pro for %@";
 "pro.fineprint.lifetime" = "One-time purchase. No subscription. Shared with your family.";
 "pro.restore" = "Restore";
-"trial.active %lld" = "Pro trial: %lld days left";
 "trial.active.detail" = "Keep every wall with a one-time purchase.";
 "trial.ended" = "Your trial has ended";
 "trial.ended.detail" = "Your walls are still here. Unlock them for good.";
@@ -133,3 +128,14 @@
 "status.empty.title" = "No Health data yet";
 "status.empty.detail" = "Allow Wall of Truth to read your data in Health, under Data Access & Devices, then try again.";
 "status.retry" = "Try again";
+"range.goal" = "Goal";
+"range.strong" = "Strong";
+"range.great" = "Great";
+"range.peak" = "Peak";
+"config.value" = "Value";
+"config.hours" = "Hours";
+"config.value.hint" = "This range starts at this value.";
+"config.hours.hint" = "This range starts at this many hours of sleep.";
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+"recap.total %lld" = "goal days out of %lld";

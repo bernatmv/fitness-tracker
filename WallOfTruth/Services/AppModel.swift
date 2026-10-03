@@ -18,6 +18,9 @@ final class AppModel {
     private(set) var isSyncing = false
     /// A refresh was requested while one was running; run once more after.
     private var pendingRefresh = false
+    /// Counts finished quick passes (recent days), so callers can wait for
+    /// fresh data without waiting for a multi-year backfill.
+    private(set) var quickPasses = 0
     private(set) var syncState = SyncState.load()
     let purchases: PurchaseManager
     private let sync: HistorySync
@@ -27,7 +30,7 @@ final class AppModel {
         purchases = PurchaseManager()
         if let saved = SharedContainer.read(Preferences.self, from: FileName.preferences) {
             preferences = saved
-        } else if let migrated = LegacyMigration.migratedPreferences() {
+        } else if let migrated = LegacyMigration.migrateOnce() {
             preferences = migrated
             SharedContainer.write(migrated, to: FileName.preferences)
         } else {
@@ -100,9 +103,14 @@ final class AppModel {
             didRequestAccess = true
             await requestHealthAccess()
         }
+        // Nothing on record (e.g. Health access was granted after an empty
+        // first sync): read history from scratch, not just recent days.
+        if !hasAnyData, syncState.lastSync != nil { syncState = SyncState() }
         let today = Day.today
         let range = HistorySync.refreshRange(state: syncState, today: today)
-        guard apply(await sync.fetch(Metric.allCases, range: range), covering: range) else { return }
+        let refreshed = apply(await sync.fetch(Metric.allCases, range: range), covering: range)
+        quickPasses += 1
+        guard refreshed else { return }
         // Backfill only in the foreground, a year at a time, newest first.
         while UIApplication.shared.applicationState != .background,
               let older = HistorySync.backfillRange(state: syncState, earliest: sync.source.earliestDay(), today: today) {
@@ -111,6 +119,27 @@ final class AppModel {
         }
     }
     private var didRequestAccess = false
+
+    /// Pull to refresh: returns once recent days are in, while any
+    /// backfill continues on its own.
+    func refreshRecent() async {
+        // A sync already running includes recent days; don't hold the spinner.
+        guard !isSyncing else { return }
+        let start = quickPasses
+        Task { await refresh() }
+        let deadline = ContinuousClock.now + .seconds(20)
+        while quickPasses == start, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+    }
+
+    /// Bounded wait for the first quick pass of this launch.
+    func waitForFirstPass(timeout: Duration = .seconds(15)) async {
+        let deadline = ContinuousClock.now + timeout
+        while quickPasses == 0, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+    }
 
     /// Re-reads all history from Health, e.g. after granting more permissions.
     func resyncAll() async {

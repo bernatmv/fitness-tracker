@@ -19,8 +19,20 @@ enum LegacyMigration {
         let metricConfigs: [String: Config]?
     }
 
-    /// Settings migrated from the old app, or nil when there is nothing to migrate.
-    static func migratedPreferences(defaults: UserDefaults? = UserDefaults(suiteName: SharedContainer.appGroup)) -> Preferences? {
+    private static let doneKey = "legacy_migration_done"
+    /// Old caches derived from Health; the native app never reads them.
+    private static let staleKeys = ["@fitness_tracker:health_data", "@fitness_tracker:widget_data"]
+
+    /// Settings from the old app, at most once per install so a later
+    /// problem with the new settings file can never bring old ones back.
+    /// Also drops the old multi-MB Health cache from the shared suite.
+    static func migrateOnce(
+        defaults: UserDefaults? = UserDefaults(suiteName: SharedContainer.appGroup),
+        local: UserDefaults = .standard
+    ) -> Preferences? {
+        guard !local.bool(forKey: doneKey) else { return nil }
+        local.set(true, forKey: doneKey)
+        staleKeys.forEach { defaults?.removeObject(forKey: $0) }
         guard let json = defaults?.string(forKey: preferencesKey) else { return nil }
         return preferences(fromLegacyJSON: Data(json.utf8))
     }

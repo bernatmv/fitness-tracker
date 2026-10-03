@@ -18,7 +18,6 @@
 "unit.hours" = "%@ godz.";
 "unit.floors" = "%@ pięter";
 "home.today %@ %@" = "%1$@ · cel %2$@";
-"home.locked.days %lld" = "Dni z danymi do odblokowania: %lld";
 "home.locked.empty" = "Odblokuj, aby zacząć swoją ścianę";
 "home.style.weeks" = "Widok tygodni";
 "home.style.months" = "Widok miesięcy";
@@ -37,12 +36,9 @@
 "detail.stats.bestday" = "Najlepszy dzień";
 "ranges.title" = "Twoje zakresy";
 "ranges.edit" = "Edytuj";
-"ranges.days %lld" = "%lld d";
 "ranges.footer" = "Dni w każdym zakresie w ciągu ostatnich 12 miesięcy. Pierwszy zakres to twój cel dzienny.";
 "range.below" = "Poniżej celu";
-"range.number %lld" = "Zakres %lld";
 "config.title" = "Zakresy i kolor";
-"config.title %@" = "%@";
 "config.ranges" = "Zakresy";
 "config.color" = "Kolor";
 "config.from" = "Od";
@@ -102,7 +98,6 @@
 "pro.cta.buy %@" = "Odblokuj Pro za %@";
 "pro.fineprint.lifetime" = "Jednorazowy zakup. Bez subskrypcji. Udostępniany rodzinie.";
 "pro.restore" = "Przywróć";
-"trial.active %lld" = "Okres próbny Pro · pozostałe dni: %lld";
 "trial.active.detail" = "Zachowaj wszystkie ściany dzięki jednorazowemu zakupowi.";
 "trial.ended" = "Okres próbny się zakończył";
 "trial.ended.detail" = "Twoje ściany wciąż tu są. Odblokuj je na stałe.";
@@ -133,3 +128,14 @@
 "status.empty.title" = "Brak danych z Zdrowia";
 "status.empty.detail" = "Zezwól Wall of Truth na odczyt danych w aplikacji Zdrowie, w sekcji Dostęp do danych i urządzenia, i spróbuj ponownie.";
 "status.retry" = "Spróbuj ponownie";
+"range.goal" = "Cel";
+"range.strong" = "Mocno";
+"range.great" = "Świetnie";
+"range.peak" = "Szczyt";
+"config.value" = "Wartość";
+"config.hours" = "Godziny";
+"config.value.hint" = "Ten zakres zaczyna się od tej wartości.";
+"config.hours.hint" = "Ten zakres zaczyna się od tylu godzin snu.";
+"common.save" = "Zapisz";
+"common.cancel" = "Anuluj";
+"recap.total %lld" = "dni z celem na %lld";

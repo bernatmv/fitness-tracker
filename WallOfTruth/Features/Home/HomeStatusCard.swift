@@ -46,12 +46,12 @@ struct HomeStatusCard: View {
             }
         }
         .padding(Theme.Spacing.l)
-        .metricCard(Palette.with(id: Metric.free.defaultPaletteID))
+        .surface(radius: Theme.Radius.card)
         .accessibilityElement(children: .combine)
     }
 
     private var tile: some View {
-        let palette = Palette.with(id: Metric.free.defaultPaletteID)
+        let palette = Palette.with(id: status == .loading ? "neutral" : "rose")
         return RoundedRectangle(cornerRadius: Theme.Size.iconTile * 0.28, style: .continuous)
             .fill(palette.color.opacity(Theme.Grid.tileTint))
             .frame(width: Theme.Size.iconTile, height: Theme.Size.iconTile)
@@ -59,7 +59,7 @@ struct HomeStatusCard: View {
                 if status == .loading {
                     ProgressView().tint(palette.color)
                 } else {
-                    Image(systemName: "heart.text.square").font(.system(size: 19, weight: .semibold)).foregroundStyle(palette.color)
+                    Image(systemName: "heart.fill").font(.system(size: 19, weight: .semibold)).foregroundStyle(palette.color)
                 }
             }
     }
@@ -73,7 +73,7 @@ struct LoadingWall: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30)) { context in
             let phase = context.date.timeIntervalSinceReferenceDate
-            let palette = Palette.with(id: Metric.free.defaultPaletteID)
+            let palette = Palette.with(id: "neutral")
             Canvas { canvas, size in
                 let cell = WeekGridLayout.cell(width: size.width, weeks: weeks)
                 let pitch = cell * (1 + Theme.Grid.gapFraction)
