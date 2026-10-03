@@ -2,6 +2,8 @@
 
 A beautiful cross-platform mobile app to track your fitness journey with GitHub-like activity visualizations.
 
+> **Native rewrite in progress:** the iOS app is being rebuilt in SwiftUI in [`WallOfTruth/`](./WallOfTruth). It adds HabitKit-style visuals, a month view, and a freemium model where calories are free and a one-time Pro unlock covers everything else. See [docs/native_app.md](./docs/native_app.md). The React Native code below stays until the native app ships.
+
 ## Features
 
 ### 📊 Health Data Tracking
