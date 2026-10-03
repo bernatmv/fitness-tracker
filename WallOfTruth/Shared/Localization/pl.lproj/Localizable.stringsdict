@@ -2,6 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>detail.streak.a11y %lld</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Obecna seria: %lld dni</string>
+			<key>many</key>
+			<string>Obecna seria: %lld dni</string>
+			<key>one</key>
+			<string>Obecna seria: %lld dzień</string>
+			<key>other</key>
+			<string>Obecna seria: %lld dnia</string>
+		</dict>
+	</dict>
 	<key>home.locked.days %lld</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -13,7 +33,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>lld</string>
 			<key>few</key>
-			<string>%lld dni danych czeka</string>
+			<string>%lld dni danych czekają</string>
 			<key>many</key>
 			<string>%lld dni danych czeka</string>
 			<key>one</key>

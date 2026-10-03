@@ -10,6 +10,8 @@ struct HistoryWallCard: View {
 
     private let cell: CGFloat = 11
     private let chunkWeeks = 26
+    /// Room for a three-letter month in 10pt mono.
+    private static let labelWidth: CGFloat = 22
     private var pitch: CGFloat { cell * (1 + Theme.Grid.gapFraction) }
 
     /// At least a year; more when older data exists (about ten years max).
@@ -55,7 +57,9 @@ struct HistoryWallCard: View {
                         .font(.mono(10))
                         .foregroundStyle(Theme.Colors.tertiaryText)
                         .fixedSize()
-                        .offset(x: CGFloat(start.column) * pitch)
+                        // A month starting in the last columns is pulled back
+                        // inside the chunk rather than clipped ("Oc").
+                        .offset(x: min(CGFloat(start.column) * pitch, width - Self.labelWidth))
                 }
             }
             .frame(width: width, height: 12, alignment: .topLeading)

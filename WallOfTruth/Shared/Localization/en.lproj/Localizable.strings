@@ -25,7 +25,6 @@
 "home.empty.action" = "Choose metrics";
 "detail.today %@" = "Today: %@";
 "detail.goal" = "Daily goal";
-"detail.streak.a11y %lld" = "Current streak: %lld days";
 "detail.month.previous" = "Previous month";
 "detail.month.next" = "Next month";
 "detail.stats.title" = "Last 12 months";

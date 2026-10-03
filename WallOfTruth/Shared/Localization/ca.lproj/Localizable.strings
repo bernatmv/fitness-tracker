@@ -25,7 +25,6 @@
 "home.empty.action" = "Tria mètriques";
 "detail.today %@" = "Avui: %@";
 "detail.goal" = "Objectiu diari";
-"detail.streak.a11y %lld" = "Ratxa actual (dies): %lld";
 "detail.month.previous" = "Mes anterior";
 "detail.month.next" = "Mes següent";
 "detail.stats.title" = "Últims 12 mesos";

@@ -63,7 +63,7 @@ struct MetricDetailView: View {
     private var chips: some View {
         HStack(spacing: Theme.Spacing.s) {
             Chip(symbol: "flame.fill", text: "\(stats.currentStreak)", color: settings.palette.color)
-                .accessibilityLabel(Text(String(format: String(localized: "detail.streak.a11y %lld"), stats.currentStreak)))
+                .accessibilityLabel(Text(Plural.string("detail.streak.a11y %lld", stats.currentStreak)))
             Chip(symbol: "scope", text: "≥ " + MetricFormat.value(settings.scale.goal, for: metric), color: settings.palette.color)
                 .accessibilityLabel(Text("detail.goal"))
         }

@@ -124,8 +124,8 @@ struct HomeView: View {
         if !PaywallView.onboardingShown, model.access == .free {
             try? await Task.sleep(for: .seconds(1.2))
             paywall = PaywallRequest(isOnboarding: true)
-        } else if TrialRecap.shouldShow(trialEnd: purchases.trialEnd, access: model.access) {
-            TrialRecap.markShown()
+        } else if TrialRecap.shouldShow(trialEnd: purchases.trialEnd, access: model.access),
+                  Metric.allCases.contains(where: { !$0.isFree && model.history($0).lastDayWithData != nil }) {
             showsRecap = true
         } else if model.hasAnyData, ReviewPrompter.recordLaunchAndCheck() {
             requestReview()

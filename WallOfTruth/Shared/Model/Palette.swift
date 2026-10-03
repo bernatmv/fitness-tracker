@@ -21,7 +21,7 @@ struct Palette: Identifiable, Hashable, Sendable {
     /// Level 0 ("not met") is a faint tint, 1–2 climb toward the base color,
     /// 4 is the full base color. On dark the top tier also gets a slight
     /// glow toward white so it pops; hues are never darkened.
-    static let darkMix: [Double] = [0.11, 0.30, 0.52, 0.74]
+    static let darkMix: [Double] = [0.20, 0.36, 0.56, 0.76]
     static let lightMix: [Double] = [0.12, 0.32, 0.54, 0.74]
     static let peakGlow: Double = 0.14
 

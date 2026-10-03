@@ -108,7 +108,7 @@ struct MonthBlocksHeatmap: View {
                         let day = block.first.advanced(by: index)
                         guard let rect = geometry.rect(for: day) else { continue }
                         if day > today {
-                            HeatmapCell.draw(in: &context, rect: rect, color: style.palette.color(level: 0).opacity(0.6), cornerFraction: 0.22)
+                            HeatmapCell.draw(in: &context, rect: rect, color: Theme.Colors.futureCell, cornerFraction: 0.22)
                         } else {
                             HeatmapCell.draw(in: &context, rect: rect, color: style.color(day),
                                              outline: day == selected ? Theme.Colors.accent : (day == today ? Theme.Colors.todayOutline : nil),

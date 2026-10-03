@@ -39,9 +39,12 @@ struct TrialRecapView: View {
                 }
             }
             .padding(.horizontal, Theme.Spacing.xl)
-            .padding(.top, Theme.Spacing.xxl + Theme.Spacing.l)
+            .padding(.top, Theme.Spacing.s)
         }
         .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .top) {
+            SheetHeader(title: Text(verbatim: "")) { dismiss() }
+        }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: Theme.Spacing.m) {
                 Button(action: upgrade) {
@@ -57,6 +60,8 @@ struct TrialRecapView: View {
             .background(Theme.Colors.background.ignoresSafeArea())
         }
         .screenBackground()
+        // Marked on screen, so a refused presentation retries next launch.
+        .onAppear { TrialRecap.markShown() }
     }
 
     private var trialDays: [Day] {

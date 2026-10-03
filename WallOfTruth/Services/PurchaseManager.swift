@@ -78,7 +78,7 @@ final class PurchaseManager {
     func waitUntilResolved(timeout: Duration = .seconds(8)) async -> Bool {
         let deadline = ContinuousClock.now + timeout
         while !isResolved, ContinuousClock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(200))
+            guard (try? await Task.sleep(for: .milliseconds(200))) != nil else { return false }
         }
         return isResolved
     }
@@ -140,7 +140,7 @@ final class PurchaseManager {
         }
         await refreshAccess()
         // Any purchase found (Pro or a trial) counts as restored.
-        message = access == .pro || trialUsed ? .restored : .nothingToRestore
+        message = access.isFullAccess() ? .restored : .nothingToRestore
     }
 
     private func purchase(_ product: Product?) async {

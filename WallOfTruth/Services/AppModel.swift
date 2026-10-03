@@ -105,7 +105,11 @@ final class AppModel {
         }
         // Nothing on record (e.g. Health access was granted after an empty
         // first sync): read history from scratch, not just recent days.
-        if !hasAnyData, syncState.lastSync != nil { syncState = SyncState() }
+        // Once per launch, so a Health store with genuinely no data isn't rescanned on every activation.
+        if !hasAnyData, syncState.lastSync != nil, !didRescanEmpty {
+            didRescanEmpty = true
+            syncState = SyncState()
+        }
         let today = Day.today
         let range = HistorySync.refreshRange(state: syncState, today: today)
         let refreshed = apply(await sync.fetch(Metric.allCases, range: range), covering: range)
@@ -119,17 +123,21 @@ final class AppModel {
         }
     }
     private var didRequestAccess = false
+    private var didRescanEmpty = false
 
     /// Pull to refresh: returns once recent days are in, while any
     /// backfill continues on its own.
     func refreshRecent() async {
-        // A sync already running includes recent days; don't hold the spinner.
-        guard !isSyncing else { return }
+        // A sync is running: queue another pass instead of holding the spinner.
+        guard !isSyncing else {
+            pendingRefresh = true
+            return
+        }
         let start = quickPasses
         Task { await refresh() }
         let deadline = ContinuousClock.now + .seconds(20)
         while quickPasses == start, ContinuousClock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(200))
+            guard (try? await Task.sleep(for: .milliseconds(200))) != nil else { return }
         }
     }
 
@@ -137,7 +145,7 @@ final class AppModel {
     func waitForFirstPass(timeout: Duration = .seconds(15)) async {
         let deadline = ContinuousClock.now + timeout
         while quickPasses == 0, ContinuousClock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(200))
+            guard (try? await Task.sleep(for: .milliseconds(200))) != nil else { return }
         }
     }
 
