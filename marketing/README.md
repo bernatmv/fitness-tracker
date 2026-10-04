@@ -4,7 +4,8 @@ Screenshots of the native app (`WallOfTruth/`) for the App Store and the landing
 
 | Folder | Contents |
 | --- | --- |
-| `app-store/iphone-6.9/` | Seven captioned App Store screenshots, 1320×2868 (6.9" display; App Store Connect scales them to smaller iPhones). 01–06 show everything unlocked; 07 is an optional free-tier slide |
+| `app-store/iphone-6.9/<locale>/` | Seven captioned App Store screenshots (JPEG) per listing language (en, es, ca, de, fr, it, pl, ja), 1320×2868 for the 6.9" display (App Store Connect scales them to smaller iPhones). The app UI in each set is in that language; ja uses the English UI with Japanese captions, because the app isn't localized into Japanese. 01–06 show everything unlocked; 07 is an optional free-tier slide |
+| `app-store/metadata/<locale>.json` | 2.0 App Store listing per language: subtitle, promotional text, keywords, description and What's New, all within App Store length limits |
 | `landing/` | Unframed screens in light and dark, as 660px-wide PNG and full-resolution WebP with rounded corners. All features are unlocked: home (top and scrolled to every metric, weeks and months), a detail screen for each of the six metrics, the ranges editor, widgets and onboarding. `home_free_light` is the only free-tier screen |
 | `widgets/` | Individual widget images with transparent rounded corners, light and dark: small, medium, large and the overview widget |
 | `tools/compose.py` | Script that builds all of the above from raw simulator screenshots |
@@ -35,7 +36,13 @@ The remaining screens use these arguments:
 - `-ResetOnboarding YES` for onboarding. Then run:
 
 ```bash
-python3 marketing/tools/compose.py <raw-screenshots-dir> marketing
+python3 marketing/tools/compose.py <raw-screenshots-dir> marketing   # landing + widgets
 ```
 
-Pass a different language to `-AppleLanguages` to get localized screenshots. The captions in `compose.py` are English only.
+For the localized App Store sets, capture the seven slides once per language with `-AppleLanguages (<lang>) -AppleLocale <region>`, putting each language's shots in `<raw>/<lang>/`. Then run:
+
+```bash
+python3 marketing/tools/compose.py <raw> marketing --locales en,es,ca,de,fr,it,pl,ja
+```
+
+The captions live in `tools/captions.json`. Japanese uses the Hiragino font.
