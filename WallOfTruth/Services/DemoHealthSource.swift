@@ -37,7 +37,7 @@ struct DemoHealthSource: HealthSource {
         case .exercise: return (70 * factor).rounded()
         case .stand: return min(16, (10 * factor).rounded())
         case .floors: return (13 * factor).rounded()
-        case .sleep: return rest ? 330 : (360 + 120 * noise * season).rounded()
+        case .sleep: return rest ? 270 : (330 + 150 * noise * season).rounded()
         }
     }
 

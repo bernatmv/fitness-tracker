@@ -12,6 +12,7 @@ enum DebugFlags {
     /// `empty` returns no Health data; `slow` delays the first sync.
     static var demoHealth: String? { string("DemoHealth") }
     static var screen: String? { string("Screen") }
+    static var gallery: String? { string("Gallery") }
     /// Shown when StoreKit has no products (simulator runs outside Xcode).
     static var placeholderPrice: String? { demoData ? "$4.99" : nil }
 

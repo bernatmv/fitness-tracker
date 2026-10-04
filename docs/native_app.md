@@ -25,7 +25,9 @@ These only work in Debug builds; see `Services/DebugFlags.swift`.
 | `-DemoData YES` | Generated data instead of HealthKit (simulator, screenshots) |
 | `-SkipOnboarding YES` | Go straight to the home screen |
 | `-Access free\|trial\|pro` | Force an access level and skip StoreKit |
-| `-Screen paywall\|paywall-steps\|settings\|weeks\|months\|recap\|detail-STEPS\|detail-STEPS-config\|widgets` | Open a screen on launch. `widgets` is an in-app gallery of every widget layout. |
+| `-Screen paywall\|paywall-steps\|settings\|weeks\|months\|recap\|onboarding-health\|detail-STEPS\|detail-STEPS-config\|widgets` | Open a screen on launch. `widgets` is an in-app gallery of every widget layout; add `-Gallery home\|home2` for the marketing layouts. |
+| `-ResetOnboarding YES` / `-ResetData YES` | Start onboarding again / delete synced history |
+| `-DemoHealth empty\|slow` | Demo source returns no data / delays the first sync |
 
 ## Structure
 
@@ -70,3 +72,7 @@ Conversion levers:
 1. Create both in-app purchases with the IDs above. The trial's display name must follow the "7-day Trial" convention. Turn on Family Sharing for Pro, because the paywall promises it.
 2. Set the app price to Free with the release that ships the new build. Attach both IAPs to that version's submission.
 3. In the review notes, explain the free trial.
+
+## Marketing screenshots
+
+App Store and landing-page images are in [`marketing/`](../marketing/README.md), together with the script that builds them.

@@ -9,6 +9,41 @@ struct WidgetGallery: View {
 
     var body: some View {
         let snapshot = WidgetSnapshot.make(preferences: model.preferences, histories: model.histories, access: model.access)
+        switch DebugFlags.gallery {
+        case "home": showcase(snapshot, page: 1)
+        case "home2": showcase(snapshot, page: 2)
+        default: all(snapshot)
+        }
+    }
+
+    /// Clean Home Screen arrangement for marketing shots (`-Gallery home`).
+    private func showcase(_ snapshot: WidgetSnapshot, page: Int) -> some View {
+        VStack(spacing: 28) {
+            if page == 1 {
+                HStack(spacing: 24) {
+                    tile(.systemSmall, metric: .calories, snapshot: snapshot)
+                    tile(.systemSmall, metric: .steps, snapshot: snapshot)
+                }
+                tile(.systemMedium, metric: .exercise, snapshot: snapshot)
+                tile(.systemLarge, metric: .sleep, snapshot: snapshot)
+            } else {
+                OverviewWidgetView(entry: OverviewEntry(date: Date(), snapshot: snapshot), familyOverride: .systemMedium)
+                    .modifier(WidgetFrame(size: CGSize(width: 364, height: 170)))
+                tile(.systemMedium, metric: .steps, snapshot: snapshot)
+                HStack(spacing: 24) {
+                    tile(.systemSmall, metric: .stand, snapshot: snapshot)
+                    tile(.systemSmall, metric: .floors, snapshot: snapshot)
+                }
+                tile(.systemMedium, metric: .calories, snapshot: snapshot)
+            }
+        }
+        .padding(.top, 40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(LinearGradient(colors: [Color(red: 0.36, green: 0.30, blue: 0.94), Color(red: 0.07, green: 0.62, blue: 0.62)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea())
+    }
+
+    private func all(_ snapshot: WidgetSnapshot) -> some View {
         ScrollView {
             VStack(spacing: 20) {
                 HStack(spacing: 16) {
