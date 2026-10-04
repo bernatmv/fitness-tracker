@@ -101,6 +101,8 @@ def main():
         ("home_months_light.png", "Month by month", "Switch to the month view and spot your patterns.", "light"),
         ("detail_steps_dark.png", "Streaks and history", "Every day you hit your goal, in one calendar.", "dark"),
         ("widgets_dark.png", "Your wall, everywhere", "Widgets for every metric on your Home Screen.", "dark"),
+        ("home_weeks_all_dark.png", "Six metrics, one wall", "Calories, steps, exercise, stand hours, floors and sleep.", "dark"),
+        # Optional last slide: the free tier. Leave it out for an all-unlocked set.
         ("home_free_light.png", "Start free with calories", "Unlock steps, exercise, stand, floors and sleep once. No subscription.", "light"),
     ]
     for i, (shot, title, sub, theme) in enumerate(shots, 1):

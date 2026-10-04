@@ -26,6 +26,7 @@ These only work in Debug builds; see `Services/DebugFlags.swift`.
 | `-SkipOnboarding YES` | Go straight to the home screen |
 | `-Access free\|trial\|pro` | Force an access level and skip StoreKit |
 | `-Screen paywall\|paywall-steps\|settings\|weeks\|months\|recap\|onboarding-health\|detail-STEPS\|detail-STEPS-config\|widgets` | Open a screen on launch. `widgets` is an in-app gallery of every widget layout; add `-Gallery home\|home2` for the marketing layouts. |
+| `-Scroll bottom` | Open the home screen scrolled to the last metric |
 | `-ResetOnboarding YES` / `-ResetData YES` | Start onboarding again / delete synced history |
 | `-DemoHealth empty\|slow` | Demo source returns no data / delays the first sync |
 

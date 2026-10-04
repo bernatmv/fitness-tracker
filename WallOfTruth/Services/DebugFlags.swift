@@ -13,6 +13,8 @@ enum DebugFlags {
     static var demoHealth: String? { string("DemoHealth") }
     static var screen: String? { string("Screen") }
     static var gallery: String? { string("Gallery") }
+    /// Opens the home screen scrolled to the end (marketing shots).
+    static var scrollToBottom: Bool { string("Scroll") == "bottom" }
     /// Shown when StoreKit has no products (simulator runs outside Xcode).
     static var placeholderPrice: String? { demoData ? "$4.99" : nil }
 

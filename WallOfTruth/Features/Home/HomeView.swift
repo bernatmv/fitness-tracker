@@ -51,6 +51,7 @@ struct HomeView: View {
                 .animation(.smooth, value: model.hasAnyData)
             }
             .scrollIndicators(.hidden)
+            .defaultScrollAnchor(DebugFlags.scrollToBottom ? .bottom : .top)
             .refreshable { await model.refreshRecent() }
             .screenBackground()
             .safeAreaInset(edge: .top) { topBar }
