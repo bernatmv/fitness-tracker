@@ -8,14 +8,14 @@ struct PaywallTeaser: View {
 
     var body: some View {
         ZStack {
-            ForEach(Array(metrics.enumerated().reversed()), id: \.element) { index, metric in
+            ForEach(Array(metrics.prefix(Self.isCompact ? 1 : 3).enumerated().reversed()), id: \.element) { index, metric in
                 card(metric, front: index == 0)
                     .scaleEffect(1 - CGFloat(index) * 0.07)
                     .offset(y: CGFloat(index) * -16)
                     .opacity(index == 0 ? 1 : 0.75 - Double(index) * 0.15)
             }
         }
-        .padding(.top, CGFloat(max(metrics.count - 1, 0)) * 16)
+        .padding(.top, CGFloat(max(min(metrics.count, Self.isCompact ? 1 : 3) - 1, 0)) * 16)
         .accessibilityHidden(true)
     }
 
@@ -29,9 +29,9 @@ struct PaywallTeaser: View {
                 IconTile(metric: metric, palette: settings.palette, size: 36)
                     .opacity(front ? 1 : 0)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(metric.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                    Text(metric.title).font(.scaled(15, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
                     Text(hasData ? Plural.string("home.locked.days %lld", series.values.filter { $0 > 0 }.count) : String(localized: "pro.teaser.sample"))
-                        .font(.system(size: 12)).foregroundStyle(Theme.Colors.secondaryText)
+                        .font(.scaled(12)).foregroundStyle(Theme.Colors.secondaryText)
                 }
                 .opacity(front ? 1 : 0)
                 Spacer()
@@ -41,12 +41,15 @@ struct PaywallTeaser: View {
                     .opacity(front ? 1 : 0)
             }
             // Same rule as the home cards: the shape shows, the details don't.
-            WeekHeatmap(style: style, weeks: 22, today: nil)
+            // Short screens (SE) get a flatter wall so the plans stay above the CTA.
+            WeekHeatmap(style: style, weeks: Self.isCompact ? 34 : 22, today: nil)
                 .blur(radius: front ? 3 : 0)
         }
         .padding(Theme.Spacing.m + 2)
         .metricCard(settings.palette)
     }
+
+    static var isCompact: Bool { UIScreen.main.bounds.height < 700 }
 
     /// Sample wall for people without data for that metric yet.
     static func sample(_ metric: Metric) -> DaySeries {
@@ -83,13 +86,13 @@ struct TrialBanner: View {
         Button(action: upgrade) {
             HStack(spacing: Theme.Spacing.m) {
                 Image(systemName: symbol)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.scaled(16, weight: .semibold))
                     .foregroundStyle(Theme.Colors.accent)
                     .frame(width: 40, height: 40)
                     .background(RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous).fill(Theme.Colors.accentSoft))
                 VStack(alignment: .leading, spacing: 2) {
-                    title.font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
-                    Text(detail).font(.system(size: 13)).foregroundStyle(Theme.Colors.secondaryText)
+                    title.font(.scaled(15, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                    Text(detail).font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.Colors.tertiaryText)

@@ -10,8 +10,12 @@ struct HistoryWallCard: View {
 
     private let cell: CGFloat = 11
     private let chunkWeeks = 26
-    /// Room for a three-letter month in 10pt mono.
-    private static let labelWidth: CGFloat = 22
+    /// Rendered width of a month label in 10pt mono (scaled like the text).
+    private static func labelWidth(for month: Day) -> CGFloat {
+        let text = month.date().formatted(month.month == 1 ? .gregorian.month(.abbreviated).year(.twoDigits) : .gregorian.month(.abbreviated))
+        let size = min(UIFontMetrics.default.scaledValue(for: 10), 10 * Theme.maxTextScale)
+        return (text as NSString).size(withAttributes: [.font: UIFont.monospacedSystemFont(ofSize: size, weight: .regular)]).width + 1
+    }
     private var pitch: CGFloat { cell * (1 + Theme.Grid.gapFraction) }
 
     /// At least a year; more when older data exists (about ten years max).
@@ -53,16 +57,16 @@ struct HistoryWallCard: View {
         return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             ZStack(alignment: .topLeading) {
                 ForEach(layout.monthStarts, id: \.column) { start in
-                    Text(start.month.date(), format: start.month.month == 1 ? .dateTime.month(.abbreviated).year(.twoDigits) : .dateTime.month(.abbreviated))
+                    Text(start.month.date(), format: start.month.month == 1 ? .gregorian.month(.abbreviated).year(.twoDigits) : .gregorian.month(.abbreviated))
                         .font(.mono(10))
                         .foregroundStyle(Theme.Colors.tertiaryText)
                         .fixedSize()
                         // A month starting in the last columns is pulled back
                         // inside the chunk rather than clipped ("Oc").
-                        .offset(x: min(CGFloat(start.column) * pitch, width - Self.labelWidth))
+                        .offset(x: min(CGFloat(start.column) * pitch, width - Self.labelWidth(for: start.month)))
                 }
             }
-            .frame(width: width, height: 12, alignment: .topLeading)
+            .frame(width: width, height: 16, alignment: .topLeading)
             .clipped()
             WeekHeatmap(style: style, weeks: chunkWeeks, end: end, selected: selected, fadeLeading: false) { day in
                 selected = selected == day ? nil : day

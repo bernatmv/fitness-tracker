@@ -11,7 +11,9 @@ struct MetricEntry: TimelineEntry {
     }
 
     var locked: Bool { !(snapshot?.access ?? .free).canView(metric, now: date) }
-    var style: HeatmapStyle { HeatmapStyle(series: entry.series, scale: entry.settings.scale, palette: entry.settings.palette) }
+    func style(monochrome: Bool) -> HeatmapStyle {
+        HeatmapStyle(series: entry.series, scale: entry.settings.scale, palette: entry.settings.palette, monochrome: monochrome)
+    }
     var today: Day { Day(date) }
     var todayValue: Double { entry.series[today] }
     var progress: Double { entry.settings.scale.goal > 0 ? todayValue / entry.settings.scale.goal : 0 }
@@ -77,6 +79,9 @@ struct MetricWidgetView: View {
     var familyOverride: WidgetFamily?
     @Environment(\.widgetFamily) private var environmentFamily
     private var family: WidgetFamily { familyOverride ?? environmentFamily }
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    /// Accented (tinted) and vibrant modes drop colour; tiers become opacity.
+    private var style: HeatmapStyle { entry.style(monochrome: renderingMode != .fullColor) }
 
     var body: some View {
         switch family {
@@ -115,7 +120,7 @@ struct MetricWidgetView: View {
     private var large: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             header(tile: 44)
-            MonthBlocksHeatmap(style: entry.style, months: MonthBlockLayout.months(count: 3, endingAt: entry.today), today: entry.today)
+            MonthBlocksHeatmap(style: style, months: MonthBlockLayout.months(count: 3, endingAt: entry.today), today: entry.today)
                 .blur(radius: entry.locked ? 4 : 0)
                 .overlay { if entry.locked { LockedPill() } }
             Spacer(minLength: 0)
@@ -143,7 +148,7 @@ struct MetricWidgetView: View {
     }
 
     private func wall(weeks: Int) -> some View {
-        WeekHeatmap(style: entry.style, weeks: weeks, end: entry.today, today: entry.today, fadeLeading: false)
+        WeekHeatmap(style: style, weeks: weeks, end: entry.today, today: entry.today, fadeLeading: false)
             .blur(radius: entry.locked ? 4 : 0)
             .overlay { if entry.locked { LockedPill().scaleEffect(0.85) } }
     }
@@ -151,7 +156,7 @@ struct MetricWidgetView: View {
     private var legend: some View {
         HStack(spacing: 3) {
             ForEach(0..<ThresholdScale.levelCount, id: \.self) { level in
-                RoundedRectangle(cornerRadius: 2.5, style: .continuous).fill(palette.color(level: level)).frame(width: 11, height: 11)
+                RoundedRectangle(cornerRadius: 2.5, style: .continuous).fill(style.color(level: level)).frame(width: 11, height: 11)
             }
         }
         .accessibilityHidden(true)
@@ -175,7 +180,7 @@ struct MetricWidgetView: View {
             if entry.locked {
                 Text("widget.locked").font(.system(size: 11))
             } else {
-                WeekHeatmap(style: HeatmapStyle(series: entry.entry.series, scale: entry.entry.settings.scale, palette: .with(id: "neutral")),
+                WeekHeatmap(style: entry.style(monochrome: true),
                             weeks: 16, end: entry.today, today: nil, fadeLeading: false)
             }
         }

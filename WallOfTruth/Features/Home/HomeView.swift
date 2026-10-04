@@ -18,6 +18,8 @@ struct HomeView: View {
     @State private var showsSettings = false
     @State private var showsRecap = false
     @State private var recapWantsUpgrade = false
+    /// Arrived from a widget: skip automatic prompts this launch.
+    @State private var handledLink = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -69,13 +71,8 @@ struct HomeView: View {
                 .presentationDetents([.large])
         }
         .task { await firstAppearance() }
-        .onOpenURL { url in
-            switch DeepLink.parse(url) {
-            case .paywall: paywall = PaywallRequest()
-            case .metric(let metric) where model.access.canView(metric): path = [metric]
-            case .metric(let metric): paywall = PaywallRequest(highlight: metric)
-            case nil: break
-            }
+        .onChange(of: model.pendingLink, initial: true) { _, link in
+            if link != nil { Task { await open(link) } }
         }
     }
 
@@ -89,7 +86,7 @@ struct HomeView: View {
         }
         .overlay {
             HStack(spacing: Theme.Spacing.s) {
-                Text("app.name").font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                Text("app.name").font(.scaled(17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
                 if model.isSyncing {
                     ProgressView().controlSize(.mini).tint(Theme.Colors.secondaryText)
                 }
@@ -98,6 +95,25 @@ struct HomeView: View {
         .padding(.horizontal, Theme.Spacing.screen)
         .padding(.vertical, Theme.Spacing.s)
         .topBarBackground()
+    }
+
+    /// Widget links: close whatever sheet is up, then navigate.
+    private func open(_ link: DeepLink.Target?) async {
+        guard let link else { return }
+        model.pendingLink = nil
+        handledLink = true
+        if showsSettings || showsRecap || paywall != nil {
+            showsSettings = false
+            showsRecap = false
+            paywall = nil
+            try? await Task.sleep(for: .milliseconds(450))
+        }
+        switch link {
+        case .paywall where model.access.showsUpsell: paywall = PaywallRequest()
+        case .paywall: break
+        case .metric(let metric) where model.access.canView(metric): path = [metric]
+        case .metric(let metric): paywall = PaywallRequest(highlight: metric)
+        }
     }
 
     /// First launch after onboarding shows the paywall once the wall is
@@ -121,11 +137,12 @@ struct HomeView: View {
         // sheet it may raise must not collide with ours).
         guard await purchases.waitUntilResolved() else { return }
         await model.waitForFirstPass()
+        guard !handledLink, path.isEmpty else { return }
         if !PaywallView.onboardingShown, model.access == .free {
             try? await Task.sleep(for: .seconds(1.2))
             paywall = PaywallRequest(isOnboarding: true)
         } else if TrialRecap.shouldShow(trialEnd: purchases.trialEnd, access: model.access),
-                  Metric.allCases.contains(where: { !$0.isFree && model.history($0).lastDayWithData != nil }) {
+                  model.visibleMetrics.contains(where: { !$0.isFree && model.history($0).lastDayWithData != nil }) {
             showsRecap = true
         } else if model.hasAnyData, ReviewPrompter.recordLaunchAndCheck() {
             requestReview()
@@ -163,7 +180,7 @@ struct WallStyleSwitcher: View {
             withAnimation(.snappy) { selection = style }
         } label: {
             Image(systemName: symbol)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.scaled(17, weight: .semibold))
                 .foregroundStyle(selection == style ? Theme.Colors.primaryText : Theme.Colors.tertiaryText)
                 .frame(width: 58, height: 46)
                 .background {

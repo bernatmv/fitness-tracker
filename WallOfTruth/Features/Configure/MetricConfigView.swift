@@ -32,7 +32,7 @@ struct MetricConfigView: View {
                         $0.paletteID = defaults.paletteID
                     }
                 }
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(15, weight: .medium))
                 .foregroundStyle(Theme.Colors.secondaryText)
                 .frame(maxWidth: .infinity)
             }
@@ -65,8 +65,8 @@ private struct RangeEditor: View {
                         .fill(settings.palette.color(level: index + 1))
                         .frame(width: 24, height: 24)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(RangeName.text(index + 1)).font(.system(size: 15, weight: .medium))
-                        Text("config.from").font(.system(size: 12)).foregroundStyle(Theme.Colors.tertiaryText)
+                        Text(RangeName.text(index + 1)).font(.scaled(15, weight: .medium))
+                        Text("config.from").font(.scaled(12)).foregroundStyle(Theme.Colors.tertiaryText)
                     }
                     Spacer()
                     stepButton("minus", index: index, direction: -1)
@@ -94,7 +94,7 @@ private struct RangeEditor: View {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(settings.palette.color(level: 0))
                     .frame(width: 24, height: 24)
-                Text(RangeName.text(0)).font(.system(size: 15, weight: .medium))
+                Text(RangeName.text(0)).font(.scaled(15, weight: .medium))
                 Spacer()
                 Text("< " + MetricFormat.value(settings.scale.goal, for: metric))
                     .font(.mono(15)).foregroundStyle(Theme.Colors.secondaryText)
@@ -123,7 +123,7 @@ private struct RangeEditor: View {
             onChange(ThresholdScale.adjusting(settings.scale.bounds, index: index, by: direction * metric.thresholdStep, step: metric.thresholdStep))
         } label: {
             Image(systemName: symbol)
-                .font(.system(size: 13, weight: .bold))
+                .font(.scaled(13, weight: .bold))
                 .frame(width: 34, height: 34)
                 .background(Circle().fill(Theme.Colors.field))
         }

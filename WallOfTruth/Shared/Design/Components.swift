@@ -136,7 +136,7 @@ struct ProBadge: View {
 struct LockedPill: View {
     var body: some View {
         Label("pro.unlock", systemImage: "lock.open.fill")
-            .font(.system(size: 14, weight: .semibold))
+            .font(.scaled(14, weight: .semibold))
             .foregroundStyle(Theme.Colors.onAccent)
             .padding(.horizontal, Theme.Spacing.l)
             .frame(height: 34)

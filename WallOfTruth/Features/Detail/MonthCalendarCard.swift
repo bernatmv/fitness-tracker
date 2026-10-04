@@ -45,7 +45,7 @@ struct MonthCalendarCard: View {
         HStack(spacing: Theme.Spacing.s) {
             Button { month = Day.today.firstOfMonth } label: {
                 Label {
-                    Text(month.date(), format: .dateTime.month(.abbreviated).year())
+                    Text(month.date(), format: .gregorian.month(.abbreviated).year())
                 } icon: {
                     Image(systemName: "calendar")
                 }
@@ -65,7 +65,7 @@ struct MonthCalendarCard: View {
     private func arrow(_ symbol: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.scaled(14, weight: .semibold))
                 .frame(width: 36, height: 36)
                 .overlay(Circle().strokeBorder(Theme.Colors.cardBorder, lineWidth: 1))
         }
@@ -121,7 +121,7 @@ private struct DayCell: View {
         }
         .buttonStyle(.plain)
         .disabled(future)
-        .accessibilityLabel(Text(day.date(), format: .dateTime.day().month(.wide)))
+        .accessibilityLabel(Text(day.date(), format: .gregorian.day().month(.wide)))
         .accessibilityValue(Text(future ? "" : RangeName.text(level)))
     }
 

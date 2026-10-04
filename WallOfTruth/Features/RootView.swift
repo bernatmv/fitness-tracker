@@ -15,6 +15,7 @@ struct RootView: View {
                 OnboardingView()
             }
         }
+        .onOpenURL { model.pendingLink = DeepLink.parse($0) }
         .tint(Theme.Colors.accent)
         .foregroundStyle(Theme.Colors.primaryText)
     }

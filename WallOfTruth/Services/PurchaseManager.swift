@@ -56,9 +56,10 @@ final class PurchaseManager {
     /// Localized Pro price, if known.
     var proPrice: String? { pro?.displayPrice ?? DebugFlags.placeholderPrice }
 
+    /// Entitlements first: they work offline, and prompts wait on them.
     func load() async {
-        await loadProducts()
         await refreshAccess()
+        await loadProducts()
     }
 
     func loadProducts() async {

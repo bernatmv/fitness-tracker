@@ -32,12 +32,22 @@ struct SettingsView: View {
         .screenBackground()
         .sheet(item: $paywall) { PaywallView(highlight: $0.highlight) }
         .sheet(item: $configuring) { MetricConfigView(metric: $0) }
-        .alert(purchases.message == .restored ? Text("pro.restored") : Text("pro.nothing_restored.title"),
-               isPresented: Binding(get: { purchases.message == .restored || purchases.message == .nothingToRestore },
-                                    set: { if !$0 { purchases.message = nil } })) {
+        .alert(alertTitle, isPresented: Binding(get: { purchases.message != nil }, set: { if !$0 { purchases.message = nil } })) {
             Button("common.ok", role: .cancel) {}
         } message: {
-            if purchases.message == .nothingToRestore { Text("pro.nothing_restored") }
+            switch purchases.message {
+            case .nothingToRestore: Text("pro.nothing_restored")
+            case .error(let text): Text(verbatim: text)
+            default: EmptyView()
+            }
+        }
+    }
+
+    private var alertTitle: Text {
+        switch purchases.message {
+        case .restored: Text("pro.restored")
+        case .nothingToRestore: Text("pro.nothing_restored.title")
+        default: Text("common.error")
         }
     }
 
@@ -136,15 +146,15 @@ private struct ProStatusCard: View {
         Button(action: upgrade) {
             HStack(spacing: Theme.Spacing.m) {
                 Image(systemName: upsell ? "crown.fill" : "checkmark.seal.fill")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.scaled(20, weight: .semibold))
                     .foregroundStyle(Theme.Colors.onAccent)
                     .frame(width: 48, height: 48)
                     .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.Colors.accent))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(upsell ? "settings.pro.upsell" : "settings.pro.owned").font(.system(size: 17, weight: .semibold))
+                    Text(upsell ? "settings.pro.upsell" : "settings.pro.owned").font(.scaled(17, weight: .semibold))
                         .foregroundStyle(Theme.Colors.primaryText)
                     Text(upsell ? "settings.pro.upsell.detail" : "settings.pro.owned.detail")
-                        .font(.system(size: 13)).foregroundStyle(Theme.Colors.secondaryText)
+                        .font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)

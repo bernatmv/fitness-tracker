@@ -37,7 +37,8 @@ struct MetricCard: View {
                 Text(subtitle)
                     .font(.cardSubtitle)
                     .foregroundStyle(Theme.Colors.secondaryText)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
             Spacer(minLength: 0)
             if !locked {

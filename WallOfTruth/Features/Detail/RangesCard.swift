@@ -28,7 +28,7 @@ struct RangesCard: View {
                 Text("ranges.title").font(.sectionTitle)
                 Spacer()
                 Button("ranges.edit", action: edit)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.scaled(15, weight: .semibold))
                     .foregroundStyle(Theme.Colors.accent)
             }
             .padding(.top, Theme.Spacing.s)
@@ -40,7 +40,7 @@ struct RangesCard: View {
             }
             .padding(.horizontal, Theme.Spacing.l)
             .surface()
-            Text("ranges.footer").font(.system(size: 12)).foregroundStyle(Theme.Colors.tertiaryText)
+            Text("ranges.footer").font(.scaled(12)).foregroundStyle(Theme.Colors.tertiaryText)
         }
     }
 
@@ -50,7 +50,7 @@ struct RangesCard: View {
                 .fill(settings.palette.color(level: level))
                 .frame(width: 24, height: 24)
             VStack(alignment: .leading, spacing: 2) {
-                Text(RangeName.text(level)).font(.system(size: 15, weight: .medium))
+                Text(RangeName.text(level)).font(.scaled(15, weight: .medium))
                 Text(span(level)).font(.mono(12)).foregroundStyle(Theme.Colors.secondaryText)
             }
             Spacer()

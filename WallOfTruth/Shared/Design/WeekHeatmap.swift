@@ -41,8 +41,16 @@ struct HeatmapStyle {
     let series: DaySeries
     let scale: ThresholdScale
     let palette: Palette
+    /// Tinted/clear widgets keep only opacity, so tiers become opacity steps.
+    var monochrome = false
 
-    func color(_ day: Day) -> Color { palette.color(level: scale.level(for: series[day])) }
+    static let monochromeOpacity: [Double] = [0.14, 0.34, 0.55, 0.78, 1.0]
+
+    func color(_ day: Day) -> Color { color(level: scale.level(for: series[day])) }
+
+    func color(level: Int) -> Color {
+        monochrome ? Color.primary.opacity(Self.monochromeOpacity[min(max(level, 0), 4)]) : palette.color(level: level)
+    }
 }
 
 /// HabitKit-style wall: one column per week, one row per weekday, drawn in a

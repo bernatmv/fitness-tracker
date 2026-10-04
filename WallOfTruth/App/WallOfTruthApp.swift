@@ -10,7 +10,8 @@ struct WallOfTruthApp: App {
             RootView()
                 .environment(model)
                 .environment(model.purchases)
-                .preferredColorScheme(model.preferences.theme.colorScheme)
+                .onAppear { model.preferences.theme.apply() }
+                .onChange(of: model.preferences.theme) { _, theme in theme.apply() }
                 .task { await model.purchases.load() }
                 .onChange(of: scenePhase) { _, phase in
                     guard phase == .active else { return }
@@ -24,11 +25,20 @@ struct WallOfTruthApp: App {
 }
 
 extension ThemePreference {
-    var colorScheme: ColorScheme? {
+    var interfaceStyle: UIUserInterfaceStyle {
         switch self {
-        case .system: nil
+        case .system: .unspecified
         case .light: .light
         case .dark: .dark
+        }
+    }
+
+    /// Overrides the whole window, so open sheets switch too and "System"
+    /// keeps tracking the device appearance live (`preferredColorScheme`
+    /// leaves presented sheets stuck in the previous style).
+    @MainActor func apply() {
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+            scene.windows.forEach { $0.overrideUserInterfaceStyle = interfaceStyle }
         }
     }
 }

@@ -84,9 +84,9 @@ private struct SelectedDayCard: View {
                 .fill(settings.palette.color(level: level))
                 .frame(width: 22, height: 22)
             VStack(alignment: .leading, spacing: 2) {
-                Text(day.date(), format: .dateTime.weekday(.wide).day().month(.wide))
-                    .font(.system(size: 13)).foregroundStyle(Theme.Colors.secondaryText)
-                Text(MetricFormat.value(value, for: metric)).font(.system(size: 17, weight: .semibold))
+                Text(day.date(), format: .gregorian.weekday(.wide).day().month(.wide))
+                    .font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
+                Text(MetricFormat.value(value, for: metric)).font(.scaled(17, weight: .semibold))
             }
             Spacer()
             if settings.scale.isExceptional(value) { StarMark(size: 22) }

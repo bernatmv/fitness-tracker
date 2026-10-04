@@ -135,7 +135,7 @@ struct MonthBlocksHeatmap: View {
         for (block, x) in zip(geometry.blocks, geometry.origins) {
             let width = CGFloat(block.columns) * geometry.pitch - geometry.cell * Theme.Grid.gapFraction
             let current = block.first == today.firstOfMonth
-            let label = Text(block.first.date(), format: .dateTime.month(.abbreviated))
+            let label = Text(block.first.date(), format: .gregorian.month(.abbreviated))
                 .font(.mono(11, weight: .medium))
                 .foregroundStyle(current ? Theme.Colors.secondaryText : Theme.Colors.tertiaryText)
             context.draw(label, at: CGPoint(x: x + width / 2, y: MonthBlocksGeometry.labelHeight / 2), anchor: .center)

@@ -78,7 +78,7 @@ struct PaywallView: View {
             CircleButton(symbol: "xmark", label: "common.close") { dismiss() }
             Spacer()
             Button("pro.restore") { Task { await purchases.restore() } }
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(15, weight: .medium))
                 .foregroundStyle(Theme.Colors.secondaryText)
         }
         .padding(.horizontal, Theme.Spacing.l)
@@ -88,10 +88,10 @@ struct PaywallView: View {
     private var title: some View {
         VStack(spacing: Theme.Spacing.s) {
             (Text("pro.title.lead") + Text(" ") + Text("pro.title.pro").foregroundColor(Theme.Colors.accent))
-                .font(.system(size: 32, weight: .bold))
+                .font(.scaled(32, weight: .bold))
                 .foregroundStyle(Theme.Colors.primaryText)
             Text("pro.subtitle")
-                .font(.system(size: 16))
+                .font(.scaled(16))
                 .foregroundStyle(Theme.Colors.secondaryText)
                 .multilineTextAlignment(.center)
         }
@@ -149,7 +149,7 @@ struct PaywallView: View {
                 if !canBuy { Task { await purchases.loadProducts() } }
             })
             if purchases.awaitingApproval {
-                Text("pro.pending").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.Colors.accent)
+                Text("pro.pending").font(.scaled(13, weight: .medium)).foregroundStyle(Theme.Colors.accent)
             }
             Group {
                 if selectedPlan == .trial {
@@ -158,7 +158,7 @@ struct PaywallView: View {
                     Text("pro.fineprint.lifetime")
                 }
             }
-            .font(.system(size: 12))
+            .font(.scaled(12))
             .foregroundStyle(Theme.Colors.tertiaryText)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -166,7 +166,7 @@ struct PaywallView: View {
                 Link("pro.terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                 Link("settings.privacy", destination: AppLinks.privacyPolicy)
             }
-            .font(.system(size: 12, weight: .medium))
+            .font(.scaled(12, weight: .medium))
             .foregroundStyle(Theme.Colors.secondaryText)
         }
         .padding(.horizontal, Theme.Spacing.xl)
@@ -190,13 +190,13 @@ private struct FeatureRow: View {
     var body: some View {
         HStack(spacing: Theme.Spacing.m + 2) {
             Image(systemName: symbol)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.scaled(16, weight: .semibold))
                 .foregroundStyle(tint)
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(tint.opacity(Theme.Grid.tileTint)))
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
-                Text(detail).font(.system(size: 14)).foregroundStyle(Theme.Colors.secondaryText)
+                Text(title).font(.scaled(16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                Text(detail).font(.scaled(14)).foregroundStyle(Theme.Colors.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -212,24 +212,30 @@ private struct PlanRow: View {
     let badge: LocalizedStringKey?
     let action: () -> Void
 
+    @ViewBuilder private var titleAndBadge: some View {
+        Text(title).font(.scaled(16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+        if let badge {
+            Text(badge)
+                .font(.mono(10, weight: .bold)).tracking(0.8).textCase(.uppercase)
+                .lineLimit(1).fixedSize()
+                .foregroundStyle(Theme.Colors.onAccent)
+                .padding(.horizontal, 7).padding(.vertical, 3)
+                .background(Capsule().fill(Theme.Colors.accent))
+        }
+    }
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: Theme.Spacing.m) {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.scaled(22))
                     .foregroundStyle(selected ? Theme.Colors.accent : Theme.Colors.tertiaryText)
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: Theme.Spacing.s) {
-                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
-                        if let badge {
-                            Text(badge)
-                                .font(.mono(10, weight: .bold)).tracking(0.8).textCase(.uppercase)
-                                .foregroundStyle(Theme.Colors.onAccent)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(Capsule().fill(Theme.Colors.accent))
-                        }
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: Theme.Spacing.s) { titleAndBadge }
+                        VStack(alignment: .leading, spacing: 4) { titleAndBadge }
                     }
-                    detail.font(.system(size: 13)).foregroundStyle(Theme.Colors.secondaryText)
+                    detail.font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
                 }
                 Spacer(minLength: 0)
                 price?.font(.mono(16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)

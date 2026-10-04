@@ -35,7 +35,7 @@ struct OnboardingView: View {
     private var welcome: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
             (Text("onboarding.welcome.lead") + Text(verbatim: "\n") + Text("app.name").foregroundColor(Theme.Colors.accent))
-                .font(.system(size: 34, weight: .bold))
+                .font(.scaled(34, weight: .bold))
                 .foregroundStyle(Theme.Colors.primaryText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -58,8 +58,8 @@ struct OnboardingView: View {
                     Image(systemName: symbol ?? metric.symbol).font(.system(size: 19, weight: .semibold)).foregroundStyle(palette.color)
                 }
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
-                Text(detail).font(.system(size: 15)).foregroundStyle(Theme.Colors.secondaryText)
+                Text(title).font(.scaled(17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                Text(detail).font(.scaled(15)).foregroundStyle(Theme.Colors.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -71,16 +71,16 @@ struct OnboardingView: View {
     private var health: some View {
         VStack(spacing: Theme.Spacing.xl) {
             Image(systemName: "heart.fill")
-                .font(.system(size: 40, weight: .semibold))
+                .font(.scaled(40, weight: .semibold))
                 .foregroundStyle(Palette.with(id: "rose").color)
                 .frame(width: 96, height: 96)
                 .background(Circle().fill(Palette.with(id: "rose").color.opacity(Theme.Grid.tileTint)))
                 .padding(.top, Theme.Spacing.xxl)
             Text("onboarding.health.title")
-                .font(.system(size: 30, weight: .bold))
+                .font(.scaled(30, weight: .bold))
                 .multilineTextAlignment(.center)
             Text("onboarding.health.detail")
-                .font(.system(size: 16))
+                .font(.scaled(16))
                 .foregroundStyle(Theme.Colors.secondaryText)
                 .multilineTextAlignment(.center)
             VStack(spacing: 0) {

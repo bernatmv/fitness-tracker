@@ -75,21 +75,30 @@ enum Theme {
         static let cardTint: Double = 0.07
     }
 
+    /// Largest text growth allowed by Dynamic Type.
+    static let maxTextScale: CGFloat = 1.35
+
     static func dynamic(light: UInt32, dark: UInt32) -> Color {
         Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light) })
     }
 }
 
 extension Font {
-    /// Monospaced digits and labels (HabitKit pairs a grotesk with a mono).
-    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+    /// Fixed design sizes that still follow the user's text size setting,
+    /// capped so tiles, chips and buttons with fixed frames keep their shape.
+    static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        .system(size: min(UIFontMetrics.default.scaledValue(for: size), size * Theme.maxTextScale), weight: weight, design: design)
     }
 
-    static let cardTitle = Font.system(size: 17, weight: .semibold)
-    static let cardSubtitle = Font.system(size: 14)
-    static let screenTitle = Font.system(size: 24, weight: .bold)
-    static let sectionTitle = Font.system(size: 20, weight: .bold)
-    static let statNumber = Font.system(size: 28, weight: .bold)
-    static let label = Font.system(size: 15)
+    /// Monospaced digits and labels (HabitKit pairs a grotesk with a mono).
+    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .scaled(size, weight: weight, design: .monospaced)
+    }
+
+    static var cardTitle: Font { .scaled(17, weight: .semibold) }
+    static var cardSubtitle: Font { .scaled(14) }
+    static var screenTitle: Font { .scaled(24, weight: .bold) }
+    static var sectionTitle: Font { .scaled(20, weight: .bold) }
+    static var statNumber: Font { .scaled(28, weight: .bold) }
+    static var label: Font { .scaled(15) }
 }

@@ -23,6 +23,9 @@ final class AppModel {
     private(set) var quickPasses = 0
     private(set) var syncState = SyncState.load()
     let purchases: PurchaseManager
+    /// A widget link received before the home screen could handle it
+    /// (cold start, onboarding, a sheet in the way).
+    var pendingLink: DeepLink.Target?
     private let sync: HistorySync
 
     init(source: HealthSource = DebugFlags.demoData ? DemoHealthSource() : HealthKitSource()) {
@@ -99,7 +102,7 @@ final class AppModel {
     private func syncOnce() async {
         // Asks only for types not asked before (e.g. stand hours for people
         // upgrading from the React Native app); otherwise returns at once.
-        if !didRequestAccess, preferences.onboardingCompleted {
+        if !didRequestAccess, preferences.onboardingCompleted, UIApplication.shared.applicationState == .active {
             didRequestAccess = true
             await requestHealthAccess()
         }
@@ -128,9 +131,11 @@ final class AppModel {
     /// Pull to refresh: returns once recent days are in, while any
     /// backfill continues on its own.
     func refreshRecent() async {
-        // A sync is running: queue another pass instead of holding the spinner.
+        // A long backfill is running: read just the recent days alongside it.
         guard !isSyncing else {
-            pendingRefresh = true
+            let today = Day.today
+            let recent = today.advanced(by: -HistorySync.refreshWindow)...today
+            merge(await sync.fetch(Metric.allCases, range: recent))
             return
         }
         let start = quickPasses
@@ -160,6 +165,16 @@ final class AppModel {
     /// metric succeeded, so a failed one is retried instead of left with gaps.
     @discardableResult
     private func apply(_ fetched: [Metric: [Day: Double]], covering range: ClosedRange<Day>) -> Bool {
+        merge(fetched)
+        guard fetched.count == Metric.allCases.count else { return false }
+        syncState.oldestFetched = min(syncState.oldestFetched ?? range.lowerBound, range.lowerBound)
+        syncState.lastSync = Date()
+        syncState.save()
+        return true
+    }
+
+    /// Stores fetched days and refreshes widgets, without touching sync progress.
+    private func merge(_ fetched: [Metric: [Day: Double]]) {
         for (metric, values) in fetched {
             var series = histories[metric] ?? .empty
             series.merge(values)
@@ -167,11 +182,6 @@ final class AppModel {
             SharedContainer.write(series, to: FileName.history(metric))
         }
         if !fetched.isEmpty { publishWidgetSnapshot() }
-        guard fetched.count == Metric.allCases.count else { return false }
-        syncState.oldestFetched = min(syncState.oldestFetched ?? range.lowerBound, range.lowerBound)
-        syncState.lastSync = Date()
-        syncState.save()
-        return true
     }
 
     /// Writes the widget payload and reloads widgets, but only when what

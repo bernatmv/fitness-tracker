@@ -30,8 +30,8 @@ struct TrialRecapView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                    Text("recap.title").font(.system(size: 32, weight: .bold))
-                    Text("recap.subtitle").font(.system(size: 16)).foregroundStyle(Theme.Colors.secondaryText)
+                    Text("recap.title").font(.scaled(32, weight: .bold))
+                    Text("recap.subtitle").font(.scaled(16)).foregroundStyle(Theme.Colors.secondaryText)
                 }
                 summary
                 VStack(spacing: Theme.Spacing.m) {
@@ -48,11 +48,15 @@ struct TrialRecapView: View {
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: Theme.Spacing.m) {
                 Button(action: upgrade) {
-                    Text(String(format: String(localized: "recap.cta %@"), purchases.proPrice ?? ""))
+                    if let price = purchases.proPrice {
+                        Text(String(format: String(localized: "recap.cta %@"), price))
+                    } else {
+                        Text("pro.unlock")
+                    }
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 Button("recap.later") { dismiss() }
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(15, weight: .medium))
                     .foregroundStyle(Theme.Colors.secondaryText)
             }
             .padding(.horizontal, Theme.Spacing.xl)
@@ -85,9 +89,9 @@ struct TrialRecapView: View {
         let total = metrics.reduce(0) { $0 + hits($1) }
         let possible = metrics.count * trialDays.count
         return HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
-            Text(verbatim: "\(total)").font(.system(size: 48, weight: .bold)).foregroundStyle(Theme.Colors.accent)
+            Text(verbatim: "\(total)").font(.scaled(48, weight: .bold)).foregroundStyle(Theme.Colors.accent)
             Text(String(format: String(localized: "recap.total %lld"), possible))
-                .font(.system(size: 16, weight: .medium)).foregroundStyle(Theme.Colors.secondaryText)
+                .font(.scaled(16, weight: .medium)).foregroundStyle(Theme.Colors.secondaryText)
             Spacer(minLength: 0)
         }
         .padding(Theme.Spacing.l)
@@ -102,9 +106,9 @@ struct TrialRecapView: View {
         return HStack(spacing: Theme.Spacing.m) {
             IconTile(metric: metric, palette: settings.palette, size: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text(metric.title).font(.system(size: 16, weight: .semibold))
+                Text(metric.title).font(.scaled(16, weight: .semibold))
                 Text(String(format: String(localized: "recap.goal %lld %lld"), hits, days.count))
-                    .font(.system(size: 13)).foregroundStyle(Theme.Colors.secondaryText)
+                    .font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
             }
             Spacer(minLength: Theme.Spacing.s)
             HStack(spacing: 3) {

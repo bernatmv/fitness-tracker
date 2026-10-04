@@ -39,6 +39,7 @@ struct OverviewWidgetView: View {
     var familyOverride: WidgetFamily?
     @Environment(\.widgetFamily) private var environmentFamily
     private var family: WidgetFamily { familyOverride ?? environmentFamily }
+    @Environment(\.widgetRenderingMode) private var renderingMode
 
     private let days = 8
     private var today: Day { Day(entry.date) }
@@ -86,7 +87,8 @@ struct OverviewWidgetView: View {
                         let day = today.advanced(by: offset - days + 1)
                         let level = locked ? Self.teaserLevel(offset: offset, metric: metric) : item.settings.scale.level(for: item.series[day])
                         RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(palette.color(level: level))
+                            .fill(HeatmapStyle(series: item.series, scale: item.settings.scale, palette: palette,
+                                               monochrome: renderingMode != .fullColor).color(level: level))
                             .aspectRatio(1, contentMode: .fit)
                             .overlay {
                                 if day == today, !locked {

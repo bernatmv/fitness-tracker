@@ -10,7 +10,7 @@ struct CircleButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.scaled(16, weight: .semibold))
                 .foregroundStyle(filled ? Theme.Colors.onAccent : Theme.Colors.primaryText)
                 .frame(width: Theme.Size.circleButton, height: Theme.Size.circleButton)
                 .background(Circle().fill(filled ? Theme.Colors.accent : Theme.Colors.control))
@@ -26,7 +26,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 17, weight: .semibold))
+            .font(.scaled(17, weight: .semibold))
             .foregroundStyle(Theme.Colors.onAccent)
             .frame(maxWidth: .infinity)
             .frame(height: Theme.Size.cta)
@@ -87,7 +87,7 @@ struct SheetHeader: View {
 
     var body: some View {
         ZStack {
-            title.font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+            title.font(.scaled(17, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
             HStack {
                 CircleButton(symbol: "xmark", label: "common.close", action: close)
                 Spacer()

@@ -76,3 +76,13 @@ struct Day: Hashable, Comparable, Codable, Sendable, Strideable {
         return (yoe + era * 400 + (m <= 2 ? 1 : 0), m, d)
     }
 }
+
+extension FormatStyle where Self == Date.FormatStyle {
+    /// Grids are laid out in Gregorian months, so labels must be too, even
+    /// for people whose default calendar is Islamic, Hebrew or Persian.
+    static var gregorian: Date.FormatStyle {
+        var style = Date.FormatStyle.dateTime
+        style.calendar = Calendar(identifier: .gregorian)
+        return style
+    }
+}

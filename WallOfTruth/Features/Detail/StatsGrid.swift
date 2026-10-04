@@ -19,11 +19,11 @@ struct StatsGrid: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("detail.stats.bestday").font(.label).foregroundStyle(Theme.Colors.secondaryText)
-                        Text(best.day.date(), format: .dateTime.day().month(.wide).year())
+                        Text(best.day.date(), format: .gregorian.day().month(.wide).year())
                             .font(.mono(13)).foregroundStyle(Theme.Colors.tertiaryText)
                     }
                     Spacer()
-                    Text(MetricFormat.value(best.value, for: metric)).font(.system(size: 20, weight: .bold))
+                    Text(MetricFormat.value(best.value, for: metric)).font(.scaled(20, weight: .bold))
                 }
                 .padding(Theme.Spacing.l)
                 .surface()
@@ -48,7 +48,7 @@ private struct StatTile: View {
                     .lineLimit(1)
                 Spacer(minLength: Theme.Spacing.xs)
                 Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.scaled(13, weight: .bold))
                     .foregroundStyle(palette.color)
                     .frame(width: 32, height: 32)
                     .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(palette.color.opacity(Theme.Grid.tileTint)))
