@@ -1,22 +1,17 @@
 import SwiftUI
 
 /// Pro upsell. Strategy: show the person their own locked walls (real data,
-/// not stock art), lead with a no-risk free trial, frame the price as a
-/// one-time payment, and keep closing and restoring always one tap away.
+/// not stock art), frame the price as a one-time payment with no
+/// subscription, and keep closing and restoring always one tap away. The
+/// free calories tier is the trial.
 struct PaywallView: View {
     var highlight: Metric?
     var isOnboarding = false
     @Environment(AppModel.self) private var model
     @Environment(PurchaseManager.self) private var purchases
     @Environment(\.dismiss) private var dismiss
-    @State private var plan: Plan = .trial
-
-    enum Plan { case trial, lifetime }
-
     static let onboardingKey = "onboarding_paywall_shown"
     static var onboardingShown: Bool { UserDefaults.standard.bool(forKey: onboardingKey) }
-
-    private var selectedPlan: Plan { purchases.canStartTrial ? plan : .lifetime }
 
     var body: some View {
         ScrollView {
@@ -36,8 +31,8 @@ struct PaywallView: View {
         .screenBackground()
         .presentationDragIndicator(.hidden)
         .onChange(of: purchases.access) { _, access in
-            // Bought Pro or started the trial: done here.
-            if access.isFullAccess() { dismiss() }
+            // Bought Pro: done here.
+            if access.isFullAccess { dismiss() }
         }
         .onAppear {
             // Marked only once actually on screen, so a refused presentation retries next launch.
@@ -111,34 +106,25 @@ struct PaywallView: View {
 
     private var plans: some View {
         VStack(spacing: Theme.Spacing.s + 2) {
-            if purchases.canStartTrial {
-                PlanRow(selected: selectedPlan == .trial, title: "pro.plan.trial",
-                        detail: Text(String(format: String(localized: "pro.plan.trial.detail %@"), price)),
-                        price: nil, badge: nil) { plan = .trial }
-            }
-            PlanRow(selected: selectedPlan == .lifetime, title: "pro.plan.lifetime", detail: Text("pro.plan.lifetime.detail"),
-                    price: Text(verbatim: price), badge: "pro.plan.lifetime.badge") { plan = .lifetime }
+            PlanRow(selected: true, title: "pro.plan.lifetime", detail: Text("pro.plan.lifetime.detail"),
+                    price: Text(verbatim: price), badge: "pro.plan.lifetime.badge") {}
         }
     }
 
     private var price: String { purchases.proPrice ?? "…" }
 
-    /// Buying needs a loaded product; the free trial needs its own.
-    private var canBuy: Bool {
-        selectedPlan == .trial ? (purchases.trial != nil || DebugFlags.placeholderPrice != nil) : purchases.proPrice != nil
-    }
+    /// Buying needs a loaded product.
+    private var canBuy: Bool { purchases.proPrice != nil }
 
     private var footer: some View {
         VStack(spacing: Theme.Spacing.s) {
             Button {
-                Task { selectedPlan == .trial ? await purchases.startTrial() : await purchases.buyPro() }
+                Task { await purchases.buyPro() }
             } label: {
                 if purchases.isPurchasing || purchases.isLoadingProducts {
                     ProgressView().tint(Theme.Colors.onAccent)
                 } else if !canBuy {
                     Text("pro.unavailable")
-                } else if selectedPlan == .trial {
-                    Text("pro.cta.trial")
                 } else {
                     Text(String(format: String(localized: "pro.cta.buy %@"), price))
                 }
@@ -151,13 +137,7 @@ struct PaywallView: View {
             if purchases.awaitingApproval {
                 Text("pro.pending").font(.scaled(13, weight: .medium)).foregroundStyle(Theme.Colors.accent)
             }
-            Group {
-                if selectedPlan == .trial {
-                    Text(String(format: String(localized: "pro.fineprint.trial %@"), price))
-                } else {
-                    Text("pro.fineprint.lifetime")
-                }
-            }
+            Text("pro.fineprint.lifetime")
             .font(.scaled(12))
             .foregroundStyle(Theme.Colors.tertiaryText)
             .multilineTextAlignment(.center)

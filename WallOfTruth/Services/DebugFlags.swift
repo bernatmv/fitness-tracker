@@ -22,7 +22,6 @@ enum DebugFlags {
         switch string("Access") {
         case "free": .free
         case "pro": .pro
-        case "trial": .trial(endsAt: Date().addingTimeInterval(2 * 86_400 + 3600))
         default: nil
         }
     }

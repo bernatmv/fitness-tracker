@@ -1,49 +1,34 @@
 {
-  "identifier" : "6F3A9C1E",
-  "nonRenewingSubscriptions" : [],
-  "products" : [
+  "identifier": "6F3A9C1E",
+  "nonRenewingSubscriptions": [],
+  "products": [
     {
-      "displayPrice" : "4.99",
-      "familyShareable" : true,
-      "internalID" : "6739000001",
-      "localizations" : [
+      "displayPrice": "4.99",
+      "familyShareable": true,
+      "internalID": "6739000001",
+      "localizations": [
         {
-          "description" : "Unlock every metric, forever.",
-          "displayName" : "Wall of Truth Pro",
-          "locale" : "en_US"
+          "description": "Unlock every metric, forever.",
+          "displayName": "Wall of Truth Pro",
+          "locale": "en_US"
         }
       ],
-      "productID" : "com.bernat.walloftruth.pro",
-      "referenceName" : "Pro Lifetime",
-      "type" : "NonConsumable"
-    },
-    {
-      "displayPrice" : "0.0",
-      "familyShareable" : false,
-      "internalID" : "6739000002",
-      "localizations" : [
-        {
-          "description" : "Try every metric free for 7 days.",
-          "displayName" : "7-day Trial",
-          "locale" : "en_US"
-        }
-      ],
-      "productID" : "com.bernat.walloftruth.trial7",
-      "referenceName" : "7-day Trial",
-      "type" : "NonConsumable"
+      "productID": "com.bernat.walloftruth.pro",
+      "referenceName": "Pro Lifetime",
+      "type": "NonConsumable"
     }
   ],
-  "settings" : {
-    "_applicationInternalID" : "6739000000",
-    "_developerTeamID" : "426R48XBW3",
-    "_failTransactionsEnabled" : false,
-    "_locale" : "en_US",
-    "_storefront" : "USA",
-    "_storeKitErrors" : []
+  "settings": {
+    "_applicationInternalID": "6739000000",
+    "_developerTeamID": "426R48XBW3",
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": []
   },
-  "subscriptionGroups" : [],
-  "version" : {
-    "major" : 3,
-    "minor" : 0
+  "subscriptionGroups": [],
+  "version": {
+    "major": 3,
+    "minor": 0
   }
 }

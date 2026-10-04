@@ -42,25 +42,5 @@
 			<string>%lld dnia danych czeka</string>
 		</dict>
 	</dict>
-	<key>trial.active %lld</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>lld</string>
-			<key>few</key>
-			<string>Okres próbny Pro: zostały %lld dni</string>
-			<key>many</key>
-			<string>Okres próbny Pro: zostało %lld dni</string>
-			<key>one</key>
-			<string>Okres próbny Pro: został %lld dzień</string>
-			<key>other</key>
-			<string>Okres próbny Pro: zostało %lld dnia</string>
-		</dict>
-	</dict>
 </dict>
 </plist>

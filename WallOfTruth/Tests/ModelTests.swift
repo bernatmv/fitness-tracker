@@ -236,33 +236,12 @@ struct PaletteTests {
     }
 }
 
-struct TrialRecapTests {
-    let end = Date(timeIntervalSince1970: 1_800_000_000)
-
-    @Test func showsOnceAfterTheTrialEnds() {
-        let defaults = UserDefaults(suiteName: "recap-test-\(UUID())")!
-        #expect(!TrialRecap.shouldShow(trialEnd: end, access: .free, now: end.addingTimeInterval(-60), defaults: defaults))
-        #expect(TrialRecap.shouldShow(trialEnd: end, access: .free, now: end.addingTimeInterval(60), defaults: defaults))
-        #expect(!TrialRecap.shouldShow(trialEnd: end, access: .pro, now: end.addingTimeInterval(60), defaults: defaults))
-        #expect(!TrialRecap.shouldShow(trialEnd: end, access: .free, now: end.addingTimeInterval(15 * 86_400), defaults: defaults))
-        TrialRecap.markShown(defaults: defaults)
-        #expect(!TrialRecap.shouldShow(trialEnd: end, access: .free, now: end.addingTimeInterval(60), defaults: defaults))
-    }
-}
 
 struct WidgetScheduleTests {
-    @Test func addsAnEntryAtTrialEnd() {
+    @Test func refreshesByMidnightOrWithinTheHour() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let ends = now.addingTimeInterval(600)
-        #expect(WidgetSchedule.entryDates(now: now, access: .trial(endsAt: ends)) == [now, ends])
-        #expect(WidgetSchedule.entryDates(now: now, access: .free) == [now])
-    }
-
-    @Test func refreshesWhenTheTrialEnds() {
-        let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let ends = now.addingTimeInterval(600)
-        #expect(WidgetSchedule.nextRefresh(now: now, access: .trial(endsAt: ends)) == ends)
-        #expect(WidgetSchedule.nextRefresh(now: now, access: .pro) <= now.addingTimeInterval(3600))
+        let next = WidgetSchedule.nextRefresh(now: now)
+        #expect(next > now && next <= now.addingTimeInterval(3600))
     }
 }
 
