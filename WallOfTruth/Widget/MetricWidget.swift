@@ -10,7 +10,7 @@ struct MetricEntry: TimelineEntry {
         snapshot?.entries[metric] ?? WidgetSnapshot.Entry(settings: .defaults(for: metric), series: .empty)
     }
 
-    var locked: Bool { !(snapshot?.access ?? .free).canView(metric, now: date) }
+    var locked: Bool { !(snapshot?.access ?? .free).canView(metric) }
     func style(monochrome: Bool) -> HeatmapStyle {
         HeatmapStyle(series: entry.series, scale: entry.settings.scale, palette: entry.settings.palette, monochrome: monochrome)
     }
@@ -31,29 +31,16 @@ struct MetricProvider: AppIntentTimelineProvider {
     /// One entry per refresh; the app reloads timelines after every sync,
     /// and a midnight refresh starts the new day's cell.
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<MetricEntry> {
-        let snapshot = WidgetSnapshot.load()
-        let dates = WidgetSchedule.entryDates(access: snapshot?.access)
-        let entries = dates.map { MetricEntry(date: $0, metric: configuration.metricType.metric, snapshot: snapshot) }
-        return Timeline(entries: entries, policy: .after(WidgetSchedule.nextRefresh(access: snapshot?.access)))
+        let entry = MetricEntry(date: Date(), metric: configuration.metricType.metric, snapshot: WidgetSnapshot.load())
+        return Timeline(entries: [entry], policy: .after(WidgetSchedule.nextRefresh()))
     }
 
 }
 
 enum WidgetSchedule {
-    /// Now, plus the moment a trial ends, so locked metrics lock on time
-    /// even if WidgetKit delays the next reload.
-    static func entryDates(now: Date = Date(), access: Access?) -> [Date] {
-        if case .trial(let endsAt)? = access, endsAt > now { return [now, endsAt] }
-        return [now]
-    }
-
     /// Next midnight, or within the hour as a self-healing fallback.
-    static func nextRefresh(now: Date = Date(), access: Access? = nil) -> Date {
-        let midnight = Day(now).advanced(by: 1).date()
-        var next = min(midnight, now.addingTimeInterval(3600))
-        // Re-render right when a trial ends so its metrics lock on time.
-        if case .trial(let endsAt)? = access, endsAt > now { next = min(next, endsAt) }
-        return next
+    static func nextRefresh(now: Date = Date()) -> Date {
+        min(Day(now).advanced(by: 1).date(), now.addingTimeInterval(3600))
     }
 }
 

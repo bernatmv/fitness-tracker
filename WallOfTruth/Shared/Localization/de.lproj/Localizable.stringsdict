@@ -34,21 +34,5 @@
 			<string>%lld Tage mit Daten warten</string>
 		</dict>
 	</dict>
-	<key>trial.active %lld</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>lld</string>
-			<key>one</key>
-			<string>Pro-Test: noch %lld Tag</string>
-			<key>other</key>
-			<string>Pro-Test: noch %lld Tage</string>
-		</dict>
-	</dict>
 </dict>
 </plist>

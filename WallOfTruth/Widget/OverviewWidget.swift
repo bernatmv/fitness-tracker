@@ -14,9 +14,7 @@ struct OverviewProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<OverviewEntry>) -> Void) {
-        let snapshot = WidgetSnapshot.load()
-        let entries = WidgetSchedule.entryDates(access: snapshot?.access).map { OverviewEntry(date: $0, snapshot: snapshot) }
-        completion(Timeline(entries: entries, policy: .after(WidgetSchedule.nextRefresh(access: snapshot?.access))))
+        completion(Timeline(entries: [OverviewEntry(date: Date(), snapshot: WidgetSnapshot.load())], policy: .after(WidgetSchedule.nextRefresh())))
     }
 }
 
@@ -48,7 +46,7 @@ struct OverviewWidgetView: View {
     /// Unlocked metrics first; locked ones fill the rest as dimmed rows.
     private var metrics: [Metric] {
         let enabled = (entry.snapshot?.order ?? Metric.allCases).filter { entry.snapshot?.entries[$0]?.settings.enabled ?? true }
-        let sorted = enabled.filter { access.canView($0, now: entry.date) } + enabled.filter { !access.canView($0, now: entry.date) }
+        let sorted = enabled.filter { access.canView($0) } + enabled.filter { !access.canView($0) }
         return Array(sorted.prefix(family == .systemLarge ? 6 : 3))
     }
 
@@ -72,7 +70,7 @@ struct OverviewWidgetView: View {
     private func row(_ metric: Metric) -> some View {
         let item = entry.snapshot?.entries[metric] ?? WidgetSnapshot.Entry(settings: .defaults(for: metric), series: .empty)
         let palette = item.settings.palette
-        let locked = !access.canView(metric, now: entry.date)
+        let locked = !access.canView(metric)
         return Link(destination: locked ? DeepLink.paywall : DeepLink.metric(metric)) {
             HStack(spacing: 6) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)

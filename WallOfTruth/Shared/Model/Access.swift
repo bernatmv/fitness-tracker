@@ -1,31 +1,19 @@
 import Foundation
 
-/// What the user has unlocked.
-enum Access: Codable, Equatable, Sendable {
+/// What the user has unlocked. The free tier (calories, every feature) is
+/// the trial; Pro is a one-time unlock of every metric.
+enum Access: String, Codable, Equatable, Sendable {
     /// Calories only.
     case free
-    /// Everything, until the trial ends.
-    case trial(endsAt: Date)
     /// Lifetime Pro purchase.
     case pro
 
-    func isFullAccess(now: Date = Date()) -> Bool {
-        switch self {
-        case .free: false
-        case .trial(let endsAt): now < endsAt
-        case .pro: true
-        }
-    }
+    var isFullAccess: Bool { self == .pro }
 
-    func canView(_ metric: Metric, now: Date = Date()) -> Bool {
-        metric.isFree || isFullAccess(now: now)
+    func canView(_ metric: Metric) -> Bool {
+        metric.isFree || isFullAccess
     }
 
     /// Show upgrade prompts only to people who can still buy.
-    var showsUpsell: Bool {
-        switch self {
-        case .free, .trial: true
-        case .pro: false
-        }
-    }
+    var showsUpsell: Bool { self == .free }
 }

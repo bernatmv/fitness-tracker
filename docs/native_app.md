@@ -24,8 +24,8 @@ These only work in Debug builds; see `Services/DebugFlags.swift`.
 | --- | --- |
 | `-DemoData YES` | Generated data instead of HealthKit (simulator, screenshots) |
 | `-SkipOnboarding YES` | Go straight to the home screen |
-| `-Access free\|trial\|pro` | Force an access level and skip StoreKit |
-| `-Screen paywall\|paywall-steps\|settings\|weeks\|months\|recap\|onboarding-health\|detail-STEPS\|detail-STEPS-config\|widgets` | Open a screen on launch. `widgets` is an in-app gallery of every widget layout; add `-Gallery home\|home2` for the marketing layouts. |
+| `-Access free\|pro` | Force an access level and skip StoreKit |
+| `-Screen paywall\|paywall-steps\|settings\|weeks\|months\|onboarding-health\|detail-STEPS\|detail-STEPS-config\|widgets` | Open a screen on launch. `widgets` is an in-app gallery of every widget layout; add `-Gallery home\|home2` for the marketing layouts. |
 | `-Scroll bottom` | Open the home screen scrolled to the last metric |
 | `-ResetOnboarding YES` / `-ResetData YES` | Start onboarding again / delete synced history |
 | `-DemoHealth empty\|slow` | Demo source returns no data / delays the first sync |
@@ -51,28 +51,25 @@ These only work in Debug builds; see `Services/DebugFlags.swift`.
 
 ## Monetization
 
-| Product | ID | Type |
-| --- | --- | --- |
-| Pro (lifetime) | `com.bernat.walloftruth.pro` | Non-consumable, Family Sharing on |
-| 7-day Trial | `com.bernat.walloftruth.trial7` | Non-consumable, price tier 0 (App Review 3.1.1 free-trial pattern) |
+| Product | ID | Type | Price |
+| --- | --- | --- | --- |
+| Pro (lifetime) | `com.bernat.walloftruth.pro` | Non-consumable, Family Sharing on | $4.99 |
 
-- **Free:** Calories, with every feature.
-- **Pro:** unlocks the other five metrics and their widgets.
-- **Trial:** grants Pro for 7 days from the trial purchase date. When it ends, the other metrics lock again and nothing is charged. The paywall states all of this before the trial starts.
+- **Free:** calories, with every feature. This free tier is the trial; there is no separate trial product.
+- **Pro:** a one-time purchase that unlocks the other five metrics and their widgets. There is no subscription.
 
 Conversion levers:
 
 - Locked metrics stay on the home screen with the user's **real** data blurred and an Unlock pill, plus how many days of data are waiting.
-- The paywall fans out the user's own locked walls, puts the free trial first, and frames Pro as a one-time payment with no subscription.
+- The paywall fans out the user's own locked walls and frames Pro as a one-time payment with no subscription.
 - The paywall shows automatically once, right after onboarding, when the first wall is already visible behind it.
 - Other entry points are contextual: tapping a locked card, a widget or a settings row opens the paywall with that metric highlighted.
-- A home banner shows the days left in the trial and returns after the trial ends.
 
 ### App Store Connect checklist
 
-1. Create both in-app purchases with the IDs above. The trial's display name must follow the "7-day Trial" convention. Turn on Family Sharing for Pro, because the paywall promises it.
-2. Set the app price to Free with the release that ships the new build. Attach both IAPs to that version's submission.
-3. In the review notes, explain the free trial.
+1. Create `com.bernat.walloftruth.pro` as a non-consumable priced at $4.99, with Family Sharing on (the paywall promises it). Add a review screenshot of the paywall and attach the product to the release.
+2. Set the app price to Free with the release that ships the new build.
+3. Archive and upload: `xcodebuild archive` on the `WallOfTruth` scheme (Release), then `xcodebuild -exportArchive -exportOptionsPlist WallOfTruth/ExportOptions.plist -allowProvisioningUpdates`.
 
 ## Marketing screenshots
 
