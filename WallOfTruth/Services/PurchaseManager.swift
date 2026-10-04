@@ -2,25 +2,17 @@ import Foundation
 import StoreKit
 import os
 
-/// StoreKit 2 purchases: a lifetime Pro unlock and a free, time-limited
-/// trial (a $0 non-consumable, the pattern App Review guideline 3.1.1
-/// allows for non-subscription apps).
+/// StoreKit 2 purchase of the lifetime Pro unlock. There is no separate
+/// trial: the free calories tier, with every feature, is the trial.
 @MainActor
 @Observable
 final class PurchaseManager {
     enum ProductID {
         static let pro = "com.bernat.walloftruth.pro"
-        static let trial = "com.bernat.walloftruth.trial7"
     }
-
-    nonisolated static let trialLength: TimeInterval = 7 * 24 * 60 * 60
 
     private(set) var access: Access = Access.cached
     private(set) var pro: Product?
-    private(set) var trial: Product?
-    private(set) var trialUsed = false
-    /// When the trial ended or ends, if one was ever started.
-    private(set) var trialEnd: Date?
     private(set) var isPurchasing = false
     private(set) var isLoadingProducts = false
     /// True once StoreKit has answered at least once this launch.
@@ -51,8 +43,6 @@ final class PurchaseManager {
         }
     }
 
-    var canStartTrial: Bool { !trialUsed && (trial != nil || DebugFlags.placeholderPrice != nil) && access == .free }
-
     /// Localized Pro price, if known.
     var proPrice: String? { pro?.displayPrice ?? DebugFlags.placeholderPrice }
 
@@ -67,9 +57,7 @@ final class PurchaseManager {
         isLoadingProducts = true
         defer { isLoadingProducts = false }
         do {
-            let products = try await Product.products(for: [ProductID.pro, ProductID.trial])
-            pro = products.first { $0.id == ProductID.pro } ?? pro
-            trial = products.first { $0.id == ProductID.trial } ?? trial
+            pro = try await Product.products(for: [ProductID.pro]).first ?? pro
         } catch {
             log.error("Loading products failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -92,43 +80,20 @@ final class PurchaseManager {
         accessGeneration += 1
         let generation = accessGeneration
         if let override = DebugFlags.accessOverride {
-            if case .trial(let endsAt) = override { trialEnd = endsAt }
             isResolved = true
             return set(override)
         }
         var proOwned = false
-        var trialStart: Date?
         for await entitlement in Transaction.currentEntitlements {
             guard case .verified(let transaction) = entitlement, transaction.revocationDate == nil else { continue }
-            switch transaction.productID {
-            case ProductID.pro: proOwned = true
-            case ProductID.trial: trialStart = transaction.purchaseDate
-            default: break
-            }
+            if transaction.productID == ProductID.pro { proOwned = true }
         }
         guard generation == accessGeneration else { return }
-        trialUsed = trialStart != nil
-        trialEnd = trialStart?.addingTimeInterval(Self.trialLength)
-        set(Self.resolve(proOwned: proOwned, trialStart: trialStart, now: Date()))
+        set(proOwned ? .pro : .free)
         isResolved = true
     }
 
-    /// Pure resolution so the rules are unit-testable.
-    nonisolated static func resolve(proOwned: Bool, trialStart: Date?, now: Date) -> Access {
-        if proOwned { return .pro }
-        if let trialStart {
-            let endsAt = trialStart.addingTimeInterval(trialLength)
-            return now < endsAt ? .trial(endsAt: endsAt) : .free
-        }
-        return .free
-    }
-
     func buyPro() async { await purchase(pro) }
-
-    func startTrial() async {
-        await purchase(trial)
-        if case .trial(let endsAt) = access { await TrialReminder.schedule(endingAt: endsAt) }
-    }
 
     func restore() async {
         do {
@@ -140,8 +105,7 @@ final class PurchaseManager {
             return
         }
         await refreshAccess()
-        // Any purchase found (Pro or a trial) counts as restored.
-        message = access.isFullAccess() ? .restored : .nothingToRestore
+        message = access.isFullAccess ? .restored : .nothingToRestore
     }
 
     private func purchase(_ product: Product?) async {
@@ -166,10 +130,7 @@ final class PurchaseManager {
     }
 
     private func set(_ new: Access) {
-        if !new.showsUpsell {
-            awaitingApproval = false
-            TrialReminder.cancel()
-        }
+        if !new.showsUpsell { awaitingApproval = false }
         guard new != access else { return }
         access = new
         new.cache()

@@ -16,8 +16,6 @@ struct HomeView: View {
     @State private var path: [Metric] = []
     @State private var paywall: PaywallRequest?
     @State private var showsSettings = false
-    @State private var showsRecap = false
-    @State private var recapWantsUpgrade = false
     /// Arrived from a widget: skip automatic prompts this launch.
     @State private var handledLink = false
 
@@ -25,7 +23,6 @@ struct HomeView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 LazyVStack(spacing: Theme.Spacing.l - 1) {
-                    TrialBanner { paywall = PaywallRequest() }
                     let status = HomeStatus.resolve(hasData: model.hasAnyData, isSyncing: model.isSyncing, hasSynced: model.syncState.lastSync != nil)
                     if let status {
                         HomeStatusCard(status: status) { Task { await model.resyncAll() } }
@@ -64,13 +61,6 @@ struct HomeView: View {
         }
         .sheet(item: $paywall) { PaywallView(highlight: $0.highlight, isOnboarding: $0.isOnboarding) }
         .sheet(isPresented: $showsSettings) { SettingsView() }
-        .sheet(isPresented: $showsRecap, onDismiss: {
-            // Present the paywall only once the recap sheet is gone.
-            if recapWantsUpgrade { recapWantsUpgrade = false; paywall = PaywallRequest() }
-        }) {
-            TrialRecapView { recapWantsUpgrade = true; showsRecap = false }
-                .presentationDetents([.large])
-        }
         .task { await firstAppearance() }
         .onChange(of: model.pendingLink, initial: true) { _, link in
             if link != nil { Task { await open(link) } }
@@ -103,9 +93,8 @@ struct HomeView: View {
         guard let link else { return }
         model.pendingLink = nil
         handledLink = true
-        if showsSettings || showsRecap || paywall != nil {
+        if showsSettings || paywall != nil {
             showsSettings = false
-            showsRecap = false
             paywall = nil
             try? await Task.sleep(for: .milliseconds(450))
         }
@@ -128,7 +117,6 @@ struct HomeView: View {
         case "settings": showsSettings = true; return
         case "months": model.preferences.wallStyle = .month
         case "weeks": model.preferences.wallStyle = .weeks
-        case "recap": showsRecap = true; return
         case let screen? where screen.hasPrefix("detail-"):
             path = [Metric(rawValue: String(screen.dropFirst(7))) ?? .steps]; return
         default: break
@@ -142,9 +130,6 @@ struct HomeView: View {
         if !PaywallView.onboardingShown, model.access == .free {
             try? await Task.sleep(for: .seconds(1.2))
             paywall = PaywallRequest(isOnboarding: true)
-        } else if TrialRecap.shouldShow(trialEnd: purchases.trialEnd, access: model.access),
-                  model.visibleMetrics.contains(where: { !$0.isFree && model.history($0).lastDayWithData != nil }) {
-            showsRecap = true
         } else if model.hasAnyData, ReviewPrompter.recordLaunchAndCheck() {
             requestReview()
         }

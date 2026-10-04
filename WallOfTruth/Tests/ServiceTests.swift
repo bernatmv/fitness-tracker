@@ -3,45 +3,23 @@ import Testing
 @testable import WallOfTruth
 
 struct AccessTests {
-    let now = Date(timeIntervalSince1970: 1_800_000_000)
-
     @Test func freeUnlocksOnlyCalories() {
-        #expect(Access.free.canView(.calories, now: now))
+        #expect(Access.free.canView(.calories))
         for metric in Metric.allCases where metric != .calories {
-            #expect(!Access.free.canView(metric, now: now))
+            #expect(!Access.free.canView(metric))
         }
+        #expect(Access.free.showsUpsell)
     }
 
-    @Test func trialUnlocksUntilItEnds() {
-        let trial = Access.trial(endsAt: now.addingTimeInterval(60))
-        #expect(trial.canView(.steps, now: now))
-        #expect(!trial.canView(.steps, now: now.addingTimeInterval(61)))
-        #expect(trial.showsUpsell)
+    @Test func proSeesEverythingAndNoUpsell() {
+        #expect(Metric.allCases.allSatisfy { Access.pro.canView($0) })
+        #expect(!Access.pro.showsUpsell)
     }
 
-    @Test func paidUsersSeeEverythingAndNoUpsell() {
-        for access in [Access.pro] {
-            #expect(Metric.allCases.allSatisfy { access.canView($0, now: now) })
-            #expect(!access.showsUpsell)
-        }
+    @Test func cachedValueSurvivesEncoding() throws {
+        let decoded = try JSONDecoder().decode(Access.self, from: JSONEncoder().encode(Access.pro))
+        #expect(decoded == .pro)
     }
-}
-
-struct PurchaseResolutionTests {
-    let now = Date(timeIntervalSince1970: 1_800_000_000)
-
-    @Test func proBeatsEverything() {
-        #expect(PurchaseManager.resolve(proOwned: true, trialStart: now, now: now) == .pro)
-    }
-
-    @Test func trialLastsSevenDays() {
-        let started = now.addingTimeInterval(-6 * 86_400)
-        #expect(PurchaseManager.resolve(proOwned: false, trialStart: started, now: now)
-            == .trial(endsAt: started.addingTimeInterval(7 * 86_400)))
-        let expired = now.addingTimeInterval(-8 * 86_400)
-        #expect(PurchaseManager.resolve(proOwned: false, trialStart: expired, now: now) == .free)
-    }
-
 }
 
 struct LegacyMigrationTests {

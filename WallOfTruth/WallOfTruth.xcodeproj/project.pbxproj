@@ -13,7 +13,6 @@
 		0A1D374D84314855829D7ECE /* Plural.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BC340E521D207980F2D3234 /* Plural.swift */; };
 		0AAE2E7B8E001E8FA8F3B40B /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF555C62F6BD74891D6B62D /* LegacyMigration.swift */; };
 		0BCCF7B1E19855DE93B2B20D /* ThresholdScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3034FE476A6A677271F01B5 /* ThresholdScale.swift */; };
-		0C13A925D2E6DF52EC76D336 /* TrialRecapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A47918CF25D476D444993642 /* TrialRecapView.swift */; };
 		106FF75C0B41A473BD5E5BFF /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BDB9BC9DD44293DBB41C97D /* Components.swift */; };
 		17FAF9062D18BDE19FDEFE20 /* HistorySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C48EF4F40DDE3C4215E7EAC /* HistorySync.swift */; };
 		19C939C3366CB0EDBB3505DB /* ServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B34C290C56253E5A89B26C5 /* ServiceTests.swift */; };
@@ -62,7 +61,6 @@
 		98D40F54BD2B07DD0D5B933F /* DemoHealthSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C242FB82037E8C457E25F513 /* DemoHealthSource.swift */; };
 		A592997591EC386760C82127 /* HealthSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF76F1D057D29F7B7C23F3F8 /* HealthSource.swift */; };
 		A5AADBB10127B3A3B21133A5 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 178BD3BA206DADAF6DD90680 /* WidgetSnapshot.swift */; };
-		A831627A1E11A142055CCF36 /* TrialReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CFC43B3C9860BFDF8D6D8C /* TrialReminder.swift */; };
 		AE0BDFD0501436BAFC5699A3 /* MonthCalendarCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6FFD38DD8343B7D607451D2 /* MonthCalendarCard.swift */; };
 		AFE26AA484AF51D805932DE9 /* Metric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30EB77378E5A8843D44941ED /* Metric.swift */; };
 		B29F5E11BDCA40A27FAB3487 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9769DD8503453A6350F0F839 /* Localizable.strings */; };
@@ -177,7 +175,6 @@
 		9C6B4050CAE1146CFF211D16 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = es; path = es.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		A2ED6EF44DBBC87099CFB28B /* WallOfTruthWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = WallOfTruthWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A41679AE66D2F1E2914C9E81 /* WallOfTruth.storekit */ = {isa = PBXFileReference; path = WallOfTruth.storekit; sourceTree = "<group>"; };
-		A47918CF25D476D444993642 /* TrialRecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialRecapView.swift; sourceTree = "<group>"; };
 		A6721EC68FBE11853123CBC7 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AC66586037B8A89ABA58CE82 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		AC71EC368EAB924DFE319905 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
@@ -195,7 +192,6 @@
 		CE1BF3CAD25FC38E6FBC99CD /* WallOfTruthTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WallOfTruthTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE26F7E7A54A0CFEA6526FA1 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		CE6DE50649AD3B924169D285 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		D1CFC43B3C9860BFDF8D6D8C /* TrialReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialReminder.swift; sourceTree = "<group>"; };
 		D409A06BC7D6A396992ACF04 /* MonthBlocksHeatmap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthBlocksHeatmap.swift; sourceTree = "<group>"; };
 		D6E6C9D2C0FA65EB19BF1228 /* Day.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Day.swift; sourceTree = "<group>"; };
 		D6FFD38DD8343B7D607451D2 /* MonthCalendarCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarCard.swift; sourceTree = "<group>"; };
@@ -373,7 +369,6 @@
 			children = (
 				EBFA818F72CAEAFB065D5E20 /* PaywallTeaser.swift */,
 				F96EF2B3E98827D4ADD0FACB /* PaywallView.swift */,
-				A47918CF25D476D444993642 /* TrialRecapView.swift */,
 			);
 			path = Paywall;
 			sourceTree = "<group>";
@@ -426,7 +421,6 @@
 				0788E23E68A3BA76EBC3E3D3 /* ReviewPrompter.swift */,
 				C94D0820CBAA66742B25564D /* SleepAggregator.swift */,
 				6E097A975DC6D6F87BD2B9E4 /* StandHours.swift */,
-				D1CFC43B3C9860BFDF8D6D8C /* TrialReminder.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -639,8 +633,6 @@
 				DF62EEBDA3F29741FBC88723 /* Theme.swift in Sources */,
 				F3B9092E97008C566B60F587 /* ThresholdInput.swift in Sources */,
 				0BCCF7B1E19855DE93B2B20D /* ThresholdScale.swift in Sources */,
-				0C13A925D2E6DF52EC76D336 /* TrialRecapView.swift in Sources */,
-				A831627A1E11A142055CCF36 /* TrialReminder.swift in Sources */,
 				2307687E07D209A59516CA9B /* WallOfTruthApp.swift in Sources */,
 				D8AE68511925A1A6BBA89731 /* WeekHeatmap.swift in Sources */,
 				E61C6B1B965988D595322D08 /* WidgetGallery.swift in Sources */,
