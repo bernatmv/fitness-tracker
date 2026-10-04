@@ -1,0 +1,75 @@
+{
+  "slides": ["home_weeks_dark", "config_dark", "home_months_light", "detail_steps_dark", "widgets_dark", "home_weeks_all_dark", "home_free_light"],
+  "en": [
+    ["Every day, one square", "Your Apple Health data as a wall of truth."],
+    ["Your ranges, your colors", "Set four thresholds so good days and great days look different."],
+    ["Month by month", "Switch to the month view and spot your patterns."],
+    ["Streaks and history", "Every day you hit your goal, in one calendar."],
+    ["Your wall, everywhere", "Widgets for every metric on your Home Screen."],
+    ["Six metrics, one wall", "Calories, steps, exercise, stand hours, floors and sleep."],
+    ["Start free with calories", "Unlock steps, exercise, stand, floors and sleep once. No subscription."]
+  ],
+  "es": [
+    ["Cada día, un cuadrado", "Tus datos de Salud convertidos en un muro de la verdad."],
+    ["Tus rangos, tus colores", "Cuatro umbrales para que un buen día y un gran día no se parezcan."],
+    ["Mes a mes", "Cambia a la vista mensual y descubre tus patrones."],
+    ["Rachas e historial", "Cada día que cumples tu objetivo, en un calendario."],
+    ["Tu muro, en todas partes", "Widgets de cada métrica en tu pantalla de inicio."],
+    ["Seis métricas, un muro", "Calorías, pasos, ejercicio, horas de pie, pisos y sueño."],
+    ["Empieza gratis con calorías", "Desbloquea pasos, ejercicio, de pie, pisos y sueño una vez. Sin suscripción."]
+  ],
+  "ca": [
+    ["Cada dia, un quadrat", "Les teves dades de Salut convertides en un mur de la veritat."],
+    ["Els teus rangs, els teus colors", "Quatre llindars perquè un bon dia i un gran dia no s’assemblin."],
+    ["Mes a mes", "Canvia a la vista mensual i descobreix els teus patrons."],
+    ["Ratxes i historial", "Cada dia que compleixes l’objectiu, en un calendari."],
+    ["El teu mur, arreu", "Ginys de cada mètrica a la pantalla d’inici."],
+    ["Sis mètriques, un mur", "Calories, passos, exercici, hores dempeus, pisos i son."],
+    ["Comença gratis amb calories", "Desbloqueja passos, exercici, dempeus, pisos i son un sol cop. Sense subscripció."]
+  ],
+  "de": [
+    ["Jeder Tag, ein Quadrat", "Deine Health-Daten als Wand der Wahrheit."],
+    ["Deine Bereiche, deine Farben", "Vier Schwellen, damit gute und großartige Tage anders aussehen."],
+    ["Monat für Monat", "Wechsle zur Monatsansicht und erkenne deine Muster."],
+    ["Serien und Verlauf", "Jeder Tag, an dem du dein Ziel erreichst, in einem Kalender."],
+    ["Deine Wand, überall", "Widgets für jeden Messwert auf deinem Home-Bildschirm."],
+    ["Sechs Werte, eine Wand", "Kalorien, Schritte, Training, Stehstunden, Etagen und Schlaf."],
+    ["Kostenlos mit Kalorien", "Schalte Schritte, Training, Stehen, Etagen und Schlaf einmalig frei. Kein Abo."]
+  ],
+  "fr": [
+    ["Chaque jour, un carré", "Vos données Santé en un mur de vérité."],
+    ["Vos plages, vos couleurs", "Quatre seuils pour qu’une bonne et une grande journée diffèrent."],
+    ["Mois par mois", "Passez à la vue mensuelle et repérez vos habitudes."],
+    ["Séries et historique", "Chaque jour où vous atteignez votre objectif, dans un calendrier."],
+    ["Votre mur, partout", "Des widgets pour chaque mesure sur l’écran d’accueil."],
+    ["Six mesures, un mur", "Calories, pas, exercice, heures debout, étages et sommeil."],
+    ["Gratuit avec les calories", "Débloquez pas, exercice, debout, étages et sommeil en une fois. Sans abonnement."]
+  ],
+  "it": [
+    ["Ogni giorno, un quadrato", "I tuoi dati di Salute in un muro della verità."],
+    ["Le tue fasce, i tuoi colori", "Quattro soglie perché una buona e una grande giornata non si somiglino."],
+    ["Mese per mese", "Passa alla vista mensile e scopri le tue abitudini."],
+    ["Serie e storico", "Ogni giorno in cui raggiungi l’obiettivo, in un calendario."],
+    ["Il tuo muro, ovunque", "Widget per ogni metrica nella schermata Home."],
+    ["Sei metriche, un muro", "Calorie, passi, allenamento, ore in piedi, piani e sonno."],
+    ["Inizia gratis con le calorie", "Sblocca passi, allenamento, in piedi, piani e sonno una volta. Nessun abbonamento."]
+  ],
+  "pl": [
+    ["Każdy dzień, jeden kwadrat", "Twoje dane ze Zdrowia jako ściana prawdy."],
+    ["Twoje zakresy, twoje kolory", "Cztery progi, by dobry i świetny dzień wyglądały inaczej."],
+    ["Miesiąc po miesiącu", "Przełącz na widok miesięczny i odkryj swoje wzorce."],
+    ["Serie i historia", "Każdy dzień z osiągniętym celem w jednym kalendarzu."],
+    ["Twoja ściana wszędzie", "Widżety dla każdego wskaźnika na ekranie początkowym."],
+    ["Sześć wskaźników, jedna ściana", "Kalorie, kroki, ćwiczenia, godziny stania, piętra i sen."],
+    ["Zacznij za darmo z kaloriami", "Odblokuj kroki, ćwiczenia, stanie, piętra i sen jednorazowo. Bez subskrypcji."]
+  ],
+  "ja": [
+    ["毎日を、ひとマスに", "ヘルスケアのデータが、ごまかしのない壁になる。"],
+    ["段階も色も、自由に", "4つの基準で、良い日と最高の日をはっきり区別。"],
+    ["月ごとにも見られる", "月表示に切り替えて、自分のパターンを見つけよう。"],
+    ["連続記録と履歴", "目標を達成した日を、ひとつのカレンダーで。"],
+    ["壁を、いつでも目の前に", "ホーム画面に、指標ごとのウィジェット。"],
+    ["6つの指標、ひとつの壁", "カロリー・歩数・エクササイズ・スタンド・階数・睡眠。"],
+    ["カロリーは無料で", "歩数・エクササイズ・スタンド・階数・睡眠は一度の購入で。サブスクなし。"]
+  ]
+}

@@ -1,15 +1,22 @@
-"""Builds marketing/ from raw simulator screenshots: App Store frames,
-landing-page images and cut-out widgets."""
+"""Builds marketing/ from raw simulator screenshots.
+
+    compose.py <raw> <out>                       landing images + widget cut-outs
+    compose.py <raw> <out> --locales en,es,...   captioned App Store sets per language
+"""
 import os, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import numpy as np
 
 RAW, OUT = sys.argv[1], sys.argv[2]
 SF = "/System/Library/Fonts/SFNS.ttf"
+JA_BOLD = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
+JA_REGULAR = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 SFR = "/System/Library/Fonts/SFNSRounded.ttf"
 W, H = 1320, 2868  # 6.9" App Store size (iPhone 17 Pro Max)
 
-def font(size, weight=700, path=SF):
+def font(size, weight=700, path=SF, lang="en"):
+    if lang == "ja":  # SF has no Japanese glyphs
+        return ImageFont.truetype(JA_BOLD if weight >= 600 else JA_REGULAR, int(size * 0.92))
     f = ImageFont.truetype(path, size)
     # Axes: width, optical size, grade, weight.
     f.set_variation_by_axes([100, min(96, max(17, size / 3)), 400, weight])
@@ -27,6 +34,12 @@ def gradient(size, top, bottom):
     return Image.fromarray(np.repeat(arr, w, axis=1).astype("uint8"))
 
 def wrap(draw, text, f, width):
+    if " " not in text.strip():  # Japanese: break between characters
+        lines, line = [], ""
+        for ch in text:
+            if draw.textlength(line + ch, font=f) <= width: line += ch
+            else: lines.append(line); line = ch
+        lines.append(line); return lines
     words, lines, line = text.split(), [], ""
     for w_ in words:
         test = (line + " " + w_).strip()
@@ -39,11 +52,11 @@ THEMES = {
     "light": dict(top=(236, 233, 252), bottom=(247, 245, 250), title=(14, 12, 17), sub=(91, 89, 96), accent=(91, 76, 240)),
 }
 
-def frame(shot, title, subtitle, theme, out):
+def frame(shot, title, subtitle, theme, out, lang="en", raw=None):
     t = THEMES[theme]
     canvas = gradient((W, H), t["top"], t["bottom"]).convert("RGBA")
     d = ImageDraw.Draw(canvas)
-    tf, sf = font(112, 720), font(48, 450)
+    tf, sf = font(112, 720, lang=lang), font(48, 450, lang=lang)
     y = 170
     for line in wrap(d, title, tf, W - 160):
         d.text((W/2, y), line, font=tf, fill=t["title"], anchor="ma"); y += 122
@@ -52,7 +65,7 @@ def frame(shot, title, subtitle, theme, out):
         d.text((W/2, y), line, font=sf, fill=t["sub"], anchor="ma"); y += 62
     # Phone screenshot: rounded like the device, with a soft shadow.
     scale = 0.80
-    img = Image.open(os.path.join(RAW, shot)).convert("RGB")
+    img = Image.open(os.path.join(raw or RAW, shot)).convert("RGB")
     sw, sh = int(img.width * scale), int(img.height * scale)
     phone = rounded(img.resize((sw, sh), Image.LANCZOS), 118)
     bezel = rounded(Image.new("RGB", (sw + 28, sh + 28), (18, 18, 22) if theme == "dark" else (30, 30, 34)), 132)
@@ -63,7 +76,8 @@ def frame(shot, title, subtitle, theme, out):
     canvas = Image.alpha_composite(canvas, shadow.filter(ImageFilter.GaussianBlur(40)))
     canvas.alpha_composite(bezel, (px, py))
     canvas.alpha_composite(phone, (px + 14, py + 14))
-    canvas.convert("RGB").save(out, optimize=True)
+    # JPEG at high quality: App Store Connect accepts it and it is ~5x smaller than PNG.
+    canvas.convert("RGB").save(out.replace(".png", ".jpg"), "JPEG", quality=92, optimize=True, progressive=True)
 
 def cutouts(shot, theme, out_dir, card, labels):
     """Finds widget tiles (card-coloured blocks on the gradient) and saves each with rounded corners."""
@@ -92,21 +106,9 @@ def cutouts(shot, theme, out_dir, card, labels):
     return n
 
 def main():
-    store, landing, widgets = (os.path.join(OUT, p) for p in ("app-store/iphone-6.9", "landing", "widgets"))
-    for p in (store, landing, widgets): os.makedirs(p, exist_ok=True)
-
-    shots = [
-        ("home_weeks_dark.png", "Every day, one square", "Your Apple Health data as a wall of truth.", "dark"),
-        ("config_dark.png", "Your ranges, your colors", "Set four thresholds so good days and great days look different.", "dark"),
-        ("home_months_light.png", "Month by month", "Switch to the month view and spot your patterns.", "light"),
-        ("detail_steps_dark.png", "Streaks and history", "Every day you hit your goal, in one calendar.", "dark"),
-        ("widgets_dark.png", "Your wall, everywhere", "Widgets for every metric on your Home Screen.", "dark"),
-        ("home_weeks_all_dark.png", "Six metrics, one wall", "Calories, steps, exercise, stand hours, floors and sleep.", "dark"),
-        # Optional last slide: the free tier. Leave it out for an all-unlocked set.
-        ("home_free_light.png", "Start free with calories", "Unlock steps, exercise, stand, floors and sleep once. No subscription.", "light"),
-    ]
-    for i, (shot, title, sub, theme) in enumerate(shots, 1):
-        frame(shot, title, sub, theme, os.path.join(store, f"{i:02d}-{shot.replace('.png', '')}.png"))
+    """Landing images and widget cut-outs. App Store sets: see localized()."""
+    landing, widgets = (os.path.join(OUT, p) for p in ("landing", "widgets"))
+    for p in (landing, widgets): os.makedirs(p, exist_ok=True)
 
     # Landing page: unframed screenshots in both appearances, as web-size
     # PNG (660px) and full-resolution WebP for retina.
@@ -123,4 +125,19 @@ def main():
             cutouts(shot, theme, widgets, card, labels)
 
 
-main()
+def localized(locales):
+    import json
+    captions = json.load(open(os.path.join(os.path.dirname(__file__), "captions.json")))
+    for loc in locales:
+        raw = os.path.join(RAW, "en" if loc == "ja" else loc)
+        out = os.path.join(OUT, "app-store/iphone-6.9", loc)
+        os.makedirs(out, exist_ok=True)
+        for i, (slide, (title, sub)) in enumerate(zip(captions["slides"], captions[loc]), 1):
+            theme = "light" if slide.endswith("light") else "dark"
+            frame(f"{slide}.png", title, sub, theme, os.path.join(out, f"{i:02d}-{slide}.png"), lang=loc, raw=raw)
+        print(loc, "done")
+
+if len(sys.argv) > 3 and sys.argv[3] == "--locales":
+    localized(sys.argv[4].split(","))
+else:
+    main()

@@ -1,4 +1,3 @@
-import StoreKit
 import SwiftUI
 
 struct SettingsView: View {
@@ -6,7 +5,6 @@ struct SettingsView: View {
     @Environment(PurchaseManager.self) private var purchases
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @Environment(\.requestReview) private var requestReview
     @State private var paywall: PaywallRequest?
     @State private var configuring: Metric?
 
@@ -106,7 +104,8 @@ struct SettingsView: View {
     }
 
     @ViewBuilder private var aboutRows: some View {
-        row("star", "settings.rate") { requestReview() }
+        // A direct link: the system review prompt is throttled and can silently do nothing.
+        row("star", "settings.rate") { openURL(AppLinks.writeReview) }
         Divider().overlay(Theme.Colors.separator)
         row("lock.shield", "settings.privacy") { openURL(AppLinks.privacyPolicy) }
         if purchases.access.showsUpsell {
@@ -173,6 +172,9 @@ private struct ProStatusCard: View {
 }
 
 enum AppLinks {
+    static let appStoreID = "6756018618"
+    static let writeReview = URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review")!
+
     /// Localized privacy page where one exists (App Review 5.1.1(i)).
     static var privacyPolicy: URL {
         let published = ["en", "es", "fr", "it", "de", "ca"]
