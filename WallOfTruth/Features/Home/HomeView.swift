@@ -93,11 +93,15 @@ struct HomeView: View {
         guard let link else { return }
         model.pendingLink = nil
         handledLink = true
-        if showsSettings || paywall != nil {
+        // Pop the detail screen too: its config sheet would block ours.
+        if showsSettings || paywall != nil || !path.isEmpty {
             showsSettings = false
             paywall = nil
+            path = []
             try? await Task.sleep(for: .milliseconds(450))
         }
+        // On a cold start the cached access may be stale; ask StoreKit first.
+        _ = await purchases.waitUntilResolved()
         switch link {
         case .paywall where model.access.showsUpsell: paywall = PaywallRequest()
         case .paywall: break

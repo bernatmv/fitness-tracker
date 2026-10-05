@@ -16,4 +16,22 @@ enum Access: String, Codable, Equatable, Sendable {
 
     /// Show upgrade prompts only to people who can still buy.
     var showsUpsell: Bool { self == .free }
+
+    /// Also reads the keyed format builds before 2.0 cached ({"pro":{}}),
+    /// so an upgrade never starts out locked for Pro users or their widgets.
+    init(from decoder: Decoder) throws {
+        if let raw = try? decoder.singleValueContainer().decode(String.self) {
+            self = Access(rawValue: raw) ?? .free
+        } else {
+            let keys = try decoder.container(keyedBy: AnyKey.self).allKeys
+            self = keys.contains { $0.stringValue == Access.pro.rawValue } ? .pro : .free
+        }
+    }
+
+    private struct AnyKey: CodingKey {
+        let stringValue: String
+        var intValue: Int? { nil }
+        init(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
 }

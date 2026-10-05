@@ -26,13 +26,18 @@ struct PaywallView: View {
             .padding(.bottom, Theme.Spacing.xxl * 2)
         }
         .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .bottom) { footer }
+        .safeAreaInset(edge: .bottom) { if model.access.showsUpsell { footer } }
         .overlay(alignment: .top) { closeBar }
         .screenBackground()
         .presentationDragIndicator(.hidden)
         .onChange(of: purchases.access) { _, access in
             // Bought Pro: done here.
             if access.isFullAccess { dismiss() }
+        }
+        .onDisappear {
+            // A restore that unlocks Pro closes this sheet itself; its
+            // "restored" alert must not pop up later in Settings.
+            if purchases.message == .restored { purchases.message = nil }
         }
         .onAppear {
             // Marked only once actually on screen, so a refused presentation retries next launch.
@@ -106,8 +111,8 @@ struct PaywallView: View {
 
     private var plans: some View {
         VStack(spacing: Theme.Spacing.s + 2) {
-            PlanRow(selected: true, title: "pro.plan.lifetime", detail: Text("pro.plan.lifetime.detail"),
-                    price: Text(verbatim: price), badge: "pro.plan.lifetime.badge") {}
+            PlanRow(title: "pro.plan.lifetime", detail: Text("pro.plan.lifetime.detail"),
+                    price: Text(verbatim: price), badge: "pro.plan.lifetime.badge")
         }
     }
 
@@ -184,13 +189,13 @@ private struct FeatureRow: View {
     }
 }
 
+/// The one plan on offer, styled as the selected choice. Not a button:
+/// the CTA below buys it.
 private struct PlanRow: View {
-    let selected: Bool
     let title: LocalizedStringKey
     let detail: Text
     let price: Text?
     let badge: LocalizedStringKey?
-    let action: () -> Void
 
     @ViewBuilder private var titleAndBadge: some View {
         Text(title).font(.scaled(16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
@@ -205,33 +210,31 @@ private struct PlanRow: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: Theme.Spacing.m) {
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.scaled(22))
-                    .foregroundStyle(selected ? Theme.Colors.accent : Theme.Colors.tertiaryText)
-                VStack(alignment: .leading, spacing: 2) {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: Theme.Spacing.s) { titleAndBadge }
-                        VStack(alignment: .leading, spacing: 4) { titleAndBadge }
-                    }
-                    detail.font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
+        HStack(spacing: Theme.Spacing.m) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.scaled(22))
+                .foregroundStyle(Theme.Colors.accent)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.Spacing.s) { titleAndBadge }
+                    VStack(alignment: .leading, spacing: 4) { titleAndBadge }
                 }
-                Spacer(minLength: 0)
-                price?.font(.mono(16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
+                detail.font(.scaled(13)).foregroundStyle(Theme.Colors.secondaryText)
             }
-            .padding(.horizontal, Theme.Spacing.l)
-            .frame(minHeight: 68)
-            .background {
-                RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
-                    .fill(selected ? Theme.Colors.accentSoft : Theme.Colors.surface)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
-                            .strokeBorder(selected ? Theme.Colors.accent : Theme.Colors.surfaceBorder, lineWidth: selected ? 1.5 : 1)
-                    }
-            }
+            Spacer(minLength: 0)
+            price?.font(.mono(16, weight: .semibold)).foregroundStyle(Theme.Colors.primaryText)
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        .padding(.horizontal, Theme.Spacing.l)
+        .frame(minHeight: 68)
+        .background {
+            RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
+                .fill(Theme.Colors.accentSoft)
+                .overlay {
+                    RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
+                        .strokeBorder(Theme.Colors.accent, lineWidth: 1.5)
+                }
+        }
+        .accessibilityElement(children: .combine)
     }
 }
