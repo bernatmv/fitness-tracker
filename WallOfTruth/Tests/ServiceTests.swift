@@ -16,6 +16,15 @@ struct AccessTests {
         #expect(!Access.pro.showsUpsell)
     }
 
+    /// Builds before 2.0 cached a keyed enum ({"pro":{}}, {"trial":{...}}).
+    @Test func decodesTheOldCachedFormat() throws {
+        func decode(_ json: String) throws -> Access { try JSONDecoder().decode(Access.self, from: Data(json.utf8)) }
+        #expect(try decode(#"{"pro":{}}"#) == .pro)
+        #expect(try decode(#"{"free":{}}"#) == .free)
+        #expect(try decode(#"{"trial":{"endsAt":800000000}}"#) == .free)
+        #expect(try decode(#""pro""#) == .pro)
+    }
+
     @Test func cachedValueSurvivesEncoding() throws {
         let decoded = try JSONDecoder().decode(Access.self, from: JSONEncoder().encode(Access.pro))
         #expect(decoded == .pro)

@@ -1,9 +1,15 @@
 import SwiftUI
+import UserNotifications
 
 @main
 struct WallOfTruthApp: App {
     @State private var model = AppModel()
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Builds before 2.0 scheduled a trial reminder; the trial no longer exists.
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["trial-ending"])
+    }
 
     var body: some Scene {
         WindowGroup {
