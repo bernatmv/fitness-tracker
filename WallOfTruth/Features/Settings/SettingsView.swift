@@ -21,6 +21,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, Theme.Spacing.xl)
+            .readableWidth()
             .padding(.bottom, Theme.Spacing.xxl)
         }
         .scrollIndicators(.hidden)

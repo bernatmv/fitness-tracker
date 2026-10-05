@@ -37,6 +37,7 @@ struct MetricConfigView: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, Theme.Spacing.xl)
+            .readableWidth()
             .padding(.bottom, Theme.Spacing.xxl)
             .animation(.smooth(duration: 0.2), value: settings)
         }

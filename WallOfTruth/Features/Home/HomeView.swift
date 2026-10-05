@@ -42,6 +42,7 @@ struct HomeView: View {
                     if model.visibleMetrics.isEmpty { EmptyMetricsView { showsSettings = true } }
                 }
                 .padding(.horizontal, Theme.Spacing.screen)
+                .readableWidth()
                 .padding(.top, Theme.Spacing.s)
                 .padding(.bottom, 120)
                 .animation(.smooth, value: model.preferences.wallStyle)
@@ -84,6 +85,7 @@ struct HomeView: View {
             }
         }
         .padding(.horizontal, Theme.Spacing.screen)
+        .readableWidth()
         .padding(.vertical, Theme.Spacing.s)
         .topBarBackground()
     }

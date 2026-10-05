@@ -59,6 +59,8 @@ enum Theme {
     }
 
     enum Size {
+        /// Content column on iPad; iPhones are narrower, so it never applies there.
+        static let readableWidth: CGFloat = 640
         static let circleButton: CGFloat = 40
         static let iconTile: CGFloat = 44
         static let headerTile: CGFloat = 52

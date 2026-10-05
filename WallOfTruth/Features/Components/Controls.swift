@@ -97,3 +97,10 @@ struct SheetHeader: View {
         .topBarBackground()
     }
 }
+
+extension View {
+    /// Keeps a screen's content in a centred column on wide screens (iPad).
+    func readableWidth() -> some View {
+        frame(maxWidth: Theme.Size.readableWidth).frame(maxWidth: .infinity)
+    }
+}
