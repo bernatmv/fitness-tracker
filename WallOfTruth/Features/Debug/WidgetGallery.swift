@@ -38,6 +38,8 @@ struct WidgetGallery: View {
             }
         }
         .padding(.top, 40)
+        // Real widget sizes look tiny on a 13" iPad; enlarge for the screenshot.
+        .scaleEffect(UIDevice.current.userInterfaceIdiom == .pad ? 1.5 : 1)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(LinearGradient(colors: [Color(red: 0.36, green: 0.30, blue: 0.94), Color(red: 0.07, green: 0.62, blue: 0.62)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea())

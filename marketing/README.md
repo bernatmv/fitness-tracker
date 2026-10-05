@@ -5,6 +5,7 @@ Screenshots of the native app (`WallOfTruth/`) for the App Store and the landing
 | Folder | Contents |
 | --- | --- |
 | `app-store/iphone-6.9/<locale>/` | Seven captioned App Store screenshots (JPEG) per listing language (en, es, ca, de, fr, it, pl, ja), 1320×2868 for the 6.9" display (App Store Connect scales them to smaller iPhones). The app UI in each set is in that language; ja uses the English UI with Japanese captions, because the app isn't localized into Japanese. 01–06 show everything unlocked; 07 is an optional free-tier slide |
+| `app-store/ipad-13/<locale>/` | The same seven slides for the 13" iPad (2064×2752), captured on the iPad Pro 13-inch simulator; build with `--device ipad` |
 | `app-store/metadata/<locale>.json` | 2.0 App Store listing per language: subtitle, promotional text, keywords, description and What's New, all within App Store length limits |
 | `landing/` | Unframed screens in light and dark, as 660px-wide PNG and full-resolution WebP with rounded corners. All features are unlocked: home (top and scrolled to every metric, weeks and months), a detail screen for each of the six metrics, the ranges editor, widgets and onboarding. `home_free_light` is the only free-tier screen |
 | `widgets/` | Individual widget images with transparent rounded corners, light and dark: small, medium, large and the overview widget |

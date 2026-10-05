@@ -2,6 +2,7 @@
 
     compose.py <raw> <out>                       landing images + widget cut-outs
     compose.py <raw> <out> --locales en,es,...   captioned App Store sets per language
+    compose.py <raw> <out> --locales en,... --device ipad   same, 13" iPad
 """
 import os, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -13,6 +14,11 @@ JA_BOLD = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
 JA_REGULAR = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 SFR = "/System/Library/Fonts/SFNSRounded.ttf"
 W, H = 1320, 2868  # 6.9" App Store size (iPhone 17 Pro Max)
+# Per-device App Store frame geometry. iPad: 13" (iPad Pro 13-inch), 2064×2752.
+DEVICES = {
+    "iphone": dict(size=(1320, 2868), folder="iphone-6.9", title=112, sub=48, top=170, scale=0.80, radius=118, bezel=14, min_y=690),
+    "ipad": dict(size=(2064, 2752), folder="ipad-13", title=124, sub=54, top=150, scale=0.76, radius=56, bezel=14, min_y=560),
+}
 
 def font(size, weight=700, path=SF, lang="en"):
     if lang == "ja":  # SF has no Japanese glyphs
@@ -52,30 +58,31 @@ THEMES = {
     "light": dict(top=(236, 233, 252), bottom=(247, 245, 250), title=(14, 12, 17), sub=(91, 89, 96), accent=(91, 76, 240)),
 }
 
-def frame(shot, title, subtitle, theme, out, lang="en", raw=None):
+def frame(shot, title, subtitle, theme, out, lang="en", raw=None, device="iphone"):
+    g = DEVICES[device]; W, H = g["size"]
     t = THEMES[theme]
     canvas = gradient((W, H), t["top"], t["bottom"]).convert("RGBA")
     d = ImageDraw.Draw(canvas)
-    tf, sf = font(112, 720, lang=lang), font(48, 450, lang=lang)
-    y = 170
+    tf, sf = font(g["title"], 720, lang=lang), font(g["sub"], 450, lang=lang)
+    y = g["top"]
     for line in wrap(d, title, tf, W - 160):
-        d.text((W/2, y), line, font=tf, fill=t["title"], anchor="ma"); y += 122
+        d.text((W/2, y), line, font=tf, fill=t["title"], anchor="ma"); y += int(g["title"] * 1.09)
     y += 22
     for line in wrap(d, subtitle, sf, W - 220):
-        d.text((W/2, y), line, font=sf, fill=t["sub"], anchor="ma"); y += 62
-    # Phone screenshot: rounded like the device, with a soft shadow.
-    scale = 0.80
+        d.text((W/2, y), line, font=sf, fill=t["sub"], anchor="ma"); y += int(g["sub"] * 1.3)
+    # Device screenshot: rounded like the device, with a soft shadow.
+    scale, r, b = g["scale"], g["radius"], g["bezel"]
     img = Image.open(os.path.join(raw or RAW, shot)).convert("RGB")
     sw, sh = int(img.width * scale), int(img.height * scale)
-    phone = rounded(img.resize((sw, sh), Image.LANCZOS), 118)
-    bezel = rounded(Image.new("RGB", (sw + 28, sh + 28), (18, 18, 22) if theme == "dark" else (30, 30, 34)), 132)
-    px, py = (W - bezel.width) // 2, max(y + 70, 690)
+    phone = rounded(img.resize((sw, sh), Image.LANCZOS), r)
+    bezel = rounded(Image.new("RGB", (sw + 2 * b, sh + 2 * b), (18, 18, 22) if theme == "dark" else (30, 30, 34)), r + b)
+    px, py = (W - bezel.width) // 2, max(y + 70, g["min_y"])
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle([px, py + 30, px + bezel.width, py + bezel.height + 30], 132,
+    ImageDraw.Draw(shadow).rounded_rectangle([px, py + 30, px + bezel.width, py + bezel.height + 30], r + b,
                                              fill=(0, 0, 0, 120 if theme == "dark" else 70))
     canvas = Image.alpha_composite(canvas, shadow.filter(ImageFilter.GaussianBlur(40)))
     canvas.alpha_composite(bezel, (px, py))
-    canvas.alpha_composite(phone, (px + 14, py + 14))
+    canvas.alpha_composite(phone, (px + b, py + b))
     # JPEG at high quality: App Store Connect accepts it and it is ~5x smaller than PNG.
     canvas.convert("RGB").save(out.replace(".png", ".jpg"), "JPEG", quality=92, optimize=True, progressive=True)
 
@@ -125,19 +132,19 @@ def main():
             cutouts(shot, theme, widgets, card, labels)
 
 
-def localized(locales):
+def localized(locales, device="iphone"):
     import json
     captions = json.load(open(os.path.join(os.path.dirname(__file__), "captions.json")))
     for loc in locales:
         raw = os.path.join(RAW, "en" if loc == "ja" else loc)
-        out = os.path.join(OUT, "app-store/iphone-6.9", loc)
+        out = os.path.join(OUT, "app-store", DEVICES[device]["folder"], loc)
         os.makedirs(out, exist_ok=True)
         for i, (slide, (title, sub)) in enumerate(zip(captions["slides"], captions[loc]), 1):
             theme = "light" if slide.endswith("light") else "dark"
-            frame(f"{slide}.png", title, sub, theme, os.path.join(out, f"{i:02d}-{slide}.png"), lang=loc, raw=raw)
-        print(loc, "done")
+            frame(f"{slide}.png", title, sub, theme, os.path.join(out, f"{i:02d}-{slide}.png"), lang=loc, raw=raw, device=device)
+        print(device, loc, "done")
 
 if len(sys.argv) > 3 and sys.argv[3] == "--locales":
-    localized(sys.argv[4].split(","))
+    localized(sys.argv[4].split(","), device=sys.argv[6] if len(sys.argv) > 6 and sys.argv[5] == "--device" else "iphone")
 else:
     main()
