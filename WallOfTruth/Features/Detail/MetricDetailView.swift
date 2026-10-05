@@ -26,6 +26,7 @@ struct MetricDetailView: View {
                 RangesCard(metric: metric, settings: settings, series: series) { showsConfig = true }
             }
             .padding(.horizontal, Theme.Spacing.xl)
+            .readableWidth()
             .padding(.bottom, Theme.Spacing.xxl)
             .animation(.smooth(duration: 0.25), value: selected)
         }
@@ -44,6 +45,7 @@ struct MetricDetailView: View {
             CircleButton(symbol: "slider.horizontal.3", label: "config.title") { showsConfig = true }
         }
         .padding(.horizontal, Theme.Spacing.xl)
+        .readableWidth()
         .padding(.vertical, Theme.Spacing.s)
         .topBarBackground()
     }

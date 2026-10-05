@@ -14,6 +14,7 @@ struct OnboardingView: View {
                     if step == 0 { welcome } else { health }
                 }
                 .padding(.horizontal, Theme.Spacing.xl)
+                .readableWidth()
                 .padding(.top, 56)
                 .padding(.bottom, Theme.Spacing.xl)
                 .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
@@ -27,6 +28,7 @@ struct OnboardingView: View {
             .buttonStyle(PrimaryButtonStyle())
             .disabled(isConnecting)
             .padding(.horizontal, Theme.Spacing.xl)
+            .readableWidth()
             .padding(.bottom, Theme.Spacing.l)
         }
         .screenBackground()
